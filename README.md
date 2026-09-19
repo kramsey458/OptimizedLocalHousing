@@ -1,0 +1,109 @@
+# Optimized Local Housing
+
+A Timberborn 1.1 mod (built against **1.1.2.4**) that moves adult beavers into the homes that give the
+**shortest total commute** between where they live and where they work. Version **0.1.0** (preview).
+
+Everyone can't live in the house nearest their workplace, because beds are limited. The best you can do is
+minimize the total travel across the whole colony, and that is exactly what this mod solves, once a day, with
+an optimal assignment (the Hungarian algorithm), instead of nudging beavers around one swap at a time.
+
+## Installation
+
+1. Close Timberborn. Extract the release ZIP into `Documents/Timberborn/Mods`. It contains one
+   `OptimizedLocalHousing` folder.
+2. Launch Timberborn, enable **Optimized Local Housing**, and restart.
+3. Load a **copy** of your save. The first pass runs as soon as the game starts ticking, then again at the
+   start of every day. One line per pass is written to `Player.log` (look for `[OptimizedLocalHousing]`).
+
+Standalone, no dependencies. **Do not run it together with Incremental Housing**: this mod disables itself if
+that mod (or another housing-assignment mod it knows about) is enabled. Both multiplayer players must install
+the identical version.
+
+## What it does
+
+Each pass:
+
+1. **Capture.** Every housed adult beaver, its home, and its assigned workplace.
+2. **Price.** For every workplace, real route costs (`Accessible.FindRoadPath`, so ziplines and stairs count)
+   from its 32 nearest homes. Homes farther away are estimated, and any move to one is re-checked with a real
+   route before it is allowed.
+3. **Solve.** The optimal way to reassign the adults to the beds that adults occupy today.
+4. **Verify.** Every proposed move is re-priced with fresh routes. A move is dropped if the beaver would end up
+   unable to reach work, and a group of moves must save more than half a route-cost unit in total.
+5. **Apply.** Moves are applied as whole cycles (A takes B's bed, B takes C's, C takes A's), in one game tick.
+
+### Rules it keeps
+
+- **Every home keeps exactly the same number of adults.** So homes never overfill, breeding capacity and
+  newborn beds are untouched, and vacant beds are left for the game to fill.
+- **Children never move.** Neither do beavers in paused, blocked or otherwise unusable homes, and nobody is
+  moved into one. Nobody crosses districts. Beavers are never made homeless.
+- **Unemployed adults** don't care where they live, so they give up good beds to people who commute.
+- **No churn.** A beaver prefers to stay put unless moving saves at least one route-cost unit, so an optimized
+  colony is left alone: a second pass on the same colony changes nothing.
+- **Disconnected commutes are repaired.** A beaver whose home can no longer reach its workplace is moved to a
+  home that can, as long as a bed can be arranged.
+
+### Cost and multiplayer
+
+- Work is spread over ticks with fixed budgets: **at most 32 route queries per tick**, and at most about
+  250,000 solver operations per tick. A pass takes roughly a fifth of a game day (147 ticks on a 266-beaver
+  colony), never one long stall.
+- All decisions use integer arithmetic and sorted IDs, and the whole pass state (snapshot, prices, solver rows,
+  verification results) is saved with the game. Reloading mid-pass, or a second player joining, continues
+  exactly where the pass was, and every peer reaches the same result. There is no wall-clock or frame-time
+  rule anywhere.
+- The saved state is a few hundred bytes when idle and a few tens of KB during a pass. Uninstalling is safe:
+  beavers just keep the homes they have.
+
+## Measured results (not in-game)
+
+Replaying a real 266-beaver colony (222 employed adults, 89 homes) through the actual pass engine, with
+straight-line distance standing in for route cost:
+
+| | Average commute |
+|---|---|
+| Before | 53.1 |
+| After one pass | **24.1** |
+| True optimum (brute-force-verified solver) | 24.0 |
+
+The pass took 147 ticks, 4,388 route queries and about 22 ms of total CPU, rehomed 182 beavers in 20 cycles,
+and a second pass changed nothing. Real path queries in Timberborn cost more than that stand-in, and their cost
+has **not** been measured: native Unity gameplay and live two-player join/rehost testing are untested. Test on a
+copy of a save first.
+
+## Limits
+
+- Only beds already occupied by adults are used, so vacant beds are not filled by this mod (the game still fills
+  them normally).
+- The first pass on a badly housed colony moves most adults at once, so parents can end up living away from
+  their children. Later passes move only a few.
+- If a beaver changes home or job while a pass is running, the move cycle it belongs to is skipped and retried
+  in the next day's pass.
+- Home candidates are the 32 nearest by block distance per workplace. A home much farther by straight line but
+  cheaper by zipline could be missed.
+- Homes must have a single access and a valid route, like the game's own assigner requires.
+- No settings and no UI. The tuning constants (`NearHomes`, `QueriesPerTick`, `StayBonus`) are in the source.
+
+## Build and test
+
+Requires .NET SDK 8 and a local Timberborn installation. No NuGet packages and no redistributed game DLLs.
+
+```powershell
+dotnet build OptimizedLocalHousing/OptimizedLocalHousing.csproj -c Release -p:GameManaged="C:\path\Timberborn_Data\Managed"
+dotnet run --project OptimizedLocalHousing.Tests -c Release -- OptimizedLocalHousing/bin/Release/netstandard2.1/OptimizedLocalHousing.dll "C:\path\Timberborn_Data\Managed"
+./package.ps1
+```
+
+The tests cover the solver against brute force, pause/resume at every row, cycle splitting, optimality on
+random colonies, the safety rules above, stale-world handling, determinism between peers, save/reload at every
+tick of a pass, per-tick work bounds, and the compiled adapter against the installed game's component
+blacklist. Omitting the two arguments skips the compiled-adapter check.
+
+## Uninstall
+
+Disable the mod and restart. Beavers keep their current homes.
+
+## License
+
+MIT.

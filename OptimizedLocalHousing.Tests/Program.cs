@@ -1,0 +1,340 @@
+using Newtonsoft.Json;
+using OptimizedLocalHousing;
+
+static class Program
+{
+    static int passed;
+    static Guid G(int n) => new Guid(n, 0, 0, new byte[8]);
+    static void Check(bool condition, string message) { if (!condition) throw new Exception(message); }
+    static void Test(string name, Action action) { action(); passed++; Console.WriteLine("PASS " + name); }
+
+    // ---- a fake game --------------------------------------------------------------------------------------------
+    sealed class Person { public Guid Id, Home, Work, District; public bool Adult = true; }
+    sealed class Home { public int Capacity, X, Y, Z; public Guid District = G(9000); public bool Usable = true; }
+    sealed class Fake : IPassWorld
+    {
+        public Dictionary<Guid, Person> People = new(); public Dictionary<Guid, Home> Homes = new();
+        public Dictionary<Guid, (int X, int Y, int Z)> Works = new(); public HashSet<(Guid, Guid)> Blocked = new();
+        public bool Reverse; public int Calls; public List<string> Applied = new(); public bool ThrowOnApply;
+        public Snapshot Capture()
+        {
+            var b = new SnapshotBuilder(); var people = Reverse ? People.Values.Reverse() : People.Values;
+            foreach (var p in people)
+            {
+                if (!p.Adult || !Homes.TryGetValue(p.Home, out var h) || !h.Usable) continue;
+                b.AddHome(p.Home, h.District, h.X, h.Y, h.Z);
+                var work = Job(p); if (work != Guid.Empty) b.AddWork(work, Works[work].X, Works[work].Y, Works[work].Z);
+                b.AddAdult(p.Id, p.Home, work, p.District);
+            }
+            return b.Build();
+        }
+        Guid Job(Person p) => p.Work != Guid.Empty && Works.ContainsKey(p.Work) ? p.Work : Guid.Empty;
+        public float Route(Guid home, Guid work)
+        { var h = Homes[home]; var w = Works[work]; return Math.Abs(h.X - w.X) + Math.Abs(h.Y - w.Y) + 2 * Math.Abs(h.Z - w.Z) + 5; }
+        public bool TryRoute(Guid home, Guid work, out float cost)
+        {
+            Calls++; cost = 0;
+            if (!Homes.ContainsKey(home) || !Works.ContainsKey(work) || Blocked.Contains((home, work))) return false;
+            cost = Route(home, work); return true;
+        }
+        public bool ApplyCycle(Move[] cycle)
+        {
+            if (ThrowOnApply) throw new InvalidOperationException("boom");
+            var delta = new Dictionary<Guid, int>();
+            foreach (var m in cycle)
+            {
+                if (!People.TryGetValue(m.Adult, out var p) || !p.Adult || p.Home != m.From || Job(p) != m.Work || !Homes[m.To].Usable) return false;
+                delta[m.From] = delta.GetValueOrDefault(m.From) - 1; delta[m.To] = delta.GetValueOrDefault(m.To) + 1;
+            }
+            foreach (var d in delta) if (People.Values.Count(p => p.Home == d.Key) + d.Value > Homes[d.Key].Capacity) return false;
+            foreach (var m in cycle) People[m.Adult].Home = m.To;
+            Applied.Add(string.Join(",", cycle.Select(m => $"{m.Adult.ToString()[..4]}>{m.To.ToString()[..4]}")));
+            return true;
+        }
+        public double Total() => People.Values.Where(p => p.Adult && Job(p) != Guid.Empty).Sum(p => Route(p.Home, p.Work));
+        public double Objective() => People.Values.Where(p => p.Adult).Sum(p => Job(p) == Guid.Empty ? 0 : Cost.Fixed(Route(p.Home, p.Work))); // fixed-point units
+        public Dictionary<Guid, int> AdultCounts() => People.Values.Where(p => p.Adult).GroupBy(p => p.Home).ToDictionary(g => g.Key, g => g.Count());
+        public string Fingerprint() => string.Join(";", People.Values.OrderBy(p => p.Id).Select(p => p.Id.ToString()[..8] + ">" + p.Home.ToString()[..8]));
+        public Fake Copy()
+        {
+            var f = new Fake { Reverse = Reverse };
+            foreach (var p in People) f.People[p.Key] = new Person { Id = p.Value.Id, Home = p.Value.Home, Work = p.Value.Work, District = p.Value.District, Adult = p.Value.Adult };
+            foreach (var h in Homes) f.Homes[h.Key] = new Home { Capacity = h.Value.Capacity, X = h.Value.X, Y = h.Value.Y, Z = h.Value.Z, District = h.Value.District, Usable = h.Value.Usable };
+            foreach (var w in Works) f.Works[w.Key] = w.Value; f.Blocked = new HashSet<(Guid, Guid)>(Blocked); return f;
+        }
+    }
+
+    // Random colony: every home is filled by adults (plus a few children who never move); some adults are unemployed.
+    static Fake Colony(int seed, int homes, int adults, int works, int children = 0, int districts = 1)
+    {
+        var rng = new Random(seed); var f = new Fake();
+        for (int h = 0; h < homes; h++) f.Homes[G(100 + h)] = new Home { X = rng.Next(0, 60), Y = rng.Next(0, 60), Z = rng.Next(0, 3), District = G(9000 + h % districts) };
+        for (int w = 0; w < works; w++) f.Works[G(5000 + w)] = (rng.Next(0, 60), rng.Next(0, 60), rng.Next(0, 3));
+        var slots = new List<Guid>(); var keys = f.Homes.Keys.OrderBy(k => k).ToList();
+        for (int a = 0; a < adults; a++) slots.Add(keys[a % keys.Count]);
+        for (int a = 0; a < adults; a++)
+        {
+            var home = slots[a];
+            f.People[G(10 + a)] = new Person { Id = G(10 + a), Home = home, District = f.Homes[home].District,
+                Work = rng.Next(0, 8) == 0 ? Guid.Empty : G(5000 + rng.Next(0, works)) };
+        }
+        for (int c = 0; c < children; c++) { var home = keys[rng.Next(keys.Count)]; f.People[G(3000 + c)] = new Person { Id = G(3000 + c), Home = home, District = f.Homes[home].District, Adult = false }; }
+        foreach (var h in keys) f.Homes[h].Capacity = f.People.Values.Count(p => p.Home == h);
+        return f;
+    }
+    static PassEngine Run(Fake f, PassState state = null, int limit = 5000)
+    {
+        var e = new PassEngine(f, state); e.RequestPass();
+        for (int t = 0; t < limit; t++) { e.Tick(); if (!e.Busy && !e.State.Requested) return e; }
+        throw new Exception("Pass did not finish");
+    }
+    // Best objective any arrangement of the adults into the existing beds can reach (route cost minus stay bonuses).
+    static long Best(Fake f)
+    {
+        var adults = f.People.Values.Where(p => p.Adult).OrderBy(p => p.Id).ToList(); int n = adults.Count;
+        var beds = adults.Select(a => a.Home).ToList(); long best = long.MaxValue; var perm = Enumerable.Range(0, n).ToArray();
+        long Cost1(Person a, Guid bed) => (f.People.ContainsKey(a.Id) && f.Works.ContainsKey(a.Work) ? Cost.Fixed(f.Route(bed, a.Work)) : 0) - (bed == a.Home ? Cost.StayBonus : 0);
+        void Go(int k, long sum)
+        {
+            if (k == n) { best = Math.Min(best, sum); return; }
+            for (int i = k; i < n; i++)
+            {
+                (perm[k], perm[i]) = (perm[i], perm[k]);
+                Go(k + 1, sum + Cost1(adults[k], beds[perm[k]]));
+                (perm[k], perm[i]) = (perm[i], perm[k]);
+            }
+        }
+        Go(0, 0); return best;
+    }
+    static long Achieved(Fake f) => f.People.Values.Where(p => p.Adult).Sum(p => (f.Works.ContainsKey(p.Work) ? Cost.Fixed(f.Route(p.Home, p.Work)) : 0) - 0L)
+        - f.People.Values.Where(p => p.Adult).Count(p => p.Home == StartHome[p.Id]) * (long)Cost.StayBonus;
+    static Dictionary<Guid, Guid> StartHome = new();
+
+    static int Main(string[] args)
+    {
+        try { Run(args); return 0; }
+        catch (Exception exception) { Console.Error.WriteLine("TEST FAILURE: " + exception); return 1; }
+    }
+
+    static void Run(string[] args)
+    {
+        Test("Hungarian solver matches brute force, including ties and forbidden entries", () => {
+            var rng = new Random(11);
+            for (int trial = 0; trial < 300; trial++)
+            {
+                int n = rng.Next(1, 8); var c = new long[n, n];
+                for (int i = 0; i < n; i++) for (int j = 0; j < n; j++) c[i, j] = rng.Next(0, 4) == 0 ? Cost.Forbidden : rng.Next(0, 6) * (rng.Next(0, 2) == 0 ? 1 : 1000) - 40;
+                var u = new long[n + 1]; var v = new long[n + 1]; var p = new int[n + 1]; int row = 1;
+                Check(Hungarian.Step(c, n, u, v, p, ref row, long.MaxValue, _ => 0), "Did not finish");
+                long got = 0; for (int j = 1; j <= n; j++) got += c[p[j] - 1, j - 1];
+                long best = long.MaxValue; var perm = Enumerable.Range(0, n).ToArray();
+                void Go(int k, long s) { if (k == n) { best = Math.Min(best, s); return; } for (int i = k; i < n; i++) { (perm[k], perm[i]) = (perm[i], perm[k]); Go(k + 1, s + c[k, perm[k]]); (perm[k], perm[i]) = (perm[i], perm[k]); } }
+                Go(0, 0); Check(got == best, $"Suboptimal: {got} vs {best}");
+            }
+        });
+        Test("Hungarian can be paused after any row and resumed with identical results", () => {
+            var rng = new Random(5); int n = 40; var c = new long[n, n];
+            for (int i = 0; i < n; i++) for (int j = 0; j < n; j++) c[i, j] = rng.Next(0, 50);
+            var u1 = new long[n + 1]; var v1 = new long[n + 1]; var p1 = new int[n + 1]; int r1 = 1; Hungarian.Step(c, n, u1, v1, p1, ref r1, long.MaxValue, _ => 0);
+            var u2 = new long[n + 1]; var v2 = new long[n + 1]; var p2 = new int[n + 1]; int r2 = 1; int calls = 0;
+            while (!Hungarian.Step(c, n, u2, v2, p2, ref r2, 1, _ => 0)) calls++;
+            Check(calls >= n - 1 && p1.SequenceEqual(p2) && u1.SequenceEqual(u2) && v1.SequenceEqual(v2), "Paused solve differed");
+        });
+        Test("cycle splitting: simple, complete, deterministic and applicable one at a time", () => {
+            var rng = new Random(3);
+            for (int trial = 0; trial < 200; trial++)
+            {
+                int nodes = rng.Next(2, 9), edges = rng.Next(1, 25); var from = new List<int>(); var to = new List<int>();
+                // Build a balanced multigraph out of random cycles.
+                while (from.Count < edges) { int len = rng.Next(2, 5); var ring = Enumerable.Range(0, nodes).OrderBy(_ => rng.Next()).Take(Math.Min(len, nodes)).ToList(); for (int i = 0; i < ring.Count; i++) { from.Add(ring[i]); to.Add(ring[(i + 1) % ring.Count]); } }
+                var a = Cycles.Split(nodes, from.ToArray(), to.ToArray()); var b = Cycles.Split(nodes, from.ToArray(), to.ToArray());
+                Check(a.Count == b.Count && a.Zip(b).All(x => x.First.SequenceEqual(x.Second)), "Not deterministic");
+                Check(a.SelectMany(x => x).OrderBy(x => x).SequenceEqual(Enumerable.Range(0, from.Count)), "Edges lost or repeated");
+                foreach (var cycle in a)
+                {
+                    Check(cycle.Select(e => from[e]).Distinct().Count() == cycle.Length, "Cycle is not simple");
+                    for (int i = 0; i < cycle.Length; i++) Check(to[cycle[i]] == from[cycle[(i + 1) % cycle.Length]], "Cycle does not close");
+                }
+            }
+        });
+        Test("unbalanced moves are refused rather than looped on", () => {
+            bool threw = false; try { Cycles.Split(3, new[] { 0 }, new[] { 1 }); } catch (InvalidOperationException) { threw = true; }
+            Check(threw, "Unbalanced graph accepted");
+        });
+
+        Test("the pass reaches the true optimum (brute force) on random small colonies", () => {
+            for (int seed = 0; seed < 60; seed++)
+            {
+                var f = Colony(seed, homes: 3 + seed % 3, adults: 6 + seed % 3, works: 3, children: seed % 3);
+                StartHome = f.People.ToDictionary(p => p.Key, p => p.Value.Home);
+                long best = Best(f); var counts = f.AdultCounts(); var kids = f.People.Values.Where(p => !p.Adult).ToDictionary(p => p.Id, p => p.Home);
+                var e = Run(f);
+                Check(Achieved(f) == best, $"seed {seed}: objective {Achieved(f)} but optimum is {best}");
+                Check(f.AdultCounts().OrderBy(x => x.Key).SequenceEqual(counts.OrderBy(x => x.Key)), "A home's adult count changed");
+                Check(kids.All(k => f.People[k.Key].Home == k.Value), "A child moved");
+            }
+        });
+        Test("a badly housed colony gets much shorter commutes and no home changes its head count", () => {
+            var f = Colony(1, homes: 90, adults: 240, works: 120, children: 20); double before = f.Total(); var counts = f.AdultCounts();
+            var e = Run(f);
+            Check(f.Total() < before * 0.6, $"Commute only {before:F0} -> {f.Total():F0}");
+            Check(f.AdultCounts().OrderBy(x => x.Key).SequenceEqual(counts.OrderBy(x => x.Key)), "Adult counts changed");
+            foreach (var h in f.Homes) Check(f.People.Values.Count(p => p.Home == h.Key) <= h.Value.Capacity, "Home over capacity");
+            Console.WriteLine($"   240 adults, 90 homes: commute {before:F0} -> {f.Total():F0} in {e.LastReport.Ticks} ticks, {e.LastReport.Queries} route queries, {e.LastReport.Applied} cycles");
+        });
+        Test("a second pass on an optimized colony changes nothing", () => {
+            var f = Colony(2, homes: 40, adults: 100, works: 50); Run(f); var fp = f.Fingerprint(); int applied = f.Applied.Count;
+            Run(f); Check(f.Fingerprint() == fp && f.Applied.Count == applied, "Optimized colony was reshuffled");
+        });
+        Test("small savings below the stay bonus do not move anyone", () => {
+            var f = new Fake(); f.Homes[G(1)] = new Home { Capacity = 1, X = 11 }; f.Homes[G(2)] = new Home { Capacity = 1, X = 10 };
+            f.Works[G(500)] = (0, 0, 0);
+            f.People[G(10)] = new Person { Id = G(10), Home = G(1), Work = G(500), District = G(9000) };
+            f.People[G(11)] = new Person { Id = G(11), Home = G(2), District = G(9000) };   // unemployed
+            Run(f); Check(f.Applied.Count == 0, "Moved for a 1 unit saving");
+            f.Homes[G(2)].X = 4; Run(f); Check(f.People[G(10)].Home == G(2) && f.People[G(11)].Home == G(1), "Did not take a 7 unit saving");
+        });
+        Test("unemployed adults are shuffled out of the way for workers", () => {
+            var f = new Fake(); f.Homes[G(1)] = new Home { Capacity = 1, X = 0 }; f.Homes[G(2)] = new Home { Capacity = 1, X = 50 };
+            f.Works[G(500)] = (1, 0, 0);
+            f.People[G(10)] = new Person { Id = G(10), Home = G(2), Work = G(500), District = G(9000) };
+            f.People[G(11)] = new Person { Id = G(11), Home = G(1), District = G(9000) };
+            Run(f); Check(f.People[G(10)].Home == G(1) && f.People[G(11)].Home == G(2), "Idle adult kept the best bed");
+        });
+
+        Test("input enumeration order does not change the outcome", () => {
+            var a = Colony(7, 60, 150, 70, 10); var b = a.Copy(); b.Reverse = true;
+            var ea = Run(a); var eb = Run(b);
+            Check(a.Fingerprint() == b.Fingerprint() && string.Join("|", a.Applied) == string.Join("|", b.Applied), "Outcome depends on order");
+            Check(JsonConvert.SerializeObject(ea.State) == JsonConvert.SerializeObject(eb.State), "State depends on order");
+        });
+        Test("two peers ticking in lockstep have identical serialized state at every tick", () => {
+            var a = Colony(8, 50, 130, 60, 8); var b = a.Copy(); var ea = new PassEngine(a); var eb = new PassEngine(b);
+            for (int t = 0; t < 600; t++) { ea.Tick(); eb.Tick(); Check(JsonConvert.SerializeObject(ea.State) == JsonConvert.SerializeObject(eb.State), "Peers diverged at tick " + t); }
+            Check(a.Fingerprint() == b.Fingerprint(), "Peers housed differently");
+        });
+        Test("saving and reloading at any tick of a pass gives exactly the uninterrupted result", () => {
+            var start = Colony(9, 45, 110, 55, 6); var whole = start.Copy(); var ew = Run(whole);
+            string reference = JsonConvert.SerializeObject(ew.State); int ticks = (int)ew.LastReport.Ticks;
+            var live = start.Copy(); var el = new PassEngine(live); el.RequestPass();
+            for (int t = 0; t < ticks + 2; t++)
+            {
+                var resumedWorld = start.Copy();   // nothing is applied before the last tick, so the world is unchanged mid-pass
+                if (el.Busy && live.Applied.Count == 0)
+                {
+                    var restored = new PassEngine(resumedWorld, JsonConvert.DeserializeObject<PassState>(JsonConvert.SerializeObject(el.State)));
+                    for (int k = 0; k < 5000 && (restored.Busy || restored.State.Requested); k++) restored.Tick();
+                    Check(resumedWorld.Fingerprint() == whole.Fingerprint(), $"Resume at tick {t} housed differently");
+                    Check(JsonConvert.SerializeObject(restored.State) == reference, $"Resume at tick {t} ended in a different state");
+                }
+                el.Tick();
+            }
+        });
+
+        Test("work is bounded per tick: route queries stay within budget for a large colony", () => {
+            var f = Colony(4, 150, 400, 120, 30); var e = new PassEngine(f); e.RequestPass(); int worst = 0, ticks = 0;
+            do { f.Calls = 0; e.Tick(); worst = Math.Max(worst, f.Calls); ticks++; } while ((e.Busy || e.State.Requested) && ticks < 3000);
+            Check(!e.Busy && ticks < 3000, "Did not finish");
+            Check(worst <= PassEngine.QueriesPerTick, $"{worst} route queries in one tick");
+            Console.WriteLine($"   400 adults, 150 homes, 120 workplaces: {ticks} ticks, {e.LastReport.Queries} queries, worst tick {worst}");
+        });
+        Test("far homes are never chosen without a fresh route check", () => {
+            var f = Colony(5, 120, 200, 40); var e = new PassEngine(f); e.RequestPass(); var checkedPairs = new HashSet<(Guid, Guid)>(); var before = f.People.ToDictionary(p => p.Key, p => p.Value.Home);
+            var probe = new Probe(f, checkedPairs); e = new PassEngine(probe); e.RequestPass();
+            for (int t = 0; t < 4000 && (e.Busy || e.State.Requested); t++) { probe.Recording = e.State.Stage == 3; e.Tick(); }
+            foreach (var p in f.People.Values.Where(p => p.Adult && p.Home != before[p.Id] && f.Works.ContainsKey(p.Work)))
+                Check(checkedPairs.Contains((p.Home, p.Work)), "Moved to an unchecked home");
+        });
+
+        Test("a beaver whose route is cut is moved to a home that can reach work", () => {
+            var f = new Fake(); f.Homes[G(1)] = new Home { Capacity = 1, X = 3 }; f.Homes[G(2)] = new Home { Capacity = 1, X = 4 };
+            f.Works[G(500)] = (0, 0, 0); f.Blocked.Add((G(1), G(500)));
+            f.People[G(10)] = new Person { Id = G(10), Home = G(1), Work = G(500), District = G(9000) };
+            f.People[G(11)] = new Person { Id = G(11), Home = G(2), District = G(9000) };
+            var e = Run(f); Check(f.People[G(10)].Home == G(2) && e.LastReport.Recovered == 1, "Disconnected commute not repaired");
+        });
+        Test("a move is dropped when its route disappears after pricing", () => {
+            var f = new Fake(); f.Homes[G(1)] = new Home { Capacity = 1, X = 40 }; f.Homes[G(2)] = new Home { Capacity = 1, X = 1 };
+            f.Works[G(500)] = (0, 0, 0);
+            f.People[G(10)] = new Person { Id = G(10), Home = G(1), Work = G(500), District = G(9000) };
+            f.People[G(11)] = new Person { Id = G(11), Home = G(2), District = G(9000) };
+            var e = new PassEngine(f); e.RequestPass();
+            while (e.State.Stage < 2) e.Tick();
+            f.Blocked.Add((G(2), G(500)));   // a wall goes up while the solver is running
+            for (int t = 0; t < 100 && (e.Busy || e.State.Requested); t++) e.Tick();
+            Check(f.Applied.Count == 0 && f.People[G(10)].Home == G(1) && e.LastReport.Rejected == 1, "Moved into an unreachable home");
+        });
+        Test("a cycle is rejected if anyone in it would end unreachable, even when another member gains far more", () => {
+            var f = new Fake(); f.Homes[G(1)] = new Home { Capacity = 1, X = 1000 }; f.Homes[G(2)] = new Home { Capacity = 1, X = 1 };
+            f.Works[G(500)] = (0, 0, 0); f.Works[G(501)] = (20, 0, 0); f.Blocked.Add((G(1), G(500)));   // adult 10 is cut off today
+            f.People[G(10)] = new Person { Id = G(10), Home = G(1), Work = G(500), District = G(9000) };
+            f.People[G(11)] = new Person { Id = G(11), Home = G(2), Work = G(501), District = G(9000) };
+            var e = new PassEngine(f); e.RequestPass();
+            while (e.State.Stage < 2) e.Tick();
+            f.Blocked.Add((G(1), G(501)));   // ...and the swap partner would lose their route once the wall goes up
+            for (int t = 0; t < 100 && (e.Busy || e.State.Requested); t++) e.Tick();
+            Check(f.Applied.Count == 0 && e.LastReport.Rejected == 1, "Accepted a cycle that strands someone");
+        });
+        Test("beavers who changed home or job mid-pass are skipped; everyone else is still moved", () => {
+            var f = Colony(12, 40, 100, 45); var trial = f.Copy(); Run(trial);
+            var movers = f.People.Values.Where(p => trial.People[p.Id].Home != p.Home && f.Works.ContainsKey(p.Work)).OrderBy(p => p.Id).Take(2).ToList();
+            Check(movers.Count == 2, "Need two movers");
+            var e = new PassEngine(f); e.RequestPass();
+            while (e.State.Stage < 3) e.Tick();
+            var moved = movers;
+            moved[0].Home = f.Homes.Keys.OrderBy(k => k).Last();   // the vanilla assigner re-housed them
+            moved[1].Work = moved[1].Work == G(5001) ? G(5002) : G(5001);   // ...or their job changed
+            var pinned = moved.ToDictionary(p => p.Id, p => (p.Home, p.Work));
+            for (int t = 0; t < 200 && (e.Busy || e.State.Requested); t++) e.Tick();
+            foreach (var p in moved) Check(f.People[p.Id].Home == pinned[p.Id].Home, "A stale beaver was moved anyway");
+            Check(e.LastReport.Applied > 0 && e.LastReport.Stale >= 1, "Expected some cycles skipped and the rest applied");
+            foreach (var h in f.Homes) Check(f.People.Values.Count(p => p.Home == h.Key) <= h.Value.Capacity || h.Key == f.Homes.Keys.OrderBy(k => k).Last(), "Home over capacity");
+        });
+        Test("beavers never cross districts", () => {
+            var f = Colony(13, 40, 100, 45, 0, districts: 3); var district = f.People.ToDictionary(p => p.Key, p => p.Value.District);
+            Run(f); foreach (var p in f.People.Values) Check(f.Homes[p.Home].District == district[p.Id], "Crossed districts");
+        });
+        Test("paused homes keep their residents and never gain new ones", () => {
+            var f = Colony(14, 30, 80, 30); var paused = f.Homes.Keys.OrderBy(k => k).Take(3).ToList(); foreach (var h in paused) f.Homes[h].Usable = false;
+            var residents = f.People.Values.Where(p => paused.Contains(p.Home)).ToDictionary(p => p.Id, p => p.Home);
+            Run(f); Check(residents.All(r => f.People[r.Key].Home == r.Value), "A paused home's resident was moved");
+            Check(f.People.Values.Where(p => !residents.ContainsKey(p.Id)).All(p => !paused.Contains(p.Home)), "Someone moved into a paused home");
+        });
+        Test("a colony with nobody employed, or a single adult, is left alone", () => {
+            var f = Colony(15, 10, 20, 5); foreach (var p in f.People.Values) p.Work = Guid.Empty; var fp = f.Fingerprint(); Run(f); Check(f.Fingerprint() == fp, "Moved unemployed colony");
+            var g = Colony(16, 1, 1, 1); Run(g); Check(g.Applied.Count == 0, "Moved a lone adult");
+        });
+        Test("a world that throws while moving abandons the pass and recovers", () => {
+            var f = Colony(17, 30, 70, 30); f.ThrowOnApply = true; Exception seen = null; var e = new PassEngine(f); e.Faulted += x => seen = x; e.RequestPass();
+            for (int t = 0; t < 2000 && seen == null; t++) e.Tick();
+            Check(seen != null && !e.Busy && !e.State.Requested, "Fault not contained");
+            f.ThrowOnApply = false; e.RequestPass(); for (int t = 0; t < 2000 && (e.Busy || e.State.Requested); t++) e.Tick();
+            Check(e.State.Passes >= 1 && f.Applied.Count > 0, "Did not recover on the next request");
+        });
+        Test("saved state survives a JSON round trip at every stage", () => {
+            var f = Colony(18, 30, 70, 30); var e = new PassEngine(f); e.RequestPass(); var stages = new HashSet<int>();
+            for (int t = 0; t < 2000 && (e.Busy || e.State.Requested); t++)
+            {
+                e.Tick(); stages.Add(e.State.Stage); string json = JsonConvert.SerializeObject(e.State);
+                Check(JsonConvert.SerializeObject(JsonConvert.DeserializeObject<PassState>(json)) == json, "Round trip changed the state");
+            }
+            Check(stages.SetEquals(new[] { 0, 1, 2, 3 }), "Did not exercise every stage: " + string.Join(",", stages));
+        });
+        Test("an unknown saved version or stage is discarded, not trusted", () => {
+            var e = new PassEngine(new Fake(), new PassState { Version = 99, Stage = 2 }); Check(e.State.Stage == 0 && e.State.Version == 1, "Foreign state kept");
+        });
+
+        if (args.Length == 2) Test("compiled adapter follows installed component API contract", () => AdapterApiChecks.Verify(args[0], args[1]));
+        Console.WriteLine($"{passed} checks passed. Native Unity execution and two-player playtest are not exercised.");
+    }
+
+    // Records every (home, work) pair the engine priced or verified.
+    sealed class Probe : IPassWorld
+    {
+        readonly Fake _f; readonly HashSet<(Guid, Guid)> _seen; public bool Recording;
+        public Probe(Fake f, HashSet<(Guid, Guid)> seen) { _f = f; _seen = seen; }
+        public Snapshot Capture() => _f.Capture();
+        public bool TryRoute(Guid home, Guid work, out float cost) { if (Recording) _seen.Add((home, work)); return _f.TryRoute(home, work, out cost); }
+        public bool ApplyCycle(Move[] cycle) => _f.ApplyCycle(cycle);
+    }
+}

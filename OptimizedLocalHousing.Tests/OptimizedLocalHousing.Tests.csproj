@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../OptimizedLocalHousing/Assignment.cs" Link="Assignment.cs" />
+    <Compile Include="../OptimizedLocalHousing/PassEngine.cs" Link="PassEngine.cs" />
+    <Reference Include="Newtonsoft.Json"><HintPath>C:\Program Files (x86)\Steam\steamapps\common\Timberborn\Timberborn_Data\Managed\Newtonsoft.Json.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>
