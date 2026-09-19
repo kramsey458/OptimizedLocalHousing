@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FAQ: Optimized Local Housing</title>
+<meta name="description" content="Frequently asked questions about the Optimized Local Housing Timberborn mod: how it works, breeding and children, how it compares to other housing mods, multiplayer, compatibility and settings.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<script>try{var t=localStorage.getItem('olh-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="wrap bar">
+    <a class="brand" href="index.html"><img src="favicon.svg" alt="" width="32" height="32"> Optimized Local Housing</a>
+    <nav class="nav" aria-label="Main">
+      <a href="index.html">Home</a>
+      <a href="index.html#features">Features</a>
+      <a href="install.html">Install</a>
+      <a href="troubleshooting.html">Troubleshooting</a>
+      <a href="faq.html" aria-current="page">FAQ</a>
+      <a href="https://github.com/kramsey458/OptimizedLocalHousing">GitHub</a>
+      <button class="theme-btn" id="theme-toggle" type="button">Dark mode</button>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="doc">
+<div class="wrap narrow faq">
+  <span class="eyebrow">Guide</span>
+  <h1>Frequently asked questions</h1>
+  <p class="lead">Straight answers, including the ones that aren't flattering. If yours isn't here, <a href="https://github.com/kramsey458/OptimizedLocalHousing/issues/new">ask on GitHub</a>.</p>
+
+  <h2 id="basics">The basics</h2>
+
+  <details>
+    <summary>What does it do, in one sentence?</summary>
+    <div class="answer"><p>Once a day it works out the arrangement of adult beavers into their existing beds that makes the colony's total home-to-workplace travel as short as possible, and moves the beavers that need moving.</p></div>
+  </details>
+
+  <details>
+    <summary>How often does it run, and how long does a pass take?</summary>
+    <div class="answer">
+      <p>A pass starts the first time the mod sees a save, then at the start of every in-game day. On a 266-beaver colony a pass took 147 ticks, roughly 90 seconds at normal speed. The work is spread across those ticks, with at most 32 route queries per tick.</p>
+      <p>Moves are applied when a pass finishes, which can be at any time of day. Beavers simply walk to their new home the next time they go home.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Does it have settings?</summary>
+    <div class="answer"><p>No. Version 0.1.0 has no menu and no options. The tuning values (<code>NearHomes</code>, <code>QueriesPerTick</code>, <code>StayBonus</code>) are constants in <a href="https://github.com/kramsey458/OptimizedLocalHousing/blob/main/OptimizedLocalHousing/Assignment.cs">the source</a> if you're willing to rebuild it. A relaxed "let adult counts change" option was considered and dropped, and <a href="#vacant">the reason is below</a>.</p></div>
+  </details>
+
+  <details>
+    <summary>What is a "move cycle"?</summary>
+    <div class="answer"><p>A group of beavers that each take the next beaver's bed, and the last takes the first's, like A→B→C→A. Every home in the cycle ends up with as many adults as it started with. Cycles are applied all at once, or not at all if anything about them has changed. A simple two-beaver swap is the smallest cycle.</p></div>
+  </details>
+
+  <h2 id="deciding">How it decides</h2>
+
+  <details>
+    <summary>What does "shortest" mean here?</summary>
+    <div class="answer">
+      <p>It uses the game's own route cost between a home and the beaver's assigned workplace, so stairs, platforms and ziplines count. It isn't straight-line distance. To keep the work small, each workplace prices its 32 nearest homes by block distance; anything farther is only estimated, and every move is re-priced with fresh routes before it happens.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Why didn't a particular beaver move?</summary>
+    <div class="answer">
+      <ul>
+        <li>It is already in the best place the total allows. Someone else needed that bed more.</li>
+        <li>Moving would save less than one route-cost unit. A beaver stays put unless the move is worth it, so the colony doesn't churn.</li>
+        <li>Its workplace is disabled or in another district, or it has no job, so its commute isn't measured.</li>
+        <li>Its home is paused, blocked, or switched off by automation. Those homes are skipped.</li>
+        <li>It was skipped this time because something changed mid-pass, and it will be reconsidered tomorrow.</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>What happens to unemployed adults?</summary>
+    <div class="answer"><p>They don't care where they live, so they are treated as free to take whatever bed is left. That means an unemployed beaver may give up a home next to a workplace so a working beaver can have it.</p></div>
+  </details>
+
+  <details id="vacant">
+    <summary>Why doesn't it fill empty beds, or let homes end up with different numbers of adults?</summary>
+    <div class="answer">
+      <p>We tested exactly that, and it isn't worth it. On the real 266-beaver colony we replayed, letting the solver change how many adults each home holds shortened the average commute by only about 4% (24.0 to 23.1). But it used up the beds where babies could be born: homes able to have a baby fell from 11 to 1. Keeping those baby beds empty brought the gain back to nothing.</p>
+      <p>So every home keeps its adult count. This was measured on one colony, with a straight-line stand-in for route cost and child-bed limits inferred from household sizes, so other colonies will differ, but a 4% gain wasn't worth risking population growth.</p>
+    </div>
+  </details>
+
+  <h2 id="safety">Breeding, children and saves</h2>
+
+  <details id="breeding">
+    <summary>Does it affect breeding?</summary>
+    <div class="answer">
+      <p>It's built not to. In the game's code a baby needs a home with a free bed, at least two adults, and fewer children than half its adults. Optimized Local Housing keeps every home's number of adults exactly the same and never moves children, so each home keeps the same free beds and the same number of pairs. The chance of a birth in each home is untouched.</p>
+      <p>What changes is <em>which</em> adults live in a home. By construction, breeding capacity is identical before and after a pass.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Will children be separated from their parents?</summary>
+    <div class="answer"><p>Children never move, but the adults in their home may change, especially on the first pass. We haven't found any game mechanic that ties a child to specific adults, but we can't rule one out. If it matters to you, <a href="troubleshooting.html#families">try it on a copy first</a>.</p></div>
+  </details>
+
+  <details>
+    <summary>Can a beaver end up homeless, or in a home it can't reach?</summary>
+    <div class="answer"><p>No, by design. Every move is applied as a whole cycle in one tick and rolled back if the game refuses any part of it. Every destination's route to the beaver's workplace is checked with a fresh query first, and a move that would leave a beaver unable to reach work is thrown away.</p></div>
+  </details>
+
+  <details>
+    <summary>Is it safe for my save? What if I remove it?</summary>
+    <div class="answer"><p>The mod stores a small amount of data in your save: a few hundred bytes when idle and a few tens of kilobytes during a pass. If you remove the mod, the data is ignored and beavers keep their current homes. Because it's a preview, still keep a backup and try it on a copy first.</p></div>
+  </details>
+
+  <h2 id="compat">Compatibility and comparisons</h2>
+
+  <details id="conflicts">
+    <summary>Can I use it with Incremental Housing, Housing Optimize or Commute Balancer?</summary>
+    <div class="answer"><p>No. Two housing mods would keep reassigning each other's work. Optimized Local Housing checks for these mods at startup and turns itself off, with a warning in the log, if one is enabled. Pick one. See <a href="troubleshooting.html#disabled">Troubleshooting</a>.</p></div>
+  </details>
+
+  <details>
+    <summary>How is it different from Bobingabout's Housing Optimize and Commute Balancer?</summary>
+    <div class="answer">
+      <p>As described on their Workshop pages:</p>
+      <ul>
+        <li><a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3438044391">Housing Optimize</a> reassigns beavers once at the start of each day: it unassigns everyone and refills homes first-come-first-served, nearest first, all at once. Its author notes the result isn't guaranteed to be the best.</li>
+        <li><a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3663421750">Commute Balancer</a> works gradually over days, moving a beaver to a closer empty home or swapping when the benefit outweighs the other beaver's inconvenience.</li>
+        <li><strong>Optimized Local Housing</strong> solves the whole colony at once for the smallest total commute, keeps every home's number of adults, and spreads the work across ticks with fixed budgets.</li>
+      </ul>
+      <p>In a replay on one real colony, a first-come-first-served strategy like the one Housing Optimize describes averaged 25.6 (between 23.5 and 29.0 depending on the order workplaces were handled), against 24.1 for this mod, even though that model was given looser bed rules. That was a model with a straight-line stand-in, not a benchmark of either mod. Both of those mods have thousands of subscribers and real-world mileage. This one is new.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Is it the best housing mod?</summary>
+    <div class="answer">
+      <p>We don't claim that. Because it solves the assignment exactly, it should reach the shortest total commute among the approaches above, and the tests support that. But it is unproven in live gameplay and live multiplayer, and commute isn't the only thing that matters: stability, disruption and real-world track record count too.</p>
+      <p>The fair test is to run each mod on a copy of the same save for a few in-game days and compare the average commute afterward. If you do, we'd like to hear the result.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Does it work in multiplayer, or with BeaverBuddies?</summary>
+    <div class="answer"><p>It is designed for it. It uses whole-number maths and sorted IDs, and the entire pass state is saved with the game, so every player should reach the same result even across a reload or a mid-pass join. All players must run the same version. This has been tested in simulation, <strong>not yet in a live two-player game</strong>.</p></div>
+  </details>
+
+  <details>
+    <summary>Does it work with the Iron Teeth faction?</summary>
+    <div class="answer"><p>It hasn't been tested. It was developed and replayed on a Folktails colony, and it only handles beaver dwellers.</p></div>
+  </details>
+
+  <details>
+    <summary>Which game versions, operating systems and mods does it need?</summary>
+    <div class="answer">
+      <ul>
+        <li>Timberborn 1.1 (built against 1.1.2.4, minimum 1.1.0.0). A future update could break it.</li>
+        <li>Checked on Windows only.</li>
+        <li>No other mods are required. It doesn't need Harmony or Mod Settings.</li>
+      </ul>
+    </div>
+  </details>
+
+  <h2 id="project">The project</h2>
+
+  <details>
+    <summary>Is it open source?</summary>
+    <div class="answer"><p>Yes, under the MIT license. The source, the test suite and the build script are on <a href="https://github.com/kramsey458/OptimizedLocalHousing">GitHub</a>.</p></div>
+  </details>
+
+  <details>
+    <summary>Why is it labelled a preview?</summary>
+    <div class="answer"><p>Because it hasn't been proven in the live game yet. See <a href="index.html#status">what is tested and what isn't</a>. It will drop the preview label once it has been through real play, including multiplayer.</p></div>
+  </details>
+
+  <details>
+    <summary>How do I report a bug or suggest something?</summary>
+    <div class="answer"><p>Open an issue on <a href="https://github.com/kramsey458/OptimizedLocalHousing/issues/new">GitHub</a>. The <a href="troubleshooting.html#report">troubleshooting page</a> lists what to include.</p></div>
+  </details>
+</div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap foot">
+    <div><strong>Optimized Local Housing</strong><br>A free, open-source Timberborn mod, MIT licensed. Not affiliated with Mechanistry.</div>
+    <div><h2>Guides</h2><ul><li><a href="install.html">Install guide</a></li><li><a href="troubleshooting.html">Troubleshooting</a></li><li><a href="faq.html">FAQ</a></li></ul></div>
+    <div><h2>Project</h2><ul><li><a href="https://github.com/kramsey458/OptimizedLocalHousing">Source on GitHub</a></li><li><a href="https://github.com/kramsey458/OptimizedLocalHousing/releases/tag/v0.1.0">Release v0.1.0</a></li><li><a href="https://github.com/kramsey458/OptimizedLocalHousing/issues">Issues</a></li></ul></div>
+  </div>
+</footer>
+<script src="site.js" defer></script>
+</body>
+</html>

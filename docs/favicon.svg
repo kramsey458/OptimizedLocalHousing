@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Optimized Local Housing">
+  <rect width="64" height="64" rx="14" fill="#1c5cab"/>
+  <path d="M14 34 L26 23 L38 34 V46 H14 Z" fill="#fff"/>
+  <rect x="21" y="37" width="10" height="9" rx="1.5" fill="#1c5cab"/>
+  <path d="M38 40 H44" stroke="#f6b08a" stroke-width="4" stroke-linecap="round"/>
+  <rect x="44" y="34" width="10" height="12" rx="2" fill="#eb6834"/>
+</svg>

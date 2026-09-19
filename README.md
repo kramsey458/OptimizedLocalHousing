@@ -1,5 +1,7 @@
 # Optimized Local Housing
 
+**Website:** https://kramsey458.github.io/OptimizedLocalHousing/ (install guide, troubleshooting, FAQ)
+
 A Timberborn 1.1 mod (built against **1.1.2.4**) that moves adult beavers into the homes that give the
 **shortest total commute** between where they live and where they work. Version **0.1.0** (preview).
 
@@ -12,7 +14,7 @@ an optimal assignment (the Hungarian algorithm), instead of nudging beavers arou
 1. Close Timberborn. Extract the release ZIP into `Documents/Timberborn/Mods`. It contains one
    `OptimizedLocalHousing` folder.
 2. Launch Timberborn, enable **Optimized Local Housing**, and restart.
-3. Load a **copy** of your save. The first pass runs as soon as the game starts ticking, then again at the
+3. Load a **copy** of your save. On a save the mod has not seen before, the first pass starts as soon as the game is ticking, then it runs again at the
    start of every day. One line per pass is written to `Player.log` (look for `[OptimizedLocalHousing]`).
 
 Standalone, no dependencies. **Do not run it together with Incremental Housing**: this mod disables itself if
