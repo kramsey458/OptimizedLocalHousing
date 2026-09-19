@@ -33,11 +33,11 @@
 <section class="hero">
   <div class="wrap hero-grid">
     <div>
-      <span class="eyebrow">Timberborn 1.1 mod &middot; Preview 0.1.0</span>
+      <span class="eyebrow">Timberborn 1.1 mod &middot; Version 1.0.0 &middot; Stable</span>
       <h1>Every beaver, as close to work as the beds allow.</h1>
       <p class="lead">Optimized Local Housing re-houses your adult beavers once a day so the whole colony's walk between home and workplace is as short as it can possibly be, without touching your breeding.</p>
       <div class="cta">
-        <a class="btn" href="https://github.com/kramsey458/OptimizedLocalHousing/releases/download/v0.1.0/OptimizedLocalHousing-v0.1.0.zip">Download v0.1.0</a>
+        <a class="btn" href="https://github.com/kramsey458/OptimizedLocalHousing/releases/download/v1.0.0/OptimizedLocalHousing-v1.0.0.zip">Download v1.0.0</a>
         <a class="btn ghost" href="install.html">Install guide</a>
       </div>
       <ul class="badges" aria-label="Facts">
@@ -45,8 +45,8 @@
         <li>No other mods required</li>
         <li>Built against Timberborn 1.1.2.4</li>
       </ul>
-      <div class="notice" role="note">
-        <p><strong>Preview release.</strong> It is covered by automated tests and a replay of a real colony, but it has not yet been proven in live gameplay or live multiplayer. <a href="#status">See exactly what is and isn't tested</a>, and try it on a copy of your save first.</p>
+      <div class="notice ok" role="note">
+        <p><strong>Stable release.</strong> It has run 16 passes in a row in a live game, including a hosted co-op session, with no errors. <a href="#status">See exactly what is and isn't tested.</a></p>
       </div>
     </div>
     <figure class="diagram">
@@ -125,7 +125,7 @@
       <article class="card">
         <div class="icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 19a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.4"/><path d="M16.5 14.2A5 5 0 0 1 21 19"/></svg></div>
         <h3>Built with co-op in mind</h3>
-        <p>Whole-number maths, sorted IDs and a fully saved pass state are meant to give every player the same result, even across a save, a reload or a mid-pass join. <a href="#status">Not yet tested live.</a></p>
+        <p>Whole-number maths, sorted IDs and a fully saved pass state are meant to give every player the same result, even across a save, a reload or a mid-pass join. It has run through a live co-op session without a desync. <a href="#status">Details</a></p>
       </article>
     </div>
   </div>
@@ -249,6 +249,7 @@
       </div>
     </div>
     <p class="muted small" style="margin-top:1.2rem">Distance in this replay is a straight-line stand-in for route cost, so real numbers in your game will differ, and real path queries cost more than the stand-in. The first pass on a badly housed colony moves most adults at once; later passes move only a few.</p>
+    <p class="small" style="margin-top:.6rem"><strong>In the live game:</strong> the game logs of a real colony (about 350 adults, 104 homes, 167 workplaces) show 16 consecutive passes, each taking about 183 ticks and about 5,350 route queries, and applying between 0 and 4 move cycles. No errors, warnings or rollbacks were logged.</p>
   </div>
 </section>
 
@@ -257,12 +258,14 @@
     <div class="section-head">
       <span class="eyebrow">Status</span>
       <h2>What is tested, and what isn't</h2>
-      <p class="lead">This is a preview. Here is the honest picture.</p>
+      <p class="lead">Stable means the evidence below, not that every situation has been tried. Here is the honest picture.</p>
     </div>
     <div class="grid two">
       <div class="notice ok" style="margin:0">
         <p><strong>Verified</strong></p>
         <ul class="checks">
+          <li>16 passes in a row in a live game (about 350 adults, 104 homes, 167 workplaces) with no errors, warnings or rollbacks.</li>
+          <li>A hosted co-op session with a second player on the same version: about 11,000 ticks, 15 passes, and no desync reported by the host.</li>
           <li>25 automated checks pass, including a comparison of the solver against brute force.</li>
           <li>Two simulated peers stay identical at every tick of a pass.</li>
           <li>Saving and reloading at any tick of a pass gives exactly the uninterrupted result.</li>
@@ -274,8 +277,8 @@
       <div class="notice" style="margin:0">
         <p><strong>Not yet verified</strong></p>
         <ul class="checks no">
-          <li>Running in live Timberborn gameplay, and the real cost of path queries.</li>
-          <li>Live two-player join, rehost and desync behaviour.</li>
+          <li>Frame-time impact: the per-tick work is bounded, but the cost of a real path query hasn't been timed.</li>
+          <li>Multiplayer beyond that one hosted session: joining, rehosting, and the client's side.</li>
           <li>The Iron Teeth faction (developed and replayed on a Folktails colony).</li>
           <li>Operating systems other than Windows.</li>
         </ul>
@@ -294,7 +297,7 @@
   <div class="wrap foot">
     <div><strong>Optimized Local Housing</strong><br>A free, open-source Timberborn mod, MIT licensed. Not affiliated with Mechanistry.</div>
     <div><h2>Guides</h2><ul><li><a href="install.html">Install guide</a></li><li><a href="troubleshooting.html">Troubleshooting</a></li><li><a href="faq.html">FAQ</a></li></ul></div>
-    <div><h2>Project</h2><ul><li><a href="https://github.com/kramsey458/OptimizedLocalHousing">Source on GitHub</a></li><li><a href="https://github.com/kramsey458/OptimizedLocalHousing/releases/tag/v0.1.0">Release v0.1.0</a></li><li><a href="https://github.com/kramsey458/OptimizedLocalHousing/issues">Issues</a></li></ul></div>
+    <div><h2>Project</h2><ul><li><a href="https://github.com/kramsey458/OptimizedLocalHousing">Source on GitHub</a></li><li><a href="https://github.com/kramsey458/OptimizedLocalHousing/releases/tag/v1.0.0">Release v1.0.0</a></li><li><a href="https://github.com/kramsey458/OptimizedLocalHousing/issues">Issues</a></li></ul></div>
   </div>
 </footer>
 <script src="site.js" defer></script>

@@ -42,7 +42,7 @@
   <table>
     <thead><tr><th>Message</th><th>Meaning</th></tr></thead>
     <tbody>
-      <tr><td><code>0.1.0 loaded.</code></td><td>The mod started. Normal.</td></tr>
+      <tr><td><code>1.0.0 loaded.</code></td><td>The mod started. Normal.</td></tr>
       <tr><td><code>Pass N: … move cycles applied …</code></td><td>A pass finished. Normal. <a href="#zero">What the numbers mean</a>.</td></tr>
       <tr><td><code>Disabled because another housing assignment mod is enabled: …</code></td><td>Another housing mod is on. <a href="#disabled">Fix</a>.</td></tr>
       <tr><td><code>Saved state ignored: …</code></td><td>The saved mod data couldn't be read. <a href="#state">Harmless</a>.</td></tr>
@@ -70,7 +70,7 @@
     <div class="answer">
       <ul>
         <li>Make sure you're reading the right session. The log is overwritten each launch, and the previous one is <code>Player-prev.log</code>.</li>
-        <li>Check the mod list near the top of the log. <code>Optimized Local Housing (v0.1.0)</code> should be listed. If it isn't, it wasn't enabled, or you didn't restart after enabling it.</li>
+        <li>Check the mod list near the top of the log. <code>Optimized Local Housing (v1.0.0)</code> should be listed. If it isn't, it wasn't enabled, or you didn't restart after enabling it.</li>
         <li>If it's listed but the <code>loaded.</code> line is missing, check the game didn't fail to load the mod's DLL further down the log, and <a href="#report">report it</a> with that log.</li>
       </ul>
     </div>
@@ -80,7 +80,7 @@
     <summary>It says <code>loaded.</code> but I never see a <code>Pass</code> line</summary>
     <div class="answer">
       <ul>
-        <li><strong>The game has to run.</strong> Passes only progress while the game is ticking. Paused time doesn't count. A pass takes roughly 150 ticks on a colony of a few hundred beavers, about 90 seconds at normal speed.</li>
+        <li><strong>The game has to run.</strong> Passes only progress while the game is ticking. Paused time doesn't count. A pass takes roughly 150 to 200 ticks on a colony of a few hundred beavers, about 90 seconds to two minutes at normal speed.</li>
         <li><strong>Saves the mod has already seen</strong> start their next pass at the beginning of the next in-game day, not straight away. Only a save the mod hasn't seen before starts a pass immediately.</li>
         <li>You quit the game before the pass finished. Let it run a little longer, and note the line is written when the pass <em>ends</em>.</li>
         <li>Look for <a href="#disabled">"Disabled because…"</a> or <a href="#abandoned">"Pass abandoned…"</a> in the log.</li>
@@ -105,7 +105,7 @@
   <details id="zero">
     <summary>The pass line says <code>0 move cycles applied</code>, or the numbers look strange</summary>
     <div class="answer">
-      <p>Reading the line: <code>Pass 3: 244 adults, 89 homes, 127 workplaces; 4388 route queries over 147 ticks; 20 move cycles applied (0 rejected, 0 stale), 0 disconnected commutes repaired, route cost saved 6438.</code></p>
+      <p>Reading the line: <code>Pass 34: 345 adults, 104 homes, 167 workplaces; 5394 route queries over 183 ticks; 4 move cycles applied (1 rejected, 2 stale), 0 disconnected commutes repaired, route cost saved 717.</code></p>
       <ul>
         <li><strong>adults / homes / workplaces:</strong> how many the pass considered.</li>
         <li><strong>move cycles applied:</strong> groups of beavers that swapped beds around. Zero is the correct answer when the colony is already as good as it can be. A second pass on an optimized colony changes nothing.</li>
@@ -141,7 +141,7 @@
   <details id="stutter">
     <summary>The game hitches when a pass starts or finishes</summary>
     <div class="answer">
-      <p>The pass is split into steps with fixed per-tick budgets (at most 32 route queries per tick), but two moments do their work in a single tick: taking the snapshot when a pass starts, and applying the moves when it ends. On a large colony either could cause a brief blip, and real path-query cost hasn't been measured in the live game yet.</p>
+      <p>The pass is split into steps with fixed per-tick budgets (at most 32 route queries per tick), but two moments do their work in a single tick: taking the snapshot when a pass starts, and applying the moves when it ends. On a large colony either could cause a brief blip. Frame-time impact hasn't been measured; for scale, a pass on a live colony of about 350 adults, 104 homes and 167 workplaces used about 5,350 route queries over about 183 ticks, with no problems reported.</p>
       <p>If you see a real stutter, please <a href="#report">report it</a> with your colony size and the pass line from the log. Until it's fixed you can disable the mod.</p>
     </div>
   </details>
@@ -173,7 +173,7 @@
       <ul>
         <li><strong>Everyone needs the identical version.</strong> If only some players have the mod, or the versions differ, the games will disagree about where beavers live.</li>
         <li>Restart the session from the host's save with everyone on the same version.</li>
-        <li>This design has been tested in simulation but <strong>not in a live co-op game</strong>. If it desyncs, it is worth reporting: include every player's <code>Player.log</code> from the session and say when it happened relative to a <code>Pass</code> line.</li>
+        <li>It has been used in one live hosted co-op session (about 11,000 ticks and 15 passes) with no desync reported by the host, so a desync would be a new finding. If it happens, please report it: include every player's <code>Player.log</code> from the session and say when it happened relative to a <code>Pass</code> line.</li>
       </ul>
     </div>
   </details>
@@ -208,7 +208,7 @@
   <div class="wrap foot">
     <div><strong>Optimized Local Housing</strong><br>A free, open-source Timberborn mod, MIT licensed. Not affiliated with Mechanistry.</div>
     <div><h2>Guides</h2><ul><li><a href="install.html">Install guide</a></li><li><a href="troubleshooting.html">Troubleshooting</a></li><li><a href="faq.html">FAQ</a></li></ul></div>
-    <div><h2>Project</h2><ul><li><a href="https://github.com/kramsey458/OptimizedLocalHousing">Source on GitHub</a></li><li><a href="https://github.com/kramsey458/OptimizedLocalHousing/releases/tag/v0.1.0">Release v0.1.0</a></li><li><a href="https://github.com/kramsey458/OptimizedLocalHousing/issues">Issues</a></li></ul></div>
+    <div><h2>Project</h2><ul><li><a href="https://github.com/kramsey458/OptimizedLocalHousing">Source on GitHub</a></li><li><a href="https://github.com/kramsey458/OptimizedLocalHousing/releases/tag/v1.0.0">Release v1.0.0</a></li><li><a href="https://github.com/kramsey458/OptimizedLocalHousing/issues">Issues</a></li></ul></div>
   </div>
 </footer>
 <script src="site.js" defer></script>

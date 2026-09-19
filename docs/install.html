@@ -33,7 +33,7 @@
   <p class="lead">About five minutes. You need Timberborn 1.1 and nothing else: no other mods are required.</p>
 
   <div class="notice" role="note">
-    <p><strong>Preview release.</strong> Please try it on a <em>copy</em> of a save first. Keep an original so you can undo the moves the mod makes.</p>
+    <p><strong>Back up first.</strong> As with any mod, keep a copy of your save so you can undo the moves the mod makes.</p>
   </div>
 
   <nav class="toc" aria-label="On this page">
@@ -60,8 +60,8 @@
 
   <h2 id="steps">Step by step</h2>
   <ol class="steps">
-    <li><div><strong>Back up your save</strong><p>Copy the save you want to try from <code>Documents\Timberborn\Saves</code>. Play the copy, not the original.</p></div></li>
-    <li><div><strong>Download the mod</strong><p>Get <a href="https://github.com/kramsey458/OptimizedLocalHousing/releases/download/v0.1.0/OptimizedLocalHousing-v0.1.0.zip"><code>OptimizedLocalHousing-v0.1.0.zip</code></a> from the <a href="https://github.com/kramsey458/OptimizedLocalHousing/releases/tag/v0.1.0">release page</a>. It is distributed from GitHub, not the Steam Workshop.</p></div></li>
+    <li><div><strong>Back up your save</strong><p>Copy the save you want to use from <code>Documents\Timberborn\Saves</code> so you can go back if you don't like the result.</p></div></li>
+    <li><div><strong>Download the mod</strong><p>Get <a href="https://github.com/kramsey458/OptimizedLocalHousing/releases/download/v1.0.0/OptimizedLocalHousing-v1.0.0.zip"><code>OptimizedLocalHousing-v1.0.0.zip</code></a> from the <a href="https://github.com/kramsey458/OptimizedLocalHousing/releases/tag/v1.0.0">release page</a>. It is distributed from GitHub, not the Steam Workshop.</p></div></li>
     <li><div><strong>Close Timberborn</strong><p>Make sure the game is fully closed before you copy files into its Mods folder.</p></div></li>
     <li><div><strong>Extract into your Mods folder</strong><p>Extract the ZIP into <code>Documents\Timberborn\Mods</code>. It contains one folder, <code>OptimizedLocalHousing</code>, and you should end up with the layout <a href="#layout">shown below</a>. If you extracted into a new folder, you may have a doubled <code>OptimizedLocalHousing\OptimizedLocalHousing</code>. Move the inner one up.</p></div></li>
     <li><div><strong>Enable it and restart</strong><p>Start Timberborn, open <strong>Mods</strong> from the main menu, tick <strong>Optimized Local Housing</strong>, and restart the game when it asks. Menu wording can differ a little between game versions.</p></div></li>
@@ -84,20 +84,21 @@
   <ol>
     <li>Quit the game, then open <code>%USERPROFILE%\AppData\LocalLow\Mechanistry\Timberborn\Player.log</code>. If you have already restarted, the previous session is in <code>Player-prev.log</code>.</li>
     <li>Search for <code>[OptimizedLocalHousing]</code>. You should see this at startup:
-<pre><code class="log-line">[OptimizedLocalHousing] 0.1.0 loaded.</code></pre></li>
-    <li>After a pass finishes you should see a summary line (about 90 seconds after loading at normal game speed on a colony of a few hundred beavers, faster at higher speeds). This is an example, and your numbers will differ:
-<pre><code class="log-line">[OptimizedLocalHousing] Pass 1: 244 adults, 89 homes, 127 workplaces; 4388 route queries over 147 ticks; 20 move cycles applied (0 rejected, 0 stale), 0 disconnected commutes repaired, route cost saved 6438.</code></pre></li>
+<pre><code class="log-line">[OptimizedLocalHousing] 1.0.0 loaded.</code></pre></li>
+    <li>After a pass finishes you should see a summary line (roughly 90 seconds to two minutes at normal game speed on a colony of a few hundred beavers, faster at higher speeds). This is a real line from a live game, and your numbers will differ:
+<pre><code class="log-line">[OptimizedLocalHousing] Pass 26: 356 adults, 104 homes, 167 workplaces; 5354 route queries over 182 ticks; 2 move cycles applied (0 rejected, 0 stale), 0 disconnected commutes repaired, route cost saved 177.</code></pre></li>
   </ol>
   <p>No line, or an error line? Head to <a href="troubleshooting.html">Troubleshooting</a>.</p>
 
   <h2 id="multiplayer">Multiplayer</h2>
-  <p>Every player must have the <strong>exact same version</strong> installed, because the mod changes which beaver lives where and all players' games have to agree. The pass is designed to give the same result on every machine and to resume correctly after a save, a reload or a join. That design has been tested in simulation but <strong>not yet in a live two-player game</strong>. If you try it, please <a href="https://github.com/kramsey458/OptimizedLocalHousing/issues/new">tell us how it went</a>.</p>
+  <p>Every player must have the <strong>exact same version</strong> installed, because the mod changes which beaver lives where and all players' games have to agree. The pass is designed to give the same result on every machine and to resume correctly after a save, a reload or a join. It has been used in a live hosted co-op session (about 11,000 ticks and 15 passes) with no desync reported by the host. That is one session, so if you try it please <a href="https://github.com/kramsey458/OptimizedLocalHousing/issues/new">tell us how it went</a>.</p>
 
   <h2 id="update">Updating</h2>
   <ol>
     <li>Close the game and delete the old <code>Mods\OptimizedLocalHousing</code> folder.</li>
     <li>Extract the new ZIP into <code>Mods</code> as above.</li>
-    <li>Start the game. Your saves keep working. The mod ignores saved state it doesn't understand and starts fresh.</li>
+    <li>Start the game. Your saves keep working, including saves from v0.1.0: the mod's saved data is compatible, and it ignores saved state it doesn't understand and starts fresh.</li>
+    <li>In multiplayer, every player must update to the same version together.</li>
   </ol>
 
   <h2 id="uninstall">Uninstalling</h2>
@@ -105,9 +106,9 @@
 
   <h2 id="checksum">Verify the download (optional)</h2>
   <p>In PowerShell, from the folder you downloaded to:</p>
-<pre><code>Get-FileHash .\OptimizedLocalHousing-v0.1.0.zip -Algorithm SHA256</code></pre>
+<pre><code>Get-FileHash .\OptimizedLocalHousing-v1.0.0.zip -Algorithm SHA256</code></pre>
   <p>The hash should be:</p>
-<pre><code>2e9b00b3e8c18e975968a699c2bfe4f77a6514a8104b1f7c9a4626d93d7475ad</code></pre>
+<pre><code>f4de3a7eac21365bf692364e7d9cc9d6a41a81823bba23d916b15c8b07e9967d</code></pre>
   <p>The same hash is in the <code>SHA256SUMS</code> file attached to the release.</p>
 </div>
 </main>
@@ -116,7 +117,7 @@
   <div class="wrap foot">
     <div><strong>Optimized Local Housing</strong><br>A free, open-source Timberborn mod, MIT licensed. Not affiliated with Mechanistry.</div>
     <div><h2>Guides</h2><ul><li><a href="install.html">Install guide</a></li><li><a href="troubleshooting.html">Troubleshooting</a></li><li><a href="faq.html">FAQ</a></li></ul></div>
-    <div><h2>Project</h2><ul><li><a href="https://github.com/kramsey458/OptimizedLocalHousing">Source on GitHub</a></li><li><a href="https://github.com/kramsey458/OptimizedLocalHousing/releases/tag/v0.1.0">Release v0.1.0</a></li><li><a href="https://github.com/kramsey458/OptimizedLocalHousing/issues">Issues</a></li></ul></div>
+    <div><h2>Project</h2><ul><li><a href="https://github.com/kramsey458/OptimizedLocalHousing">Source on GitHub</a></li><li><a href="https://github.com/kramsey458/OptimizedLocalHousing/releases/tag/v1.0.0">Release v1.0.0</a></li><li><a href="https://github.com/kramsey458/OptimizedLocalHousing/issues">Issues</a></li></ul></div>
   </div>
 </footer>
 <script src="site.js" defer></script>

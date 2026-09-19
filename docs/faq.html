@@ -42,14 +42,14 @@
   <details>
     <summary>How often does it run, and how long does a pass take?</summary>
     <div class="answer">
-      <p>A pass starts the first time the mod sees a save, then at the start of every in-game day. On a 266-beaver colony a pass took 147 ticks, roughly 90 seconds at normal speed. The work is spread across those ticks, with at most 32 route queries per tick.</p>
+      <p>A pass starts the first time the mod sees a save, then at the start of every in-game day. A pass took 147 ticks on a 266-beaver colony in the replay, and about 183 ticks on a live colony of about 350 adults, roughly 90 seconds to two minutes at normal speed. The work is spread across those ticks, with at most 32 route queries per tick.</p>
       <p>Moves are applied when a pass finishes, which can be at any time of day. Beavers simply walk to their new home the next time they go home.</p>
     </div>
   </details>
 
   <details>
     <summary>Does it have settings?</summary>
-    <div class="answer"><p>No. Version 0.1.0 has no menu and no options. The tuning values (<code>NearHomes</code>, <code>QueriesPerTick</code>, <code>StayBonus</code>) are constants in <a href="https://github.com/kramsey458/OptimizedLocalHousing/blob/main/OptimizedLocalHousing/Assignment.cs">the source</a> if you're willing to rebuild it. A relaxed "let adult counts change" option was considered and dropped, and <a href="#vacant">the reason is below</a>.</p></div>
+    <div class="answer"><p>No. Version 1.0.0 has no menu and no options. The tuning values (<code>NearHomes</code>, <code>QueriesPerTick</code>, <code>StayBonus</code>) are constants in <a href="https://github.com/kramsey458/OptimizedLocalHousing/blob/main/OptimizedLocalHousing/Assignment.cs">the source</a> if you're willing to rebuild it. A relaxed "let adult counts change" option was considered and dropped, and <a href="#vacant">the reason is below</a>.</p></div>
   </details>
 
   <details>
@@ -114,7 +114,7 @@
 
   <details>
     <summary>Is it safe for my save? What if I remove it?</summary>
-    <div class="answer"><p>The mod stores a small amount of data in your save: a few hundred bytes when idle and a few tens of kilobytes during a pass. If you remove the mod, the data is ignored and beavers keep their current homes. Because it's a preview, still keep a backup and try it on a copy first.</p></div>
+    <div class="answer"><p>The mod stores a small amount of data in your save: a few hundred bytes when idle and a few tens of kilobytes during a pass. If you remove the mod, the data is ignored and beavers keep their current homes. As with any mod, keep a backup of important saves.</p></div>
   </details>
 
   <h2 id="compat">Compatibility and comparisons</h2>
@@ -133,21 +133,21 @@
         <li><a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3663421750">Commute Balancer</a> works gradually over days, moving a beaver to a closer empty home or swapping when the benefit outweighs the other beaver's inconvenience.</li>
         <li><strong>Optimized Local Housing</strong> solves the whole colony at once for the smallest total commute, keeps every home's number of adults, and spreads the work across ticks with fixed budgets.</li>
       </ul>
-      <p>In a replay on one real colony, a first-come-first-served strategy like the one Housing Optimize describes averaged 25.6 (between 23.5 and 29.0 depending on the order workplaces were handled), against 24.1 for this mod, even though that model was given looser bed rules. That was a model with a straight-line stand-in, not a benchmark of either mod. Both of those mods have thousands of subscribers and real-world mileage. This one is new.</p>
+      <p>In a replay on one real colony, a first-come-first-served strategy like the one Housing Optimize describes averaged 25.6 (between 23.5 and 29.0 depending on the order workplaces were handled), against 24.1 for this mod, even though that model was given looser bed rules. That was a model with a straight-line stand-in, not a benchmark of either mod. Both of those mods have thousands of subscribers and much more real-world mileage. This one is newer.</p>
     </div>
   </details>
 
   <details>
     <summary>Is it the best housing mod?</summary>
     <div class="answer">
-      <p>We don't claim that. Because it solves the assignment exactly, it should reach the shortest total commute among the approaches above, and the tests support that. But it is unproven in live gameplay and live multiplayer, and commute isn't the only thing that matters: stability, disruption and real-world track record count too.</p>
+      <p>We don't claim that. Because it solves the assignment exactly, it should reach the shortest total commute among the approaches above, and the tests support that. It has now run in live single-player and co-op play, but with far less mileage than long-established mods, and commute isn't the only thing that matters: stability, disruption and real-world track record count too.</p>
       <p>The fair test is to run each mod on a copy of the same save for a few in-game days and compare the average commute afterward. If you do, we'd like to hear the result.</p>
     </div>
   </details>
 
   <details>
     <summary>Does it work in multiplayer, or with BeaverBuddies?</summary>
-    <div class="answer"><p>It is designed for it. It uses whole-number maths and sorted IDs, and the entire pass state is saved with the game, so every player should reach the same result even across a reload or a mid-pass join. All players must run the same version. This has been tested in simulation, <strong>not yet in a live two-player game</strong>.</p></div>
+    <div class="answer"><p>It is designed for it. It uses whole-number maths and sorted IDs, and the entire pass state is saved with the game, so every player should reach the same result even across a reload or a mid-pass join. All players must run the same version. It has been used in a live hosted co-op session (about 11,000 ticks and 15 passes) with a second player on the same version, and the host's log shows no desync. That is one session, so treat it as encouraging rather than conclusive.</p></div>
   </details>
 
   <details>
@@ -174,8 +174,8 @@
   </details>
 
   <details>
-    <summary>Why is it labelled a preview?</summary>
-    <div class="answer"><p>Because it hasn't been proven in the live game yet. See <a href="index.html#status">what is tested and what isn't</a>. It will drop the preview label once it has been through real play, including multiplayer.</p></div>
+    <summary>Is it stable?</summary>
+    <div class="answer"><p>Version 1.0.0 is the first official release. It is the same code as the earlier v0.1.0 preview, promoted after 16 consecutive passes in a live game, including a hosted co-op session, ran with no errors, warnings or rollbacks. “Stable” means that evidence plus the automated tests, not that every situation has been tried. See <a href="index.html#status">what is tested and what isn't</a>.</p></div>
   </details>
 
   <details>
@@ -189,7 +189,7 @@
   <div class="wrap foot">
     <div><strong>Optimized Local Housing</strong><br>A free, open-source Timberborn mod, MIT licensed. Not affiliated with Mechanistry.</div>
     <div><h2>Guides</h2><ul><li><a href="install.html">Install guide</a></li><li><a href="troubleshooting.html">Troubleshooting</a></li><li><a href="faq.html">FAQ</a></li></ul></div>
-    <div><h2>Project</h2><ul><li><a href="https://github.com/kramsey458/OptimizedLocalHousing">Source on GitHub</a></li><li><a href="https://github.com/kramsey458/OptimizedLocalHousing/releases/tag/v0.1.0">Release v0.1.0</a></li><li><a href="https://github.com/kramsey458/OptimizedLocalHousing/issues">Issues</a></li></ul></div>
+    <div><h2>Project</h2><ul><li><a href="https://github.com/kramsey458/OptimizedLocalHousing">Source on GitHub</a></li><li><a href="https://github.com/kramsey458/OptimizedLocalHousing/releases/tag/v1.0.0">Release v1.0.0</a></li><li><a href="https://github.com/kramsey458/OptimizedLocalHousing/issues">Issues</a></li></ul></div>
   </div>
 </footer>
 <script src="site.js" defer></script>
