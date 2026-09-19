@@ -33,7 +33,7 @@ public sealed class HousingConfigurator : Configurator
 
 public sealed class ModStarter : IModStarter
 {
-    public void StartMod(IModEnvironment environment) => Debug.Log("[OptimizedLocalHousing] 0.1.0 loaded.");
+    public void StartMod(IModEnvironment environment) => Debug.Log("[OptimizedLocalHousing] 1.0.0 loaded.");
 }
 
 // Thin bridge between the game and PassEngine: it enumerates beavers, answers route queries, and applies moves.

@@ -3,7 +3,7 @@
 **Website:** https://kramsey458.github.io/OptimizedLocalHousing/ (install guide, troubleshooting, FAQ)
 
 A Timberborn 1.1 mod (built against **1.1.2.4**) that moves adult beavers into the homes that give the
-**shortest total commute** between where they live and where they work. Version **0.1.0** (preview).
+**shortest total commute** between where they live and where they work. Version **1.0.0**, the first stable release.
 
 Everyone can't live in the house nearest their workplace, because beds are limited. The best you can do is
 minimize the total travel across the whole colony, and that is exactly what this mod solves, once a day, with
@@ -14,8 +14,9 @@ an optimal assignment (the Hungarian algorithm), instead of nudging beavers arou
 1. Close Timberborn. Extract the release ZIP into `Documents/Timberborn/Mods`. It contains one
    `OptimizedLocalHousing` folder.
 2. Launch Timberborn, enable **Optimized Local Housing**, and restart.
-3. Load a **copy** of your save. On a save the mod has not seen before, the first pass starts as soon as the game is ticking, then it runs again at the
-   start of every day. One line per pass is written to `Player.log` (look for `[OptimizedLocalHousing]`).
+3. Load your save (back up important saves first, as with any mod). On a save the mod has not seen before, the
+   first pass starts as soon as the game is ticking, then it runs again at the start of every day. One line per
+   pass is written to `Player.log` (look for `[OptimizedLocalHousing]`).
 
 Standalone, no dependencies. **Do not run it together with Incremental Housing**: this mod disables itself if
 that mod (or another housing-assignment mod it knows about) is enabled. Both multiplayer players must install
@@ -58,7 +59,9 @@ Each pass:
 - The saved state is a few hundred bytes when idle and a few tens of KB during a pass. Uninstalling is safe:
   beavers just keep the homes they have.
 
-## Measured results (not in-game)
+## Results
+
+### Replay of a real colony
 
 Replaying a real 266-beaver colony (222 employed adults, 89 homes) through the actual pass engine, with
 straight-line distance standing in for route cost:
@@ -70,9 +73,25 @@ straight-line distance standing in for route cost:
 | True optimum (brute-force-verified solver) | 24.0 |
 
 The pass took 147 ticks, 4,388 route queries and about 22 ms of total CPU, rehomed 182 beavers in 20 cycles,
-and a second pass changed nothing. Real path queries in Timberborn cost more than that stand-in, and their cost
-has **not** been measured: native Unity gameplay and live two-player join/rehost testing are untested. Test on a
-copy of a save first.
+and a second pass changed nothing.
+
+### In the live game
+
+The game logs of the maintainer's own colony show 16 consecutive passes (numbers 23 to 38) completing without a
+single error, warning or rollback, on a colony of about 350 adults, 104 homes and 167 workplaces. Each pass took
+about 183 ticks and about 5,350 route queries, and applied between 0 and 4 move cycles. In 10 of the 16 passes a
+cycle was skipped because a beaver changed job or home while the pass was running ("stale"). That is expected,
+and those beavers are simply reconsidered in the next pass.
+
+That included a hosted co-op session with a second player running the same mod version: about 11,000 ticks and
+15 passes, with no desync reported in the host's log.
+
+### What has not been measured
+
+- Frame-time impact. The per-tick work is bounded (32 route queries), but the cost of a real path query has not
+  been timed.
+- The Iron Teeth faction, and operating systems other than Windows.
+- Multiplayer beyond that one hosted session, and the client's side of it.
 
 ## Limits
 
