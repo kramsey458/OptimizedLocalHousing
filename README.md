@@ -1,6 +1,6 @@
 # Optimized Local Housing
 
-**Website:** https://kramsey458.github.io/OptimizedLocalHousing/ (install guide, troubleshooting, FAQ)
+**Website:** https://timbermods.github.io/OptimizedLocalHousing/ (install guide, troubleshooting, FAQ)
 
 A Timberborn 1.1 mod (built against **1.1.2.4**) that moves adult beavers into the homes that give the
 **shortest total commute** between where they live and where they work. Version **1.0.0**, the first stable release.
