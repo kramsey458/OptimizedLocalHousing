@@ -49,7 +49,7 @@
 
   <details>
     <summary>Does it have settings?</summary>
-    <div class="answer"><p>No. Version 1.0.0 has no menu and no options. The tuning values (<code>NearHomes</code>, <code>QueriesPerTick</code>, <code>StayBonus</code>) are constants in <a href="https://github.com/timbermods/OptimizedLocalHousing/blob/main/OptimizedLocalHousing/Assignment.cs">the source</a> if you're willing to rebuild it. A relaxed "let adult counts change" option was considered and dropped, and <a href="#vacant">the reason is below</a>.</p></div>
+    <div class="answer" data-release-pinned="1.0.0"><p>No. Version 1.0.0 has no menu and no options. The tuning values (<code>NearHomes</code>, <code>QueriesPerTick</code>, <code>StayBonus</code>) are constants in <a href="https://github.com/timbermods/OptimizedLocalHousing/blob/main/OptimizedLocalHousing/Assignment.cs">the source</a> if you're willing to rebuild it. A relaxed "let adult counts change" option was considered and dropped, and <a href="#vacant">the reason is below</a>.</p></div>
   </details>
 
   <details>
@@ -175,7 +175,7 @@
 
   <details>
     <summary>Is it stable?</summary>
-    <div class="answer"><p>Version 1.0.0 is the first official release. It is the same code as the earlier v0.1.0 preview, promoted after 16 consecutive passes in a live game, including a hosted co-op session, ran with no errors, warnings or rollbacks. “Stable” means that evidence plus the automated tests, not that every situation has been tried. See <a href="index.html#status">what is tested and what isn't</a>.</p></div>
+    <div class="answer" data-release-pinned="1.0.0"><p>Version 1.0.0 is the first official release. It is the same code as the earlier v0.1.0 preview, promoted after 16 consecutive passes in a live game, including a hosted co-op session, ran with no errors, warnings or rollbacks. “Stable” means that evidence plus the automated tests, not that every situation has been tried. See <a href="index.html#status">what is tested and what isn't</a>.</p></div>
   </details>
 
   <details>
@@ -189,9 +189,10 @@
   <div class="wrap foot">
     <div><strong>Optimized Local Housing</strong><br>A free, open-source Timberborn mod, MIT licensed. Not affiliated with Mechanistry.</div>
     <div><h2>Guides</h2><ul><li><a href="install.html">Install guide</a></li><li><a href="troubleshooting.html">Troubleshooting</a></li><li><a href="faq.html">FAQ</a></li></ul></div>
-    <div><h2>Project</h2><ul><li><a href="https://github.com/timbermods/OptimizedLocalHousing">Source on GitHub</a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/releases/tag/v1.0.0">Release v1.0.0</a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/issues">Issues</a></li></ul></div>
+    <div><h2>Project</h2><ul><li><a href="https://github.com/timbermods/OptimizedLocalHousing">Source on GitHub</a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="notes">Release <span data-release="tag">v1.0.0</span></a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/issues">Issues</a></li></ul></div>
   </div>
 </footer>
 <script src="site.js" defer></script>
+<script src="release.js" defer data-repo="timbermods/OptimizedLocalHousing" data-asset="^OptimizedLocalHousing-v[\d.]+\.zip$"></script>
 </body>
 </html>

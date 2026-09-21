@@ -42,7 +42,7 @@
   <table>
     <thead><tr><th>Message</th><th>Meaning</th></tr></thead>
     <tbody>
-      <tr><td><code>1.0.0 loaded.</code></td><td>The mod started. Normal.</td></tr>
+      <tr><td><code><span data-release="version">1.0.0</span> loaded.</code></td><td>The mod started. Normal.</td></tr>
       <tr><td><code>Pass N: … move cycles applied …</code></td><td>A pass finished. Normal. <a href="#zero">What the numbers mean</a>.</td></tr>
       <tr><td><code>Disabled because another housing assignment mod is enabled: …</code></td><td>Another housing mod is on. <a href="#disabled">Fix</a>.</td></tr>
       <tr><td><code>Saved state ignored: …</code></td><td>The saved mod data couldn't be read. <a href="#state">Harmless</a>.</td></tr>
@@ -70,7 +70,7 @@
     <div class="answer">
       <ul>
         <li>Make sure you're reading the right session. The log is overwritten each launch, and the previous one is <code>Player-prev.log</code>.</li>
-        <li>Check the mod list near the top of the log. <code>Optimized Local Housing (v1.0.0)</code> should be listed. If it isn't, it wasn't enabled, or you didn't restart after enabling it.</li>
+        <li>Check the mod list near the top of the log. <code>Optimized Local Housing (<span data-release="tag">v1.0.0</span>)</code> should be listed. If it isn't, it wasn't enabled, or you didn't restart after enabling it.</li>
         <li>If it's listed but the <code>loaded.</code> line is missing, check the game didn't fail to load the mod's DLL further down the log, and <a href="#report">report it</a> with that log.</li>
       </ul>
     </div>
@@ -208,9 +208,10 @@
   <div class="wrap foot">
     <div><strong>Optimized Local Housing</strong><br>A free, open-source Timberborn mod, MIT licensed. Not affiliated with Mechanistry.</div>
     <div><h2>Guides</h2><ul><li><a href="install.html">Install guide</a></li><li><a href="troubleshooting.html">Troubleshooting</a></li><li><a href="faq.html">FAQ</a></li></ul></div>
-    <div><h2>Project</h2><ul><li><a href="https://github.com/timbermods/OptimizedLocalHousing">Source on GitHub</a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/releases/tag/v1.0.0">Release v1.0.0</a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/issues">Issues</a></li></ul></div>
+    <div><h2>Project</h2><ul><li><a href="https://github.com/timbermods/OptimizedLocalHousing">Source on GitHub</a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="notes">Release <span data-release="tag">v1.0.0</span></a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/issues">Issues</a></li></ul></div>
   </div>
 </footer>
 <script src="site.js" defer></script>
+<script src="release.js" defer data-repo="timbermods/OptimizedLocalHousing" data-asset="^OptimizedLocalHousing-v[\d.]+\.zip$"></script>
 </body>
 </html>

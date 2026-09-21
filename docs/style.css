@@ -208,3 +208,7 @@ figcaption { color: var(--ink-2); font-size: 0.9rem; margin-top: 0.5rem; }
 .foot ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.3rem; }
 .foot a { color: var(--ink-2); }
 .foot a:hover { color: var(--ink); }
+
+/* Release script: a note on text that was written for an older release */
+.pinned-note { font-size: 0.92rem; color: var(--ink-2); border-left: 3px solid var(--warn-line); padding: 0.15rem 0 0.15rem 0.7rem; margin: 0.8rem 0 0; }
+.notice .pinned-note { color: inherit; border-left-color: currentColor; }

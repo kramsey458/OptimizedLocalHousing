@@ -61,7 +61,7 @@
   <h2 id="steps">Step by step</h2>
   <ol class="steps">
     <li><div><strong>Back up your save</strong><p>Copy the save you want to use from <code>Documents\Timberborn\Saves</code> so you can go back if you don't like the result.</p></div></li>
-    <li><div><strong>Download the mod</strong><p>Get <a href="https://github.com/timbermods/OptimizedLocalHousing/releases/download/v1.0.0/OptimizedLocalHousing-v1.0.0.zip"><code>OptimizedLocalHousing-v1.0.0.zip</code></a> from the <a href="https://github.com/timbermods/OptimizedLocalHousing/releases/tag/v1.0.0">release page</a>. It is distributed from GitHub, not the Steam Workshop.</p></div></li>
+    <li><div><strong>Download the mod</strong><p>Get <a href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="download"><code><span data-release="asset-name">OptimizedLocalHousing-v1.0.0.zip</span></code></a> from the <a href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="notes">release page</a>. It is distributed from GitHub, not the Steam Workshop.</p></div></li>
     <li><div><strong>Close Timberborn</strong><p>Make sure the game is fully closed before you copy files into its Mods folder.</p></div></li>
     <li><div><strong>Extract into your Mods folder</strong><p>Extract the ZIP into <code>Documents\Timberborn\Mods</code>. It contains one folder, <code>OptimizedLocalHousing</code>, and you should end up with the layout <a href="#layout">shown below</a>. If you extracted into a new folder, you may have a doubled <code>OptimizedLocalHousing\OptimizedLocalHousing</code>. Move the inner one up.</p></div></li>
     <li><div><strong>Enable it and restart</strong><p>Start Timberborn, open <strong>Mods</strong> from the main menu, tick <strong>Optimized Local Housing</strong>, and restart the game when it asks. Menu wording can differ a little between game versions.</p></div></li>
@@ -84,7 +84,7 @@
   <ol>
     <li>Quit the game, then open <code>%USERPROFILE%\AppData\LocalLow\Mechanistry\Timberborn\Player.log</code>. If you have already restarted, the previous session is in <code>Player-prev.log</code>.</li>
     <li>Search for <code>[OptimizedLocalHousing]</code>. You should see this at startup:
-<pre><code class="log-line">[OptimizedLocalHousing] 1.0.0 loaded.</code></pre></li>
+<pre><code class="log-line">[OptimizedLocalHousing] <span data-release="version">1.0.0</span> loaded.</code></pre></li>
     <li>After a pass finishes you should see a summary line (roughly 90 seconds to two minutes at normal game speed on a colony of a few hundred beavers, faster at higher speeds). This is a real line from a live game, and your numbers will differ:
 <pre><code class="log-line">[OptimizedLocalHousing] Pass 26: 356 adults, 104 homes, 167 workplaces; 5354 route queries over 182 ticks; 2 move cycles applied (0 rejected, 0 stale), 0 disconnected commutes repaired, route cost saved 177.</code></pre></li>
   </ol>
@@ -106,9 +106,9 @@
 
   <h2 id="checksum">Verify the download (optional)</h2>
   <p>In PowerShell, from the folder you downloaded to:</p>
-<pre><code>Get-FileHash .\OptimizedLocalHousing-v1.0.0.zip -Algorithm SHA256</code></pre>
+<pre><code>Get-FileHash .\<span data-release="asset-name">OptimizedLocalHousing-v1.0.0.zip</span> -Algorithm SHA256</code></pre>
   <p>The hash should be:</p>
-<pre><code>f4de3a7eac21365bf692364e7d9cc9d6a41a81823bba23d916b15c8b07e9967d</code></pre>
+<pre><code><span data-release="sha256">f4de3a7eac21365bf692364e7d9cc9d6a41a81823bba23d916b15c8b07e9967d</span></code></pre>
   <p>The same hash is in the <code>SHA256SUMS</code> file attached to the release.</p>
 </div>
 </main>
@@ -117,9 +117,10 @@
   <div class="wrap foot">
     <div><strong>Optimized Local Housing</strong><br>A free, open-source Timberborn mod, MIT licensed. Not affiliated with Mechanistry.</div>
     <div><h2>Guides</h2><ul><li><a href="install.html">Install guide</a></li><li><a href="troubleshooting.html">Troubleshooting</a></li><li><a href="faq.html">FAQ</a></li></ul></div>
-    <div><h2>Project</h2><ul><li><a href="https://github.com/timbermods/OptimizedLocalHousing">Source on GitHub</a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/releases/tag/v1.0.0">Release v1.0.0</a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/issues">Issues</a></li></ul></div>
+    <div><h2>Project</h2><ul><li><a href="https://github.com/timbermods/OptimizedLocalHousing">Source on GitHub</a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="notes">Release <span data-release="tag">v1.0.0</span></a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/issues">Issues</a></li></ul></div>
   </div>
 </footer>
 <script src="site.js" defer></script>
+<script src="release.js" defer data-repo="timbermods/OptimizedLocalHousing" data-asset="^OptimizedLocalHousing-v[\d.]+\.zip$"></script>
 </body>
 </html>
