@@ -33,11 +33,11 @@
 <section class="hero">
   <div class="wrap hero-grid">
     <div>
-      <span class="eyebrow">Timberborn 1.1 mod &middot; Version <span data-release="version">1.0.0</span> &middot; Stable</span>
+      <span class="eyebrow">Timberborn 1.1 mod &middot; Version <span data-release="version">1.1.0</span> &middot; Stable</span>
       <h1>Every beaver, as close to work as the beds allow.</h1>
       <p class="lead">Optimized Local Housing re-houses your adult beavers once a day so the whole colony's walk between home and workplace is as short as it can possibly be, without touching your breeding.</p>
       <div class="cta">
-        <a class="btn" href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="download"><span>Download <span data-release="tag">v1.0.0</span></span></a>
+        <a class="btn" href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="download"><span>Download <span data-release="tag">v1.1.0</span></span></a>
         <a class="btn ghost" href="install.html">Install guide</a>
       </div>
       <ul class="badges" aria-label="Facts">
@@ -45,8 +45,8 @@
         <li>No other mods required</li>
         <li>Built against Timberborn 1.1.2.4</li>
       </ul>
-      <div class="notice ok" role="note" data-release-pinned="1.0.0">
-        <p><strong>Stable release.</strong> It has run 16 passes in a row in a live game, including a hosted co-op session, with no errors. <a href="#status">See exactly what is and isn't tested.</a></p>
+      <div class="notice ok" role="note" data-release-pinned="1.1.0">
+        <p><strong>Stable release.</strong> The 1.0 code ran 16 passes in a row in a live game, including a hosted co-op session, with no errors, and every change since is covered by automated tests. <a href="#status">See exactly what is and isn't tested.</a></p>
       </div>
     </div>
     <figure class="diagram">
@@ -82,7 +82,7 @@
   <div class="wrap two-col">
     <div>
       <h2>Homes shouldn't be a lottery.</h2>
-      <p>By the look of the game's code, the built-in home assigner hands out beds in rotation and never asks where a beaver works. Over time a colony ends up with beavers walking across the whole map every day, past homes that are empty-handed and right beside their job.</p>
+      <p>By the look of the game's code, the built-in home assigner hands out beds in rotation and never asks where a beaver works. Over time a colony ends up with beavers walking across the whole map every day, past homes right beside their job.</p>
     </div>
     <div>
       <p>Not everyone can live next door to work, because beds are limited. So the real question is which arrangement of beavers into beds makes the <em>total</em> walking smallest. That is a classic assignment problem, and this mod solves it exactly, once a day, instead of nudging beavers around a swap at a time.</p>
@@ -115,7 +115,7 @@
       <article class="card">
         <div class="icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M10 9v6M14 9v6"/></svg></div>
         <h3>No pointless shuffling</h3>
-        <p>A beaver only moves if it saves at least one route-cost unit. Once a colony is optimized, another pass changes nothing.</p>
+        <p>Beavers move only when the rearrangement saves at least one route-cost unit for each beaver moved. Once a colony is optimized, another pass changes nothing.</p>
       </article>
       <article class="card">
         <div class="icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg></div>
@@ -125,7 +125,7 @@
       <article class="card">
         <div class="icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 19a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.4"/><path d="M16.5 14.2A5 5 0 0 1 21 19"/></svg></div>
         <h3>Built with co-op in mind</h3>
-        <p>Whole-number maths, sorted IDs and a fully saved pass state are meant to give every player the same result, even across a save, a reload or a mid-pass join. It has run through a live co-op session without a desync. <a href="#status">Details</a></p>
+        <p>Whole-number math, sorted IDs and a fully saved pass state are meant to give every player the same result, even across a save, a reload or a mid-pass join. It has run through a live co-op session without a desync. <a href="#status">Details</a></p>
       </article>
     </div>
   </div>
@@ -141,9 +141,9 @@
     <div class="two-col">
       <ol class="steps">
         <li><div><strong>Capture</strong><p>Every housed adult beaver, its home and its assigned workplace, in one quick snapshot.</p></div></li>
-        <li><div><strong>Price</strong><p>Real route costs from each workplace's 32 nearest homes in its district. Anything farther is estimated, or taken from a recent check, and is re-checked before it is ever used.</p></div></li>
+        <li><div><strong>Price</strong><p>Real route costs from each workplace's 32 nearest homes in its district. Anything farther is estimated, or taken from a recent check, and any move to it is re-checked first.</p></div></li>
         <li><div><strong>Solve</strong><p>The best possible way to reassign the adults to the beds that adults occupy today, one district at a time, since nobody moves between districts.</p></div></li>
-        <li><div><strong>Verify</strong><p>Every proposed move is priced again with fresh routes. Moves that would strand a beaver, or that don't save enough, are thrown away.</p></div></li>
+        <li><div><strong>Verify</strong><p>Every proposed move is priced again with fresh routes. A cycle of moves is thrown away if it would cut off a beaver who can reach work today, or if it doesn't save enough.</p></div></li>
         <li><div><strong>Apply</strong><p>Whole cycles of moves are applied in a single tick, and rolled back if the game refuses any of them.</p></div></li>
       </ol>
       <figure class="diagram">
@@ -182,9 +182,9 @@
       <ul class="checks">
         <li>Keeps every home's number of adults exactly the same.</li>
         <li>Leaves unemployed adults free to give up good beds to beavers who commute.</li>
-        <li>Repairs a broken commute by moving a beaver to a home that can reach its workplace.</li>
+        <li>Repairs a broken commute by moving a beaver to a home that can reach its workplace, when a bed can be arranged.</li>
         <li>Skips a move if the beaver, its job or its home changed while the pass was running, and retries next day.</li>
-        <li>Disables itself if another housing-assignment mod is enabled.</li>
+        <li>Disables itself if Incremental Housing, Housing Optimize or Commute Balancer is enabled.</li>
       </ul>
     </div>
     <div>
@@ -193,7 +193,7 @@
       <ul class="checks no">
         <li>Move children.</li>
         <li>Move anyone into a paused, blocked or automation-off home, or out of one.</li>
-        <li>Move a beaver to a home it can't reach from work.</li>
+        <li>Move a beaver who can reach work into a home that can't.</li>
         <li>Move a beaver into another district.</li>
         <li>Leave a beaver homeless.</li>
       </ul>
@@ -255,7 +255,7 @@
 
 <section id="status">
   <div class="wrap">
-    <div class="section-head" data-release-pinned="1.0.0">
+    <div class="section-head" data-release-pinned="1.1.0">
       <span class="eyebrow">Status</span>
       <h2>What is tested, and what isn't</h2>
       <p class="lead">Stable means the evidence below, not that every situation has been tried. Here is the honest picture.</p>
@@ -264,12 +264,12 @@
       <div class="notice ok" style="margin:0">
         <p><strong>Verified</strong></p>
         <ul class="checks">
-          <li>16 passes in a row in a live game (about 350 adults, 104 homes, 167 workplaces) with no errors, warnings or rollbacks.</li>
+          <li>16 passes in a row in a live game on the 1.0 code (about 350 adults, 104 homes, 167 workplaces) with no errors, warnings or rollbacks.</li>
           <li>A hosted co-op session with a second player on the same version: about 11,000 ticks, 15 passes, and no desync reported by the host.</li>
-          <li>25 automated checks pass, including a comparison of the solver against brute force.</li>
-          <li>Two simulated peers stay identical at every tick of a pass.</li>
+          <li>41 automated checks pass on every change, including a comparison of the solver against brute force, colonies with several districts, and large colonies.</li>
+          <li>Two simulated peers stay identical at every tick of a pass, including when one reloads a save taken mid-pass.</li>
           <li>Saving and reloading at any tick of a pass gives exactly the uninterrupted result.</li>
-          <li>Route queries stay within their per-tick budget.</li>
+          <li>Route queries and solver work stay within their per-tick budgets, and a large colony's pass ends within the daytime.</li>
           <li>The compiled mod passes a check against the game's own component rules.</li>
           <li>The replay on a real colony described above.</li>
         </ul>
@@ -277,8 +277,8 @@
       <div class="notice" style="margin:0">
         <p><strong>Not yet verified</strong></p>
         <ul class="checks no">
-          <li>Frame-time impact: the per-tick work is bounded, but the cost of a real path query hasn't been timed.</li>
-          <li>Multiplayer beyond that one hosted session: joining, rehosting, and the client's side.</li>
+          <li>Frame-time impact: the per-tick work is bounded, but the cost of a real path query hasn't been timed, nor the larger budgets a very large colony gets.</li>
+          <li>Multiplayer beyond that one hosted session: joining, rehosting, the client's side, and a live two-player session on 1.1.0.</li>
           <li>The Iron Teeth faction (developed and replayed on a Folktails colony).</li>
           <li>Operating systems other than Windows.</li>
         </ul>
@@ -295,9 +295,9 @@
 
 <footer class="site-footer">
   <div class="wrap foot">
-    <div><strong>Optimized Local Housing</strong><br>A free, open-source Timberborn mod, MIT licensed. Not affiliated with Mechanistry.</div>
+    <div><strong>Optimized Local Housing</strong><br>Free and open source, MIT licensed. An unofficial community mod for Timberborn. Not affiliated with or endorsed by Mechanistry.</div>
     <div><h2>Guides</h2><ul><li><a href="install.html">Install guide</a></li><li><a href="troubleshooting.html">Troubleshooting</a></li><li><a href="faq.html">FAQ</a></li></ul></div>
-    <div><h2>Project</h2><ul><li><a href="https://github.com/timbermods/OptimizedLocalHousing">Source on GitHub</a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="notes">Release <span data-release="tag">v1.0.0</span></a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/issues">Issues</a></li></ul></div>
+    <div><h2>Project</h2><ul><li><a href="https://github.com/timbermods/OptimizedLocalHousing">Source on GitHub</a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="notes">Latest release</a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/issues">Issues</a></li><li><a href="https://timbermods.github.io/">More mods from Timbermods</a></li></ul></div>
   </div>
 </footer>
 <script src="site.js" defer></script>
