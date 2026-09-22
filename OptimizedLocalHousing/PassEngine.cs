@@ -28,9 +28,10 @@ public sealed class Snapshot
     public int[] HomePos = new int[0];           // x, y, z per home
     public Guid[] Works = new Guid[0];           // ascending by ID
     public int[] WorkPos = new int[0];
-    public int NearK;                            // homes queried per workplace
-    public int[] Near = new int[0];              // Works.Length * NearK home indices, nearest first
-    public int[] Costs = new int[0];             // fixed-point route cost per Near entry, -1 until queried
+    public int NearK;                            // candidate homes per workplace row (padding included)
+    public int[] Near = new int[0];              // Works.Length * NearK home indices in the workplace's district, nearest
+                                                 // first; -1 pads a row when the district has fewer homes than NearK
+    public int[] Costs = new int[0];             // fixed-point route cost per Near entry, -1 until queried (padding: Unreachable)
 }
 
 public sealed class SnapshotBuilder
@@ -78,7 +79,8 @@ public sealed class SnapshotBuilder
 
 public sealed class PassState
 {
-    public int Version = 1;
+    public const int CurrentVersion = 2;         // 2: Near rows hold only the workplace's district, padded with -1
+    public int Version = CurrentVersion;
     public bool Requested = true;                // start a pass at the next opportunity
     public int Stage;                            // 0 idle, 1 route costs, 2 assignment, 3 verification
     public Snapshot Snap;
@@ -97,7 +99,7 @@ public sealed class PassReport
     public double RouteCostSaved;
 }
 
-// One pass = capture the colony, price the nearest homes for every workplace, solve the optimal assignment,
+// One pass = capture the colony, price each workplace's nearest homes in its district, solve the optimal assignment,
 // re-check every proposed move against fresh routes, then apply whole cycles of moves. Each stage is spread
 // over ticks with fixed operation budgets, and the entire state is serializable, so a pass resumes identically
 // after a save/load and on every multiplayer peer.
@@ -116,8 +118,16 @@ public sealed class PassEngine
     public PassEngine(IPassWorld world, PassState state = null)
     {
         _world = world; State = state ?? new PassState();
-        if (State.Version != 1) State = new PassState();
+        if (State.Version != PassState.CurrentVersion) State = Restart(State);
     }
+    // A state saved by another version is not trusted: a pass it was running starts over. The lifetime counters carry
+    // over, and an idle state keeps its schedule. This depends on the save alone, so every peer does the same.
+    private static PassState Restart(PassState old) => new PassState
+    {
+        Requested = old.Stage != 0 || old.Requested,
+        Passes = old.Passes, MovedAdults = old.MovedAdults,
+        AppliedCycles = old.AppliedCycles, RejectedCycles = old.RejectedCycles, StaleCycles = old.StaleCycles,
+    };
     public bool Busy => State.Stage != 0;
     public void RequestPass() => State.Requested = true;
 
@@ -149,14 +159,29 @@ public sealed class PassEngine
         State.Requested = false; State.Queries = 0; State.Ticks = 0;
         var snap = _world.Capture();
         if (snap.Adults.Length < 2 || snap.Works.Length == 0) { Finish(snap, new List<int[]>(), null, null); return; }
+        // The game's road routes never leave a district, so a workplace only ranks homes in its own district: the one
+        // its workers live in (a job in another district does not count), taken from the lowest-ID worker.
+        var workDistrict = new Guid[snap.Works.Length]; var seen = new bool[snap.Works.Length];
+        for (int i = 0; i < snap.Adults.Length; i++)
+        {
+            int w = snap.AdultWork[i];
+            if (w >= 0 && !seen[w]) { workDistrict[w] = snap.AdultDistrict[i]; seen[w] = true; }
+        }
         int k = Math.Min(NearHomes, snap.Homes.Length);
         snap.NearK = k; snap.Near = new int[snap.Works.Length * k]; snap.Costs = new int[snap.Works.Length * k];
-        var order = new int[snap.Homes.Length]; var distance = new int[snap.Homes.Length];
+        var order = new List<int>(snap.Homes.Length); var distance = new int[snap.Homes.Length];
         for (int w = 0; w < snap.Works.Length; w++)
         {
-            for (int h = 0; h < order.Length; h++) { order[h] = h; distance[h] = Geometry.Distance(snap.HomePos, h, snap.WorkPos, w); }
-            Array.Sort(order, (a, b) => distance[a] != distance[b] ? distance[a].CompareTo(distance[b]) : a.CompareTo(b));
-            for (int i = 0; i < k; i++) { snap.Near[w * k + i] = order[i]; snap.Costs[w * k + i] = -1; }
+            order.Clear();
+            for (int h = 0; h < snap.Homes.Length; h++)
+                if (snap.HomeDistrict[h] == workDistrict[w]) { order.Add(h); distance[h] = Geometry.Distance(snap.HomePos, h, snap.WorkPos, w); }
+            order.Sort((a, b) => distance[a] != distance[b] ? distance[a].CompareTo(distance[b]) : a.CompareTo(b));
+            // Rows keep a fixed stride of k; a district with fewer homes pads its row with -1, never queried.
+            for (int i = 0; i < k; i++)
+            {
+                bool real = i < order.Count;
+                snap.Near[w * k + i] = real ? order[i] : -1; snap.Costs[w * k + i] = real ? -1 : Cost.Unreachable;
+            }
         }
         State.Snap = snap; State.Stage = 1; State.Cursor = 0;
     }
@@ -164,11 +189,12 @@ public sealed class PassEngine
     private void PriceStep()
     {
         var s = State.Snap; int k = s.NearK;
-        for (int q = 0; q < QueriesPerTick && State.Cursor < s.Costs.Length; q++, State.Cursor++)
+        for (int q = 0; q < QueriesPerTick && State.Cursor < s.Costs.Length; State.Cursor++)
         {
             int at = State.Cursor;
+            if (s.Near[at] < 0) continue;   // padding: already Unreachable, and costs no query
             s.Costs[at] = _world.TryRoute(s.Homes[s.Near[at]], s.Works[at / k], out var route) ? Cost.Fixed(route) : Cost.Unreachable;
-            State.Queries++;
+            State.Queries++; q++;
         }
         if (State.Cursor < s.Costs.Length) return;
         int n = s.Adults.Length;
@@ -199,9 +225,16 @@ public sealed class PassEngine
             _known = new Dictionary<int, int>[s.Works.Length]; _far = new long[s.Works.Length];
             for (int w = 0; w < s.Works.Length; w++)
             {
-                var d = new Dictionary<int, int>(k); int worst = 0;
-                for (int e = 0; e < k; e++) { int c = s.Costs[w * k + e]; d[s.Near[w * k + e]] = c; if (c > worst) worst = c; }
-                _known[w] = d; _far[w] = (long)worst + Cost.FarMargin;
+                // Unpriced homes are estimated beyond the worst reachable priced one. If none could reach the workplace,
+                // it is likely cut off, so unpriced homes are assumed no better than unreachable.
+                var d = new Dictionary<int, int>(k); int worst = -1;
+                for (int e = 0; e < k; e++)
+                {
+                    int home = s.Near[w * k + e], c = s.Costs[w * k + e];
+                    if (home < 0) continue;
+                    d[home] = c; if (c < Cost.Unreachable && c > worst) worst = c;
+                }
+                _known[w] = d; _far[w] = (long)(worst < 0 ? Cost.Unreachable : worst) + Cost.FarMargin;
             }
         }
         int own = s.AdultHome[i], work = s.AdultWork[i];
@@ -281,7 +314,8 @@ public sealed class PassEngine
                 report.Applied++;
                 foreach (int e in edges)
                 {
-                    if (current[e] >= Cost.Unreachable) report.Recovered++;
+                    // Repaired only if the new home reaches work: a cut-off beaver can be moved along and stay cut off.
+                    if (current[e] >= Cost.Unreachable) { if (target[e] < Cost.Unreachable) report.Recovered++; }
                     else report.RouteCostSaved += (double)((long)current[e] - target[e]) / Cost.Scale;
                     State.MovedAdults++;
                 }

@@ -12,7 +12,7 @@ public static class Cost
     public const long Forbidden = 1_000_000_000;       // adult and home in different districts
     public const int StayBonus = 1 * Scale;            // an adult prefers its current home unless a move saves more
     public const int MinimumGain = Scale / 2;         // a cycle of moves must save at least this in total
-    public const int FarMargin = 10 * Scale;           // un-queried homes are estimated this far beyond the worst queried one
+    public const int FarMargin = 10 * Scale;           // un-queried homes are estimated this far beyond the worst reachable queried one
 
     public static int Fixed(float route)
     {

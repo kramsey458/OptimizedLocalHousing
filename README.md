@@ -28,11 +28,12 @@ Each pass:
 
 1. **Capture.** Every housed adult beaver, its home, and its assigned workplace.
 2. **Price.** For every workplace, real route costs (`Accessible.FindRoadPath`, so ziplines and stairs count)
-   from its 32 nearest homes. Homes farther away are estimated, and any move to one is re-checked with a real
-   route before it is allowed.
+   from the 32 nearest homes in its district. Homes in other districts are never queried, because the game's
+   route search never leaves a district. Homes farther away are estimated, and any move to one is re-checked
+   with a real route before it is allowed.
 3. **Solve.** The optimal way to reassign the adults to the beds that adults occupy today.
 4. **Verify.** Every proposed move is re-priced with fresh routes. A move is dropped if the beaver would end up
-   unable to reach work, and a group of moves must save more than half a route-cost unit in total.
+   unable to reach work, and each cycle of moves must save at least half a route-cost unit in total.
 5. **Apply.** Moves are applied as whole cycles (A takes B's bed, B takes C's, C takes A's), in one game tick.
 
 ### Rules it keeps
@@ -106,8 +107,8 @@ That included a hosted co-op session with a second player running the same mod v
   their children. Later passes move only a few.
 - If a beaver changes home or job while a pass is running, the move cycle it belongs to is skipped and retried
   in the next day's pass.
-- Home candidates are the 32 nearest by block distance per workplace. A home much farther by straight line but
-  cheaper by zipline could be missed.
+- Home candidates are the 32 nearest by block distance in each workplace's district. A home much farther by
+  straight line but cheaper by zipline could be missed.
 - Homes must have a single access and a valid route, like the game's own assigner requires.
 - No settings and no UI. The tuning constants (`NearHomes`, `QueriesPerTick`, `StayBonus`) are in the source.
 
@@ -126,8 +127,9 @@ dotnet run --project OptimizedLocalHousing.Tests -c Release -- OptimizedLocalHou
 ```
 
 The tests cover the solver against brute force, pause/resume at every row, cycle splitting, optimality on
-random colonies, the safety rules above, stale-world handling, determinism between peers, save/reload at every
-tick of a pass, per-tick work bounds, and the compiled adapter against the installed game's component
+random colonies with one or two districts, route queries that stay inside a district, the safety rules above,
+stale-world handling, determinism between peers, save/reload at every tick of a pass (with one district and
+with several), per-tick work bounds, and the compiled adapter against the installed game's component
 blacklist. Omitting the two arguments skips the compiled-adapter check.
 
 ## Uninstall
