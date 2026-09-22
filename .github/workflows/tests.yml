@@ -1,0 +1,33 @@
+name: Tests
+
+# The mod references the game's assemblies, which cannot be redistributed, so it is not built here.
+# The test project compiles only the game-independent engine (Assignment.cs, PassEngine.cs) and restores
+# Newtonsoft.Json from nuget.org, so its checks run on a runner without Timberborn. The compiled-adapter check
+# needs the built mod and the game's Managed folder; it is skipped without its two arguments (run it locally).
+# No paths filter: the job is short, and a filtered-out run would leave a required check pending forever.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 8.0.x
+      # The runner image also carries newer SDKs, and without a global.json dotnet picks the newest one.
+      # Pin this job to SDK 8, as the README requires; the global.json exists only on the runner.
+      - name: Use .NET SDK 8
+        run: |
+          Set-Content global.json '{"sdk":{"version":"8.0.100","rollForward":"latestFeature"}}'
+          dotnet --version
+      - name: Run the game-free checks
+        run: dotnet run --project OptimizedLocalHousing.Tests -c Release

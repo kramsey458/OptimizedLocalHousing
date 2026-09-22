@@ -113,7 +113,11 @@ That included a hosted co-op session with a second player running the same mod v
 
 ## Build and test
 
-Requires .NET SDK 8 and a local Timberborn installation. No NuGet packages and no redistributed game DLLs.
+Requires .NET SDK 8. Building the mod also needs a local Timberborn installation; no game DLLs are redistributed.
+The tests compile only the game-independent engine and restore Newtonsoft.Json from nuget.org (13.0.4, the same
+release the game ships), so they run without the game. CI (`.github/workflows/tests.yml`) runs them that way on
+every push to main and every pull request, without the two arguments below: the compiled-adapter check needs the
+built mod and the game, so it runs only locally.
 
 ```powershell
 dotnet build OptimizedLocalHousing/OptimizedLocalHousing.csproj -c Release -p:GameManaged="C:\path\Timberborn_Data\Managed"
