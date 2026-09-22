@@ -11,16 +11,19 @@ an optimal assignment (the Hungarian algorithm), instead of nudging beavers arou
 
 ## Installation
 
-1. Close Timberborn. Extract the release ZIP into `Documents/Timberborn/Mods`. It contains one
+1. Download the `OptimizedLocalHousing-vX.Y.Z.zip` file under **Assets** on the
+   [latest release](https://github.com/timbermods/OptimizedLocalHousing/releases/latest) (not "Source code").
+2. Close Timberborn. Extract the ZIP into `Documents\Timberborn\Mods`. It contains one
    `OptimizedLocalHousing` folder.
-2. Launch Timberborn, enable **Optimized Local Housing**, and restart.
-3. Load your save (back up important saves first, as with any mod). On a save the mod has not seen before, the
+3. Launch Timberborn, enable **Optimized Local Housing** in the Mods menu, and restart.
+4. Load your save (back up important saves first, as with any mod). On a save the mod has not seen before, the
    first pass starts as soon as the game is ticking, then it runs again at the start of every day. One line per
    pass is written to `Player.log` (look for `[OptimizedLocalHousing]`).
 
-Standalone, no dependencies. **Do not run it together with Incremental Housing**: this mod disables itself if
-that mod (or another housing-assignment mod it knows about) is enabled. Both multiplayer players must install
-the identical version.
+Standalone, no dependencies. **Do not run it together with Incremental Housing, Housing Optimize or Commute
+Balancer.** When a game loads, this mod checks for their mod IDs (`Kyler.IncrementalHousing`, `BobHousingOptimize`,
+`BobCommuteBalancer`, `housingoptimize`). If one is enabled, it logs a warning and does nothing for that game. In
+multiplayer, every player must install the same version of the mod and run the same game version.
 
 ## What it does
 
@@ -35,8 +38,9 @@ Each pass:
    districts, so each district is solved on its own, one after another. In a colony with several districts that
    takes far fewer ticks and far less memory than solving them as one (47 solve ticks instead of 157 for four
    districts of 300 adults), and reaches the same optimum.
-4. **Verify.** Every proposed move is re-priced with fresh routes. A move is dropped if the beaver would end up
-   unable to reach work, and each cycle of moves must save at least half a route-cost unit in total. The fresh
+4. **Verify.** Every proposed move is re-priced with fresh routes. A whole cycle of moves is dropped if it would
+   leave a beaver who can reach work today unable to, and each cycle must save at least half a route-cost unit in
+   total. The fresh
    costs of homes beyond the 32 nearest are remembered in place of estimates, so a move that was turned down is
    not proposed again every day (anything proposed is still re-priced first). A remembered cost is used for seven
    passes. The seventh prices it again, and keeps it, if one of that workplace's workers lives in the home or if
@@ -50,10 +54,12 @@ Each pass:
 - **Children never move.** Neither do beavers in paused, blocked or otherwise unusable homes, and nobody is
   moved into one. Nobody crosses districts. Beavers are never made homeless.
 - **Unemployed adults** don't care where they live, so they give up good beds to people who commute.
-- **No churn.** A beaver prefers to stay put unless moving saves at least one route-cost unit, so an optimized
-  colony is left alone: a second pass on the same colony changes nothing.
+- **No churn.** Each beaver gets a one-route-cost-unit bonus for staying put, so a rearrangement must save at least
+  one unit for every beaver it moves. An optimized colony is left alone: a second pass on the same colony changes
+  nothing.
 - **Disconnected commutes are repaired.** A beaver whose home can no longer reach its workplace is moved to a
-  home that can, as long as a bed can be arranged.
+  home that can, as long as a bed can be arranged. If none can, it may be moved to another cut-off home when that
+  helps others; the pass log's "disconnected commutes repaired" counts only beavers whose new home reaches work.
 
 ### Cost and multiplayer
 
@@ -76,7 +82,7 @@ Each pass:
   adults) where beavers keep changing jobs. For seven days after a pass that moved many beavers it also holds the
   route costs that pass checked, capped at 1,024 (about 11 KB for 240 adults, about 85 KB at the cap). During a
   pass it grows with the colony: about 70 KB for 240 adults, 100 KB for 350 to 400, 380 KB for 1,300.
-  Uninstalling is safe: beavers just keep the homes they have.
+  Uninstalling is safe: beavers keep the homes they have.
 
 ## Results
 
@@ -96,11 +102,11 @@ and a second pass changed nothing.
 
 ### In the live game
 
-The game logs of the maintainer's own colony show 16 consecutive passes (numbers 23 to 38) completing without a
+The game logs of the maintainer's own colony, running the code released as 1.0.0, show 16 consecutive passes (numbers 23 to 38) completing without a
 single error, warning or rollback, on a colony of about 350 adults, 104 homes and 167 workplaces. Each pass took
 about 183 ticks and about 5,350 route queries, and applied between 0 and 4 move cycles. In 10 of the 16 passes a
 cycle was skipped because a beaver changed job or home while the pass was running ("stale"). That is expected,
-and those beavers are simply reconsidered in the next pass.
+and those beavers are reconsidered in the next pass.
 
 That included a hosted co-op session with a second player running the same mod version: about 11,000 ticks and
 15 passes, with no desync reported in the host's log.
@@ -112,11 +118,12 @@ That included a hosted co-op session with a second player running the same mod v
   large districts get: more than about 730 adults in one district, about 580 in each of two, or about 500 in each
   of three.
 - The Iron Teeth faction, and operating systems other than Windows.
-- Multiplayer beyond that one hosted session, and the client's side of it.
+- Multiplayer beyond that one hosted session, and the client's side of it. No live two-player session has been
+  played on 1.1.0 yet.
 - BeaverBuddies MultiColony (1.4.0-alpha21) in a live session. Its code was audited against this mod: the mod only
   ticks inside the simulation, draws no random numbers, uses no wall-clock or frame time, never moves a beaver
-  between districts (so colonies stay separate), and nothing it touches is patched by BeaverBuddies. Both players
-  need the same version enabled; BeaverBuddies warns at join time when the mod lists differ.
+  between districts (so colonies stay separate), and nothing it touches is patched by BeaverBuddies. Every player
+  needs the same version enabled; BeaverBuddies warns at join time when the mod lists differ.
 
 ## Limits
 

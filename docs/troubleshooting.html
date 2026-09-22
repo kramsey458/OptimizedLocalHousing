@@ -42,7 +42,7 @@
   <table>
     <thead><tr><th>Message</th><th>Meaning</th></tr></thead>
     <tbody>
-      <tr><td><code><span data-release="version">1.0.0</span> loaded.</code></td><td>The mod started. Normal.</td></tr>
+      <tr><td><code><span data-release="version">1.1.0</span> loaded.</code></td><td>The mod started. Normal.</td></tr>
       <tr><td><code>Pass N: … move cycles applied …</code></td><td>A pass finished. Normal. <a href="#zero">What the numbers mean</a>.</td></tr>
       <tr><td><code>Disabled because another housing assignment mod is enabled: …</code></td><td>Another housing mod is on. <a href="#disabled">Fix</a>.</td></tr>
       <tr><td><code>Saved state ignored: …</code></td><td>The saved mod data couldn't be read. <a href="#state">Harmless</a>.</td></tr>
@@ -70,7 +70,7 @@
     <div class="answer">
       <ul>
         <li>Make sure you're reading the right session. The log is overwritten each launch, and the previous one is <code>Player-prev.log</code>.</li>
-        <li>Check the mod list near the top of the log. <code>Optimized Local Housing (<span data-release="tag">v1.0.0</span>)</code> should be listed. If it isn't, it wasn't enabled, or you didn't restart after enabling it.</li>
+        <li>Check the mod list near the top of the log. <code>Optimized Local Housing (<span data-release="tag">v1.1.0</span>)</code> should be listed. If it isn't, it wasn't enabled, or you didn't restart after enabling it.</li>
         <li>If it's listed but the <code>loaded.</code> line is missing, check the game didn't fail to load the mod's DLL further down the log, and <a href="#report">report it</a> with that log.</li>
       </ul>
     </div>
@@ -81,7 +81,7 @@
     <div class="answer">
       <ul>
         <li><strong>The game has to run.</strong> Passes only progress while the game is ticking. Paused time doesn't count. A pass takes roughly 150 to 200 ticks on a colony of a few hundred beavers, about 90 seconds to two minutes at normal speed.</li>
-        <li><strong>Saves the mod has already seen</strong> start their next pass at the beginning of the next in-game day, not straight away. Only a save the mod hasn't seen before starts a pass immediately.</li>
+        <li><strong>Saves the mod has already seen</strong> start their next pass at the beginning of the next in-game day, not straight away. Only a save the mod hasn't seen before starts a pass immediately, and a save made during a pass carries on with it.</li>
         <li>You quit the game before the pass finished. Let it run a little longer, and note the line is written when the pass <em>ends</em>.</li>
         <li>Look for <a href="#disabled">"Disabled because…"</a> or <a href="#abandoned">"Pass abandoned…"</a> in the log.</li>
       </ul>
@@ -111,8 +111,8 @@
         <li><strong>move cycles applied:</strong> groups of beavers that swapped beds around. Zero is the correct answer when the colony is already as good as it can be. A second pass on an optimized colony changes nothing.</li>
         <li><strong>rejected:</strong> the fresh route check threw a proposed cycle away, because a beaver would end up unable to reach work, or the cycle didn't save at least half a route-cost unit. The route costs it found are remembered (and checked again when they come due), so the same cycle isn't proposed again every day.</li>
         <li><strong>stale:</strong> someone in the cycle changed home or job, died, or a home couldn't take them, between the snapshot and the moment of applying. Small numbers are normal. These beavers are reconsidered in the next pass.</li>
-        <li><strong>disconnected commutes repaired:</strong> beavers whose old home couldn't reach their workplace and whose new home can.</li>
-        <li><strong>route cost saved:</strong> the total drop in commute across the beavers that moved.</li>
+        <li><strong>disconnected commutes repaired:</strong> moved beavers whose old home couldn't reach their workplace and whose new home can. A cut-off beaver that was moved but still can't reach work isn't counted.</li>
+        <li><strong>route cost saved:</strong> the net drop in route cost across the beavers that moved. Repaired commutes aren't included, since they had no route before.</li>
       </ul>
       <p>Persistent zeros on a colony that clearly needs help usually mean the beavers aren't eligible: they have no assigned workplace, the workplace is disabled or in another district, or their homes are paused, blocked or switched off by automation. Those beavers are left alone by design.</p>
     </div>
@@ -164,7 +164,7 @@
   <details id="state">
     <summary>The log says <code>Saved state ignored</code></summary>
     <div class="answer">
-      <p>The mod couldn't read its own data from the save (for example, data written by a different version). It starts fresh, at no cost to your colony. If you see it after a normal update, you can ignore it.</p>
+      <p>The mod couldn't read its own data from the save. It starts fresh, at no cost to your colony. Data from an older version of the mod is normally read without this message: a pass that was running when the save was made starts over once.</p>
     </div>
   </details>
 
@@ -172,7 +172,7 @@
     <summary>Multiplayer: the game desynced, or players see different homes</summary>
     <div class="answer">
       <ul>
-        <li><strong>Everyone needs the identical version.</strong> If only some players have the mod, or the versions differ, the games will disagree about where beavers live.</li>
+        <li><strong>Every player must install the same version of the mod and run the same game version.</strong> If only some players have the mod, or the versions differ, the games will disagree about where beavers live.</li>
         <li>Restart the session from the host's save with everyone on the same version.</li>
         <li>It has been used in one live hosted co-op session (about 11,000 ticks and 15 passes) with no desync reported by the host, so a desync would be a new finding. If it happens, please report it: include every player's <code>Player.log</code> from the session and say when it happened relative to a <code>Pass</code> line.</li>
       </ul>
@@ -207,9 +207,9 @@
 
 <footer class="site-footer">
   <div class="wrap foot">
-    <div><strong>Optimized Local Housing</strong><br>A free, open-source Timberborn mod, MIT licensed. Not affiliated with Mechanistry.</div>
+    <div><strong>Optimized Local Housing</strong><br>Free and open source, MIT licensed. An unofficial community mod for Timberborn. Not affiliated with or endorsed by Mechanistry.</div>
     <div><h2>Guides</h2><ul><li><a href="install.html">Install guide</a></li><li><a href="troubleshooting.html">Troubleshooting</a></li><li><a href="faq.html">FAQ</a></li></ul></div>
-    <div><h2>Project</h2><ul><li><a href="https://github.com/timbermods/OptimizedLocalHousing">Source on GitHub</a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="notes">Release <span data-release="tag">v1.0.0</span></a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/issues">Issues</a></li></ul></div>
+    <div><h2>Project</h2><ul><li><a href="https://github.com/timbermods/OptimizedLocalHousing">Source on GitHub</a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="notes">Latest release</a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/issues">Issues</a></li><li><a href="https://timbermods.github.io/">More mods from Timbermods</a></li></ul></div>
   </div>
 </footer>
 <script src="site.js" defer></script>
