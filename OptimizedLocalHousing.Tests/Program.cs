@@ -133,11 +133,51 @@ static class Program
         foreach (var h in f.Homes) h.Value.Capacity = f.People.Values.Count(p => p.Home == h.Key);
         return f;
     }
-    static PassEngine Run(Fake f, PassState state = null, int limit = 5000)
+    // Per district d, 100 blocks apart: a workplace G(500 + d) at X=0 prices its 32 nearest homes (X=1), each holding one
+    // of its workers. Adult G(10 + 2d) works there and lives at X=50; adult G(11 + 2d), unemployed, lives at X=40.
+    // Neither home is priced, so X=40 looks 10 units closer; with blocked, no route leads from it to the workplace, and
+    // the swap the solver proposes is turned down by its route check.
+    static Fake FarSwap(int districts = 1, bool blocked = true)
+    {
+        var f = new Fake();
+        for (int d = 0; d < districts; d++)
+        {
+            int x = 100 * d; Guid district = G(9000 + d), work = G(500 + d);
+            f.Works[work] = (x, 0, 0); f.WorkDistrict[work] = district;
+            for (int i = 0; i < 32; i++)
+            {
+                f.Homes[G(1100 + 50 * d + i)] = new Home { Capacity = 1, X = x + 1, District = district };
+                f.People[G(2100 + 50 * d + i)] = new Person { Id = G(2100 + 50 * d + i), Home = G(1100 + 50 * d + i), Work = work, District = district };
+            }
+            f.Homes[G(200 + 2 * d)] = new Home { Capacity = 1, X = x + 50, District = district };
+            f.Homes[G(201 + 2 * d)] = new Home { Capacity = 1, X = x + 40, District = district };
+            f.People[G(10 + 2 * d)] = new Person { Id = G(10 + 2 * d), Home = G(200 + 2 * d), Work = work, District = district };
+            f.People[G(11 + 2 * d)] = new Person { Id = G(11 + 2 * d), Home = G(201 + 2 * d), District = district };
+            if (blocked) f.Blocked.Add((G(201 + 2 * d), work));
+        }
+        return f;
+    }
+    // The pass that uses the first pass's remembered costs for the last time, and prices again those still needed.
+    const int DuePass = PassEngine.LearnedPasses + 1;
+    static PassEngine Run(IPassWorld f, PassState state = null, int limit = 5000)
     {
         var e = new PassEngine(f, state); e.RequestPass();
         for (int t = 0; t < limit; t++) { e.Tick(); if (!e.Busy && !e.State.Requested) return e; }
         throw new Exception("Pass did not finish");
+    }
+    // What a save and load hands the next engine: only what the saved state holds.
+    static PassState Reload(PassState state) => JsonConvert.DeserializeObject<PassState>(JsonConvert.SerializeObject(state));
+    // Costs verified by earlier passes that the running pass takes instead of an estimate: pairs in its snapshot that
+    // are not in the workplace's candidate row.
+    static int LearnedInUse(PassState state)
+    {
+        var s = state.Snap; int used = 0;
+        for (int e = 0; e < state.LearnedCost.Length; e++)
+        {
+            int w = Array.IndexOf(s.Works, state.LearnedWork[e]), h = Array.IndexOf(s.Homes, state.LearnedHome[e]);
+            if (w >= 0 && h >= 0 && !Enumerable.Range(0, s.NearK).Any(i => s.Near[w * s.NearK + i] == h)) used++;
+        }
+        return used;
     }
     // Best objective any arrangement of the adults into the existing beds can reach (route cost minus stay bonuses).
     static long Best(Fake f)
@@ -235,8 +275,8 @@ static class Program
             Console.WriteLine($"   240 adults, 90 homes: commute {before:F0} -> {f.Total():F0} in {e.LastReport.Ticks} ticks, {e.LastReport.Queries} route queries, {e.LastReport.Applied} cycles");
         });
         Test("a second pass on an optimized colony changes nothing", () => {
-            var f = Colony(2, homes: 40, adults: 100, works: 50); Run(f); var fp = f.Fingerprint(); int applied = f.Applied.Count;
-            Run(f); Check(f.Fingerprint() == fp && f.Applied.Count == applied, "Optimized colony was reshuffled");
+            var f = Colony(2, homes: 40, adults: 100, works: 50); var e = Run(f); var fp = f.Fingerprint(); int applied = f.Applied.Count;
+            Run(f, Reload(e.State)); Check(f.Fingerprint() == fp && f.Applied.Count == applied, "Optimized colony was reshuffled");
         });
         Test("small savings below the stay bonus do not move anyone", () => {
             var f = new Fake(); f.Homes[G(1)] = new Home { Capacity = 1, X = 11 }; f.Homes[G(2)] = new Home { Capacity = 1, X = 10 };
@@ -263,66 +303,118 @@ static class Program
                 Check(JsonConvert.SerializeObject(ea.State) == JsonConvert.SerializeObject(eb.State), "State depends on order");
             }
         });
-        Test("two peers ticking in lockstep have identical serialized state at every tick", () => {
-            foreach (int districts in new[] { 1, 3 })
+        Test("two peers ticking in lockstep have identical serialized state at every tick of eight passes", () => {
+            // Two districts of 45 homes: the second pass takes costs the first one verified outside the candidate rows.
+            // Eight passes: the eighth prices again the first pass's costs that are still needed (a rejected swap each).
+            foreach (var (name, start) in new[] { ("1 district", Colony(8, 50, 130, 60, 8)), ("3 districts", Colony(8, 50, 130, 60, 8, 3)), ("2 districts of 45 homes", Colony(8, 90, 230, 80, 8, 2)),
+                ("2 districts, a rejected swap each", FarSwap(2)) })
             {
-                var a = Colony(8, 50, 130, 60, 8, districts); var b = a.Copy(); var ea = new PassEngine(a); var eb = new PassEngine(b);
-                for (int t = 0; t < 600; t++) { ea.Tick(); eb.Tick(); Check(JsonConvert.SerializeObject(ea.State) == JsonConvert.SerializeObject(eb.State), $"{districts} district(s): peers diverged at tick {t}"); }
-                Check(a.Fingerprint() == b.Fingerprint(), "Peers housed differently");
+                var a = start.Copy(); var b = start.Copy(); var ea = new PassEngine(a); var eb = new PassEngine(b); int passes = 1, used = 0, rechecked = 0;
+                for (int t = 0; t < 5000 && (ea.Busy || ea.State.Requested || passes < DuePass); t++)
+                {
+                    if (!ea.Busy && !ea.State.Requested) { ea.RequestPass(); eb.RequestPass(); passes++; }   // the next day starts on both
+                    ea.Tick(); eb.Tick(); Check(JsonConvert.SerializeObject(ea.State) == JsonConvert.SerializeObject(eb.State), $"{name}: peers diverged at tick {t}");
+                    if (passes == 2 && ea.State.Stage == 1) used = LearnedInUse(ea.State);
+                    if (passes == DuePass && ea.State.Stage == 1) rechecked = ea.State.Snap.RecheckCosts.Length;
+                }
+                Check(!ea.Busy && passes == DuePass && a.Fingerprint() == b.Fingerprint(), $"{name}: peers housed differently");
+                Check(!name.StartsWith("2 districts") || used > 0, $"{name}: the second pass used no cost the first one verified");
+                Check(!name.Contains("rejected swap") || rechecked == 4, $"{name}: pass {DuePass} priced {rechecked} remembered costs again, expected 4");
             }
         });
-        Test("saving and reloading at any tick of a pass gives exactly the uninterrupted result", () => {
+        Test("saving and reloading at any tick of three passes gives exactly the uninterrupted result", () => {
             // Three districts of 15 homes: padded candidate rows. PaddingTail: pricing ends with a tick that only skips padding.
-            foreach (var (name, start) in new[] { ("1 district", Colony(9, 45, 110, 55, 6)), ("3 districts", Colony(9, 45, 110, 55, 6, 3)), ("padding tail", PaddingTail()) })
+            // Two districts of 45 homes: the second pass takes costs the first one verified outside the candidate rows.
+            // A rejected swap in each of 2 or 16 districts: those costs decide what the later passes do; with 16 the
+            // solve spans several ticks, so a reload lands mid-solve, where the rows solved so far are rebuilt.
+            // Passes 1, 2 and 8 are checked; the eighth prices again the first pass's costs that are still needed.
+            foreach (var (name, colony) in new[] { ("1 district", Colony(9, 45, 110, 55, 6)), ("3 districts", Colony(9, 45, 110, 55, 6, 3)), ("2 districts of 45 homes", Colony(9, 90, 220, 90, 6, 2)),
+                ("2 districts, a rejected swap each", FarSwap(2)), ("16 districts, a rejected swap each", FarSwap(16)), ("padding tail", PaddingTail()) })
             {
-                var whole = start.Copy(); var ew = Run(whole);
-                string reference = JsonConvert.SerializeObject(ew.State); int ticks = (int)ew.LastReport.Ticks; bool skipOnly = false;
-                var live = start.Copy(); var el = new PassEngine(live); el.RequestPass();
-                for (int t = 0; t < ticks + 2; t++)
+                var start = colony; PassState saved = null; bool skipOnly = false; int used = 0, rechecked = 0, midSolve = 0; var rejected = new List<int>();
+                for (int pass = 1; pass <= DuePass; pass++)
                 {
-                    var resumedWorld = start.Copy();   // nothing is applied before the last tick, so the world is unchanged mid-pass
-                    if (el.Busy && live.Applied.Count == 0)
+                    // Each pass starts from the world and the saved state the previous one left.
+                    var whole = start.Copy(); var ew = Run(whole, saved == null ? null : Reload(saved)); rejected.Add(ew.LastReport.Rejected);
+                    string reference = JsonConvert.SerializeObject(ew.State); int ticks = (int)ew.LastReport.Ticks;
+                    var live = start.Copy(); var el = new PassEngine(live, saved == null ? null : Reload(saved)); el.RequestPass();
+                    for (int t = 0; t < ticks + 2 && (pass <= 2 || pass == DuePass); t++)
                     {
-                        var restored = new PassEngine(resumedWorld, JsonConvert.DeserializeObject<PassState>(JsonConvert.SerializeObject(el.State)));
-                        for (int k = 0; k < 5000 && (restored.Busy || restored.State.Requested); k++) restored.Tick();
-                        Check(resumedWorld.Fingerprint() == whole.Fingerprint(), $"{name}: resume at tick {t} housed differently");
-                        Check(JsonConvert.SerializeObject(restored.State) == reference, $"{name}: resume at tick {t} ended in a different state");
+                        var resumedWorld = start.Copy();   // nothing is applied before the last tick, so the world is unchanged mid-pass
+                        if (el.Busy && live.Applied.Count == 0)
+                        {
+                            if (pass > 1 && el.State.Stage == 2 && el.State.Row > 1) midSolve++;
+                            var restored = new PassEngine(resumedWorld, Reload(el.State));
+                            for (int k = 0; k < 5000 && (restored.Busy || restored.State.Requested); k++) restored.Tick();
+                            Check(resumedWorld.Fingerprint() == whole.Fingerprint(), $"{name}: resume at tick {t} of pass {pass} housed differently");
+                            Check(JsonConvert.SerializeObject(restored.State) == reference, $"{name}: resume at tick {t} of pass {pass} ended in a different state");
+                        }
+                        int calls = live.Calls, stage = el.State.Stage; el.Tick();
+                        if (stage == 1 && el.State.Stage == 2 && live.Calls == calls) skipOnly = true;
+                        if (pass == 2 && el.State.Stage == 1) used = LearnedInUse(el.State);
+                        if (pass == DuePass && el.State.Stage == 1) rechecked = el.State.Snap.RecheckCosts.Length;
                     }
-                    int calls = live.Calls, stage = el.State.Stage; el.Tick();
-                    if (stage == 1 && el.State.Stage == 2 && live.Calls == calls) skipOnly = true;
+                    start = whole; saved = ew.State;
                 }
                 Check(name != "padding tail" || skipOnly, "PaddingTail did not end pricing with a tick that only skips padding");
+                Check(!name.StartsWith("2 districts") || used > 0, $"{name}: the second pass used no cost the first one verified");
+                if (name.Contains("rejected swap"))
+                {
+                    int districts = name.StartsWith("16") ? 16 : 2;
+                    Check(rejected[0] == districts && rejected.Skip(1).All(r => r == 0), $"{name}: cycles rejected per pass {string.Join(", ", rejected)}");
+                    Check(rechecked == 2 * districts, $"{name}: pass {DuePass} priced {rechecked} remembered costs again, expected {2 * districts}");
+                    Check(districts == 2 || midSolve > 0, $"{name}: no reload landed mid-solve in a pass that uses remembered costs");
+                }
             }
         });
         Test("a peer that reloaded mid-pass stays in lockstep, tick for tick, with one that did not", () => {
             // A multiplayer peer may load a save taken mid-pass (a rehost, a rejoin) while another peer never
             // reloaded. From then on both must do the same work each tick: a pass that finished one tick later on one
             // computer would move beavers at a different tick there, which is a desync.
+            // Eight passes: the second starts from costs the first one verified, which the saved state must carry, and
+            // the eighth prices again those still needed. In the rejected-swap colonies they decide what the later passes
+            // do, so a peer that lost them would not keep step; with 16 districts the solve spans several ticks, so peers
+            // also reload mid-solve, where the rows solved so far are rebuilt. Peers reload during passes 1, 2 and 8.
             string Position(PassEngine e) => $"stage {e.State.Stage} row {e.State.Row} cursor {e.State.Cursor} ticks {e.State.Ticks} queries {e.State.Queries}";
-            foreach (int districts in new[] { 1, 4 })   // four districts of 25 homes: padded candidate rows
+            // Two districts of 50 homes: learned costs outside the rows; four of 25: padded rows.
+            foreach (var (name, start, every) in new[] { ("1 district", Colony(19, 100, 300, 130, 10), 5), ("2 districts", Colony(19, 100, 300, 130, 10, 2), 5),
+                ("4 districts", Colony(19, 100, 300, 130, 10, 4), 5), ("2 districts, a rejected swap each", FarSwap(2), 1), ("16 districts, a rejected swap each", FarSwap(16), 1) })
             {
-                var start = Colony(19, homes: 100, adults: 300, works: 130, children: 10, districts: districts);
-                var live = start.Copy(); var el = new PassEngine(live); el.RequestPass();
-                var restored = new List<(int At, PassEngine Engine, Fake World)>();
-                for (int t = 0; t < 5000 && (el.Busy || el.State.Requested); t++)
+                var live = start.Copy(); var el = new PassEngine(live);
+                var restored = new List<(int At, PassEngine Engine, Fake World)>(); int t = 0, used = 0, midSolve = 0; var ticks = new List<long>(); var rejected = new List<int>();
+                for (int pass = 1; pass <= DuePass; pass++)
                 {
-                    if (el.Busy && live.Applied.Count == 0 && (el.State.Stage == 2 || t % 5 == 0))
+                    el.RequestPass(); foreach (var (_, engine, _) in restored) engine.RequestPass();   // the day starts on every peer at once
+                    for (; t < 20000 && (el.Busy || el.State.Requested); t++)
                     {
-                        var world = start.Copy();
-                        restored.Add((t, new PassEngine(world, JsonConvert.DeserializeObject<PassState>(JsonConvert.SerializeObject(el.State))), world));
+                        if (el.Busy && (pass <= 2 || pass == DuePass) && (el.State.Stage == 2 || t % every == 0))
+                        {
+                            if (pass > 1 && el.State.Stage == 2 && el.State.Row > 1) midSolve++;
+                            var world = live.Copy();   // nothing is applied before a pass's last tick
+                            restored.Add((t, new PassEngine(world, Reload(el.State)), world));
+                        }
+                        el.Tick();
+                        if (pass == 2 && el.State.Stage == 1) used = LearnedInUse(el.State);
+                        foreach (var (at, engine, _) in restored)
+                        {
+                            engine.Tick();
+                            Check(Position(engine) == Position(el), $"{name}: a peer that reloaded at tick {at} is at {Position(engine)} while the other is at {Position(el)} after tick {t}");
+                        }
                     }
-                    el.Tick();
-                    foreach (var (at, engine, _) in restored)
-                    {
-                        engine.Tick();
-                        Check(Position(engine) == Position(el), $"{districts} district(s): a peer that reloaded at tick {at} is at {Position(engine)} while the other is at {Position(el)} after tick {t}");
-                    }
+                    string reference = JsonConvert.SerializeObject(el.State);
+                    foreach (var (at, engine, world) in restored)
+                        Check(JsonConvert.SerializeObject(engine.State) == reference && world.Fingerprint() == live.Fingerprint(), $"{name}: a peer that reloaded at tick {at} ended pass {pass} differently");
+                    ticks.Add(el.LastReport.Ticks); rejected.Add(el.LastReport.Rejected);
                 }
-                Check(restored.Count > 20, "Too few reload points exercised: " + restored.Count);
-                string reference = JsonConvert.SerializeObject(el.State);
-                foreach (var (at, engine, world) in restored)
-                    Check(JsonConvert.SerializeObject(engine.State) == reference && world.Fingerprint() == live.Fingerprint(), $"{districts} district(s): a peer that reloaded at tick {at} ended differently");
-                Console.WriteLine($"   300 adults, {districts} district(s): {restored.Count} reload points, each in lockstep for the whole pass ({el.LastReport.Ticks} ticks)");
+                Check(restored.Count > (every == 1 ? 5 : 40), $"{name}: too few reload points exercised: {restored.Count}");
+                Check(!name.StartsWith("2 districts") || used > 0, $"{name}: the second pass used no cost the first one verified");
+                if (name.Contains("rejected swap"))
+                {
+                    int districts = name.StartsWith("16") ? 16 : 2;
+                    Check(rejected[0] == districts && rejected.Skip(1).All(r => r == 0), $"{name}: cycles rejected per pass {string.Join(", ", rejected)}");
+                    Check(districts == 2 || midSolve > 0, $"{name}: no peer reloaded mid-solve in a pass that uses remembered costs");
+                }
+                Console.WriteLine($"   {name}: {restored.Count} reload points ({midSolve} mid-solve after pass 1), each in lockstep to the end of {DuePass} passes ({ticks.Sum()} ticks)");
             }
         });
 
@@ -335,6 +427,18 @@ static class Program
                 Check(worst <= PassEngine.QueriesPerTick, $"{districts} district(s): {worst} route queries in one tick");
                 Console.WriteLine($"   400 adults, 150 homes, 120 workplaces, {districts} district(s): {ticks} ticks, {e.LastReport.Queries} queries, worst tick {worst}");
             }
+            // Remembered costs priced again share the pricing budget: 17 districts price 34 of them on pass 8.
+            var g = FarSwap(17); var eg = new PassEngine(g); int most = 0, rechecked = 0;
+            for (int pass = 1; pass <= DuePass; pass++)
+            {
+                eg.RequestPass();
+                for (int t = 0; t < 3000 && (eg.Busy || eg.State.Requested); t++)
+                {
+                    g.Calls = 0; eg.Tick(); most = Math.Max(most, g.Calls);
+                    if (eg.State.Stage == 1) rechecked = eg.State.Snap.RecheckCosts.Length;
+                }
+            }
+            Check(rechecked == 34 && most <= PassEngine.QueriesPerTick, $"17 rejected swaps: {rechecked} costs priced again on pass {DuePass}, {most} route queries in one tick");
         });
         Test("far homes are never chosen without a fresh route check", () => {
             var f = Colony(5, 120, 200, 40); var e = new PassEngine(f); e.RequestPass(); var checkedPairs = new HashSet<(Guid, Guid)>(); var before = f.People.ToDictionary(p => p.Key, p => p.Value.Home);
@@ -410,6 +514,129 @@ static class Program
             var e = Run(f);
             Check(e.LastReport.Moves == 0 && e.LastReport.Rejected == 0, $"{e.LastReport.Moves} moves proposed, {e.LastReport.Rejected} cycle(s) rejected");
         });
+        Test("a cycle its fresh route check rejected is not proposed again on later days", () => {
+            // The first pass proposes adult 10's swap to X=40 and its route check rejects it. Later passes know that from
+            // the saved state (reloaded between passes, as a save does) and don't propose it. They ask for that route only
+            // when the remembered cost comes due, every LearnedPasses passes, and so notice when the road is back.
+            var f = FarSwap(); var e = Run(f);
+            Check(e.LastReport.Moves == 2 && e.LastReport.Rejected == 1 && f.Applied.Count == 0, $"pass 1: {e.LastReport.Moves} moves, {e.LastReport.Rejected} rejected");
+            int days = 2 * (PassEngine.LearnedPasses + 1);
+            for (int pass = 2; pass <= days; pass++)
+            {
+                var asked = new HashSet<(Guid, Guid)>(); var probe = new Probe(f, asked) { Recording = true };
+                e = Run(probe, Reload(e.State));
+                Check(e.LastReport.Rejected == 0 && f.People[G(10)].Home == G(200), $"pass {pass}: the rejected cycle came back ({e.LastReport.Moves} moves, {e.LastReport.Rejected} rejected)");
+                bool due = (pass - 1) % PassEngine.LearnedPasses == 0;
+                Check(asked.Contains((G(201), G(500))) == due, due ? $"pass {pass}: the remembered missing route came due and was not checked again" : $"pass {pass}: asked again for the route known to be missing");
+            }
+            // The road is back: the move is made on the pass that finds it, the next one the missing route is due on.
+            f.Blocked.Remove((G(201), G(500))); int movedOn = 0;
+            for (int pass = days + 1; pass <= days + PassEngine.LearnedPasses && movedOn == 0; pass++)
+            {
+                e = Run(f, Reload(e.State));
+                if (f.People[G(10)].Home == G(201)) movedOn = pass;
+            }
+            Check(movedOn == 3 * PassEngine.LearnedPasses + 1, $"the road came back before pass {days + 1}; the move was made on pass {movedOn}, expected {3 * PassEngine.LearnedPasses + 1}");
+        });
+        Test("a worker living beyond the nearest homes keeps a checked cost for home when the remembered one comes due", () => {
+            // Workplace 500 at X=0 prices its 32 nearest homes (X=1). On day 1 adult 10, who works there, moves from X=80
+            // to the unpriced X=40 (720). On day 3 adult 14 is hired and moves from X=90 to X=45 (800); X=45 has a
+            // second, unemployed resident. When day 1's costs come due, adult 10's own must be priced again: left to the
+            // estimate (896), a move to X=45 would look like a saving, and its route check would turn it down.
+            var f = new Fake(); f.Works[G(500)] = (0, 0, 0);
+            for (int i = 0; i < 32; i++)
+            {
+                f.Homes[G(1100 + i)] = new Home { Capacity = 1, X = 1 };
+                f.People[G(2100 + i)] = new Person { Id = G(2100 + i), Home = G(1100 + i), Work = G(500), District = G(9000) };
+            }
+            void Add(int home, int x, params int[] adults)
+            {
+                f.Homes[G(home)] = new Home { Capacity = adults.Length, X = x };
+                foreach (int a in adults) f.People[G(a)] = new Person { Id = G(a), Home = G(home), District = G(9000) };
+            }
+            Add(200, 80, 10); Add(201, 40, 11); Add(202, 45, 12, 13); Add(203, 90, 14); f.People[G(10)].Work = G(500);
+            var e = Run(f); var rejected = new List<int> { e.LastReport.Rejected };
+            Check(f.People[G(10)].Home == G(201), "day 1: adult 10 did not move to X=40");
+            for (int pass = 2; pass <= 2 * (PassEngine.LearnedPasses + 1); pass++)
+            {
+                if (pass == 3) f.People[G(14)].Work = G(500);
+                e = Run(f, Reload(e.State)); rejected.Add(e.LastReport.Rejected);
+                if (pass == 3) Check(f.People[G(14)].Home == G(202), "day 3: adult 14 did not move to X=45");
+            }
+            Check(rejected.All(r => r == 0) && f.People[G(10)].Home == G(201) && f.People[G(14)].Home == G(202), $"cycles rejected per day: {string.Join(" ", rejected)}");
+        });
+        Test("a remembered cost lapses when it comes due, unless a worker lives there or no route led there", () => {
+            // The swap is made on day 1: adult 10 now lives at X=40 (720) and an unemployed adult at X=50 (880). Both
+            // costs are used for LearnedPasses passes; then X=40's, adult 10's own commute, is priced again and kept,
+            // and X=50's, which none of the workplace's workers lives by, lapses to the estimate.
+            var f = FarSwap(blocked: false); var e = Run(f);
+            Check(f.People[G(10)].Home == G(201), "day 1: the swap was not made");
+            string Kept(PassState st, int home)
+            {
+                for (int i = 0; i < st.LearnedCost.Length; i++)
+                    if (st.LearnedWork[i] == G(500) && st.LearnedHome[i] == G(home)) return $"{st.LearnedCost[i]} age {st.LearnedAge[i]}";
+                return "none";
+            }
+            for (int pass = 2; pass < DuePass; pass++) e = Run(f, Reload(e.State));
+            Check(Kept(e.State, 200) == $"880 age {PassEngine.LearnedPasses - 1}" && Kept(e.State, 201) == $"720 age {PassEngine.LearnedPasses - 1}",
+                $"after pass {DuePass - 1}: X=50 {Kept(e.State, 200)}, X=40 {Kept(e.State, 201)}");
+            e = Run(f, Reload(e.State));
+            Check(Kept(e.State, 200) == "none" && Kept(e.State, 201) == "720 age 0", $"after pass {DuePass}: X=50 {Kept(e.State, 200)}, expected none; X=40 {Kept(e.State, 201)}, expected 720 age 0");
+        });
+        Test("a cost priced fresh in the candidate row wins over a remembered one", () => {
+            // Day 1 remembers that no route leads from X=40 to adult 10's workplace. By day 2 the road is back and a
+            // filler home is paused, so X=40 is among the workplace's 32 nearest and priced fresh: that price decides.
+            var f = FarSwap(); var e = Run(f);
+            Check(e.LastReport.Rejected == 1, "day 1: the swap was not rejected");
+            f.Blocked.Remove((G(201), G(500))); f.Homes[G(1100)].Usable = false;
+            e = Run(f, Reload(e.State));
+            Check(f.People[G(10)].Home == G(201), $"day 2: adult 10 still at X=50 ({e.LastReport.Moves} moves, {e.LastReport.Rejected} rejected)");
+        });
+        Test("at most LearnedLimit remembered costs are kept: the youngest, sorted by workplace and home", () => {
+            // 200 more remembered costs than the limit, ages 0 to 5, for workplaces and homes the colony doesn't have. The
+            // pass ages them by one and adds its own two (age 0); the oldest go first.
+            var rng = new Random(3); int n = PassEngine.LearnedLimit + 200;
+            var old = Enumerable.Range(0, n).Select(i => (Work: G(70000 + rng.Next(0, 50)), Home: G(80000 + i), Cost: 1000 + i, Age: i % (PassEngine.LearnedPasses - 1)))
+                .OrderBy(x => x.Work).ThenBy(x => x.Home).ToList();
+            var state = new PassState { LearnedWork = old.Select(x => x.Work).ToArray(), LearnedHome = old.Select(x => x.Home).ToArray(),
+                LearnedCost = old.Select(x => x.Cost).ToArray(), LearnedAge = old.Select(x => x.Age).ToArray() };
+            var e = Run(FarSwap(), Reload(state)); var s = e.State;
+            Check(s.LearnedCost.Length == PassEngine.LearnedLimit && s.LearnedWork.Length == PassEngine.LearnedLimit && s.LearnedHome.Length == PassEngine.LearnedLimit && s.LearnedAge.Length == PassEngine.LearnedLimit,
+                $"{s.LearnedCost.Length} remembered costs kept, limit {PassEngine.LearnedLimit}");
+            for (int i = 1; i < s.LearnedCost.Length; i++)
+            {
+                int c = s.LearnedWork[i - 1].CompareTo(s.LearnedWork[i]);
+                Check(c < 0 || c == 0 && s.LearnedHome[i - 1].CompareTo(s.LearnedHome[i]) < 0, $"entry {i} is out of order or repeated");
+            }
+            // Filled youngest first: every age is kept whole up to the one that runs past the limit.
+            var available = old.Select(x => x.Age + 1).Concat(new[] { 0, 0 }).GroupBy(a => a).ToDictionary(g => g.Key, g => g.Count());
+            var kept = s.LearnedAge.GroupBy(a => a).ToDictionary(g => g.Key, g => g.Count()); int room = PassEngine.LearnedLimit;
+            for (int age = 0; age < PassEngine.LearnedPasses; age++)
+            {
+                int expected = Math.Min(available.GetValueOrDefault(age), room); room -= expected;
+                Check(kept.GetValueOrDefault(age) == expected, $"{kept.GetValueOrDefault(age)} costs of age {age} kept, expected {expected}");
+            }
+            var byPair = old.ToDictionary(x => (x.Work, x.Home), x => x);
+            for (int i = 0; i < s.LearnedCost.Length; i++)
+                if (byPair.TryGetValue((s.LearnedWork[i], s.LearnedHome[i]), out var x)) Check(s.LearnedCost[i] == x.Cost && s.LearnedAge[i] == x.Age + 1, $"entry {i} changed its cost or age");
+        });
+        Test("a cost learned on an earlier day is checked again before anyone moves on it", () => {
+            // As above, but the route from X=40 exists on the first day; the swap is verified and then goes stale (the
+            // home is paused as it is applied). By the next day that route is gone: the swap is proposed from the
+            // remembered cost, and its fresh route check turns it down.
+            var f = FarSwap(blocked: false); var e = new PassEngine(f); e.RequestPass();
+            while (e.State.Stage < 3) e.Tick();
+            f.Homes[G(201)].Usable = false;
+            for (int t = 0; t < 100 && (e.Busy || e.State.Requested); t++) e.Tick();
+            Check(e.LastReport.Stale == 1 && f.Applied.Count == 0, $"pass 1: {e.LastReport.Applied} applied, {e.LastReport.Stale} stale");
+            f.Homes[G(201)].Usable = true; f.Blocked.Add((G(201), G(500)));
+            var asked = new HashSet<(Guid, Guid)>(); var probe = new Probe(f, asked) { Recording = true };
+            e = Run(probe, Reload(e.State));
+            Check(e.LastReport.Moves == 2 && asked.Contains((G(201), G(500))), "pass 2: the remembered swap was not proposed and checked");
+            Check(e.LastReport.Rejected == 1 && f.Applied.Count == 0 && f.People[G(10)].Home == G(200), "pass 2: moved on a remembered cost without a fresh check");
+            e = Run(f, Reload(e.State));
+            Check(e.LastReport.Moves == 0 && e.LastReport.Rejected == 0, $"pass 3: {e.LastReport.Moves} moves, {e.LastReport.Rejected} rejected; the fresh cost did not replace the remembered one");
+        });
         Test("beavers who changed home or job mid-pass are skipped; everyone else is still moved", () => {
             var f = Colony(12, 40, 100, 45); var trial = f.Copy(); Run(trial);
             var movers = f.People.Values.Where(p => trial.People[p.Id].Home != p.Home && f.Works.ContainsKey(p.Work)).OrderBy(p => p.Id).Take(2).ToList();
@@ -443,28 +670,30 @@ static class Program
                 Check(f.CrossCalls == 0, $"seed {20 + seed}: {f.CrossCalls} of {f.Calls} route queries asked for a route between districts");
             }
         });
-        Test("beside a district border, the pass does as well as solving each district on its own", () => {
+        Test("beside a district border, the pass does as well as solving each district on its own, day after day", () => {
             // The small district's homes are the nearest ones to the big district's workplaces. They must not crowd out
             // the big district's own candidates, nor make its unpriced homes look unreachable.
-            int rejected = 0, referenceRejected = 0;
+            // Sixteen days in a row, each pass starting from the state the one before saved, as in the game: twice
+            // through the remembered costs' lifetime, so costs come due, and are priced again or dropped, on the way.
+            int days = 2 * (PassEngine.LearnedPasses + 1); var perDay = new int[days]; var perDayAlone = new int[days];
             for (int seed = 0; seed < 42; seed++)
             {
-                var start = BorderColony(seed); var whole = start.Copy(); PassEngine e = null;
-                for (int pass = 0; pass < 6; pass++) e = Run(whole);
-                double alone = 0; int aloneRejected = 0;
+                var start = BorderColony(seed); var whole = start.Copy(); PassEngine e = null; var rejected = new int[days];
+                for (int pass = 0; pass < days; pass++) { e = Run(whole, e == null ? null : Reload(e.State)); rejected[pass] = e.LastReport.Rejected; perDay[pass] += rejected[pass]; }
+                double alone = 0; var aloneRejected = new int[days];
                 foreach (var district in new[] { G(9000), G(9001) })
                 {
                     var part = start.Only(district); PassEngine p = null;
-                    for (int pass = 0; pass < 6; pass++) p = Run(part);
-                    alone += part.Total(); aloneRejected += p.LastReport.Rejected;
+                    for (int pass = 0; pass < days; pass++) { p = Run(part, p == null ? null : Reload(p.State)); aloneRejected[pass] += p.LastReport.Rejected; perDayAlone[pass] += p.LastReport.Rejected; }
+                    alone += part.Total();
                 }
-                Check(whole.Total() <= alone, $"seed {seed}: commute {whole.Total():F0} after 6 passes, but {alone:F0} when each district is solved on its own");
-                // Some colonies reject the same cycle every day even with one district (verified costs are not kept
-                // between passes); the border must not add to that. For these seeds the reference rejects none.
-                Check(e.LastReport.Rejected <= aloneRejected, $"seed {seed}: pass 6 still rejected {e.LastReport.Rejected} cycle(s), {aloneRejected} when each district is solved on its own");
-                rejected += e.LastReport.Rejected; referenceRejected += aloneRejected;
+                Check(whole.Total() <= alone, $"seed {seed}: commute {whole.Total():F0} after {days} passes, but {alone:F0} when each district is solved on its own");
+                // After the first days every cycle a route check turned down is known, and a worker's own remembered
+                // commute is priced again when it comes due, so no cycle is proposed only to be turned down.
+                Check(rejected.Skip(2).All(r => r == 0) && aloneRejected.Skip(2).All(r => r == 0),
+                    $"seed {seed}: cycles rejected per day {string.Join(" ", rejected)}; {string.Join(" ", aloneRejected)} when each district is solved on its own");
             }
-            Console.WriteLine($"   42 border colonies: {rejected} cycle(s) rejected on pass 6, {referenceRejected} when each district is solved on its own");
+            Console.WriteLine($"   42 border colonies over {days} days: cycles rejected per day {string.Join(" ", perDay)}; {string.Join(" ", perDayAlone)} when each district is solved on its own");
         });
         Test("paused homes keep their residents and never gain new ones", () => {
             var f = Colony(14, 30, 80, 30); var paused = f.Homes.Keys.OrderBy(k => k).Take(3).ToList(); foreach (var h in paused) f.Homes[h].Usable = false;
@@ -484,20 +713,30 @@ static class Program
             Check(e.State.Passes >= 1 && f.Applied.Count > 0, "Did not recover on the next request");
         });
         Test("saved state survives a JSON round trip at every stage", () => {
-            foreach (int districts in new[] { 1, 2 })
+            // 35 homes per district: verified costs outside the candidate rows are kept. Rejected swaps: their costs are
+            // priced again when they come due, on pass 8.
+            foreach (var (name, f) in new[] { ("1 district", Colony(18, 35, 85, 30)), ("2 districts", Colony(18, 70, 170, 30, districts: 2)), ("rejected swaps", FarSwap(2)) })
             {
-                var f = Colony(18, 30, 70, 30, districts: districts); var e = new PassEngine(f); e.RequestPass(); var stages = new HashSet<int>();
-                for (int t = 0; t < 2000 && (e.Busy || e.State.Requested); t++)
+                var e = new PassEngine(f); var stages = new HashSet<int>(); int learned = 0, rechecked = 0;
+                for (int pass = 1; pass <= DuePass; pass++)
                 {
-                    e.Tick(); stages.Add(e.State.Stage); string json = JsonConvert.SerializeObject(e.State);
-                    Check(JsonConvert.SerializeObject(JsonConvert.DeserializeObject<PassState>(json)) == json, "Round trip changed the state");
+                    e.RequestPass();
+                    for (int t = 0; t < 2000 && (e.Busy || e.State.Requested); t++)
+                    {
+                        e.Tick(); stages.Add(e.State.Stage); learned = Math.Max(learned, e.State.LearnedCost.Length); string json = JsonConvert.SerializeObject(e.State);
+                        if (e.State.Snap != null) rechecked = Math.Max(rechecked, e.State.Snap.RecheckCosts.Length);
+                        Check(JsonConvert.SerializeObject(JsonConvert.DeserializeObject<PassState>(json)) == json, $"{name}: round trip changed the state");
+                    }
                 }
-                Check(stages.SetEquals(new[] { 0, 1, 2, 3 }), "Did not exercise every stage: " + string.Join(",", stages));
+                Check(stages.SetEquals(new[] { 0, 1, 2, 3 }), $"{name}: did not exercise every stage: " + string.Join(",", stages));
+                Check(learned > 0, $"{name}: no verified cost was kept");
+                Check(name != "rejected swaps" || rechecked == 4, $"{name}: {rechecked} remembered costs priced again, expected 4");
             }
         });
         Test("an unknown saved version or stage is discarded, not trusted", () => {
-            // Version 1 (1.0.1) ranked homes from every district: a pass it saved starts over rather than resuming.
-            foreach (int version in new[] { 1, 99 })
+            // Version 1 (1.0.1) ranked homes from every district and version 2 kept no verified costs: a pass either saved
+            // starts over rather than resuming.
+            foreach (int version in new[] { 1, 2, 99 })
             {
                 var e = new PassEngine(new Fake(), new PassState { Version = version, Stage = 2, Requested = false, Passes = 5 });
                 Check(e.State.Stage == 0 && e.State.Version == PassState.CurrentVersion && e.State.Requested, $"Version {version} state kept");

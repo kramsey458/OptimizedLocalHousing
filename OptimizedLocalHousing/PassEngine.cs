@@ -32,6 +32,9 @@ public sealed class Snapshot
     public int[] Near = new int[0];              // Works.Length * NearK home indices in the workplace's district, nearest
                                                  // first; -1 pads a row when the district has fewer homes than NearK
     public int[] Costs = new int[0];             // fixed-point route cost per Near entry, -1 until queried (padding: Unreachable)
+    public int[] RecheckWork = new int[0];       // remembered costs (PassState.Learned*) this pass prices again after the
+    public int[] RecheckHome = new int[0];       // rows: workplace and home indices, the home outside the workplace's row
+    public int[] RecheckCosts = new int[0];      // fixed-point route cost per recheck, -1 until queried
 }
 
 public sealed class SnapshotBuilder
@@ -79,7 +82,8 @@ public sealed class SnapshotBuilder
 
 public sealed class PassState
 {
-    public const int CurrentVersion = 2;         // 2: Near rows hold only the workplace's district, padded with -1
+    public const int CurrentVersion = 3;         // 2: Near rows hold only the workplace's district, padded with -1
+                                                 // 3: route costs verified outside the Near rows are kept (Learned*)
     public int Version = CurrentVersion;
     public bool Requested = true;                // start a pass at the next opportunity
     public int Stage;                            // 0 idle, 1 route costs, 2 assignment, 3 verification
@@ -90,6 +94,10 @@ public sealed class PassState
     public int[] VerifyCurrent, VerifyTarget;    // stage 3: fresh route costs per move
     public long Queries, Ticks;                  // of the running pass
     public long Passes, MovedAdults, AppliedCycles, RejectedCycles, StaleCycles;   // lifetime
+    // Fresh route costs from earlier passes' route checks, for homes outside the workplace's Near row, which pricing
+    // only estimates. Sorted by workplace, then home; age = passes finished since the cost was checked.
+    public Guid[] LearnedWork = new Guid[0], LearnedHome = new Guid[0];
+    public int[] LearnedCost = new int[0], LearnedAge = new int[0];
 }
 
 public sealed class PassReport
@@ -100,13 +108,17 @@ public sealed class PassReport
 }
 
 // One pass = capture the colony, price each workplace's nearest homes in its district, solve the optimal assignment,
-// re-check every proposed move against fresh routes, then apply whole cycles of moves. Each stage is spread
-// over ticks with fixed operation budgets, and the entire state is serializable, so a pass resumes identically
-// after a save/load and on every multiplayer peer.
+// re-check every proposed move against fresh routes, then apply whole cycles of moves. The re-checked costs of homes
+// beyond the nearest are kept for the next passes, in place of estimates, and priced again when they come due while
+// still needed. Each stage is spread over ticks with fixed operation budgets, and the entire state is serializable,
+// so a pass resumes identically after a save/load and on every multiplayer peer.
 public sealed class PassEngine
 {
     public const int NearHomes = 32, QueriesPerTick = 32;
     public const long SolveOpsPerTick = 250_000;
+    // A checked cost is used by this many later passes; the last of them prices it again, and so keeps it, while one of
+    // the workplace's workers lives in the home or while no route led there. At most LearnedLimit costs are kept.
+    public const int LearnedPasses = 7, LearnedLimit = 1024;
     private readonly IPassWorld _world;
     public PassState State { get; private set; }
     public PassReport LastReport { get; private set; }
@@ -183,20 +195,52 @@ public sealed class PassEngine
                 snap.Near[w * k + i] = real ? order[i] : -1; snap.Costs[w * k + i] = real ? -1 : Cost.Unreachable;
             }
         }
+        Recheck(snap);
         State.Snap = snap; State.Stage = 1; State.Cursor = 0;
+    }
+
+    private static bool InRow(Snapshot s, int w, int home)
+    {
+        for (int e = 0; e < s.NearK; e++) if (s.Near[w * s.NearK + e] == home) return true;
+        return false;
+    }
+    // Remembered costs that this pass uses for the last time are priced again with the rows, and kept for LearnedPasses
+    // more passes, while they matter: when one of the workplace's workers lives in the home, so their own commute is not
+    // left to an estimate that makes a move out look better than it is (a cycle the route check then turns down), and
+    // when no route led there, so a road that comes back is noticed. The rest lapse to the estimate.
+    private void Recheck(Snapshot s)
+    {
+        var lives = new HashSet<(int Work, int Home)>();   // looked up only, never enumerated
+        for (int i = 0; i < s.Adults.Length; i++) if (s.AdultWork[i] >= 0) lives.Add((s.AdultWork[i], s.AdultHome[i]));
+        var work = new List<int>(); var home = new List<int>();
+        for (int e = 0; e < State.LearnedCost.Length; e++)
+        {
+            if (State.LearnedAge[e] != LearnedPasses - 1) continue;
+            int w = Array.BinarySearch(s.Works, State.LearnedWork[e]), h = Array.BinarySearch(s.Homes, State.LearnedHome[e]);
+            if (w < 0 || h < 0 || InRow(s, w, h)) continue;
+            if (State.LearnedCost[e] >= Cost.Unreachable || lives.Contains((w, h))) { work.Add(w); home.Add(h); }
+        }
+        s.RecheckWork = work.ToArray(); s.RecheckHome = home.ToArray(); s.RecheckCosts = new int[work.Count];
+        for (int r = 0; r < s.RecheckCosts.Length; r++) s.RecheckCosts[r] = -1;
     }
 
     private void PriceStep()
     {
-        var s = State.Snap; int k = s.NearK;
-        for (int q = 0; q < QueriesPerTick && State.Cursor < s.Costs.Length; State.Cursor++)
+        // The cursor runs over the rows' entries, then over the rechecks.
+        var s = State.Snap; int k = s.NearK, end = s.Costs.Length + s.RecheckCosts.Length;
+        for (int q = 0; q < QueriesPerTick && State.Cursor < end; State.Cursor++)
         {
             int at = State.Cursor;
-            if (s.Near[at] < 0) continue;   // padding: already Unreachable, and costs no query
-            s.Costs[at] = _world.TryRoute(s.Homes[s.Near[at]], s.Works[at / k], out var route) ? Cost.Fixed(route) : Cost.Unreachable;
+            if (at >= s.Costs.Length)
+            {
+                int r = at - s.Costs.Length;
+                s.RecheckCosts[r] = _world.TryRoute(s.Homes[s.RecheckHome[r]], s.Works[s.RecheckWork[r]], out var again) ? Cost.Fixed(again) : Cost.Unreachable;
+            }
+            else if (s.Near[at] < 0) continue;   // padding: already Unreachable, and costs no query
+            else s.Costs[at] = _world.TryRoute(s.Homes[s.Near[at]], s.Works[at / k], out var route) ? Cost.Fixed(route) : Cost.Unreachable;
             State.Queries++; q++;
         }
-        if (State.Cursor < s.Costs.Length) return;
+        if (State.Cursor < end) return;
         int n = s.Adults.Length;
         State.U = new long[n + 1]; State.V = new long[n + 1]; State.P = new int[n + 1]; State.Row = 1; State.Stage = 2;
     }
@@ -235,6 +279,15 @@ public sealed class PassEngine
                     d[home] = c; if (c < Cost.Unreachable && c > worst) worst = c;
                 }
                 _known[w] = d; _far[w] = (long)(worst < 0 ? Cost.Unreachable : worst) + Cost.FarMargin;
+            }
+            // A home outside the row whose route this pass priced again, or an earlier pass checked, is taken at that cost
+            // instead of the estimate (any move is re-checked all the same). This reads the saved state only, so a
+            // rebuild after a load matches.
+            for (int r = 0; r < s.RecheckCosts.Length; r++) _known[s.RecheckWork[r]][s.RecheckHome[r]] = s.RecheckCosts[r];
+            for (int e = 0; e < State.LearnedCost.Length; e++)
+            {
+                int w = Array.BinarySearch(s.Works, State.LearnedWork[e]), home = Array.BinarySearch(s.Homes, State.LearnedHome[e]);
+                if (w >= 0 && home >= 0 && !_known[w].ContainsKey(home)) _known[w][home] = State.LearnedCost[e];
             }
         }
         int own = s.AdultHome[i], work = s.AdultWork[i];
@@ -323,9 +376,48 @@ public sealed class PassEngine
             else report.Stale++;
         }
         State.AppliedCycles += report.Applied; State.RejectedCycles += report.Rejected; State.StaleCycles += report.Stale;
-        State.Passes++;
+        State.Passes++; Learn(s, current, target);
         State.Snap = null; State.U = null; State.V = null; State.P = null; State.VerifyCurrent = null; State.VerifyTarget = null;
         State.Stage = 0; State.Cursor = 0; State.Row = 1; Forget();
         LastReport = report; Reported?.Invoke(report);
+    }
+
+    // Keeps this pass's fresh route costs for homes outside the workplace's Near row, which the next pass would only
+    // estimate again: without them a move the check turned down comes back every day. A newer cost replaces an older one
+    // for the same pair (a move's check wins over a recheck); the rest age by a pass and go after LearnedPasses, or once
+    // pricing covered their pair. The list lives in the saved state, sorted, so every peer, reloaded or not, starts the
+    // next pass from the same costs.
+    private void Learn(Snapshot s, int[] current, int[] target)
+    {
+        var all = new List<(Guid Work, Guid Home, int Cost, int Age, int Order)>();
+        for (int e = 0; _moves != null && e < _moves.Count; e++)
+        {
+            var m = _moves[e]; int work = s.AdultWork[m[0]];
+            if (work < 0) continue;
+            if (!InRow(s, work, m[1])) all.Add((s.Works[work], s.Homes[m[1]], current[e], 0, all.Count));
+            if (!InRow(s, work, m[2])) all.Add((s.Works[work], s.Homes[m[2]], target[e], 0, all.Count));
+        }
+        for (int r = 0; r < s.RecheckCosts.Length; r++) all.Add((s.Works[s.RecheckWork[r]], s.Homes[s.RecheckHome[r]], s.RecheckCosts[r], 0, all.Count));
+        for (int e = 0; e < State.LearnedCost.Length; e++)
+        {
+            if (State.LearnedAge[e] + 1 >= LearnedPasses) continue;
+            int w = Array.BinarySearch(s.Works, State.LearnedWork[e]), home = Array.BinarySearch(s.Homes, State.LearnedHome[e]);
+            if (w >= 0 && home >= 0 && InRow(s, w, home)) continue;
+            all.Add((State.LearnedWork[e], State.LearnedHome[e], State.LearnedCost[e], State.LearnedAge[e] + 1, all.Count));
+        }
+        int ByPair((Guid Work, Guid Home, int Cost, int Age, int Order) x, (Guid Work, Guid Home, int Cost, int Age, int Order) y) =>
+            x.Work != y.Work ? x.Work.CompareTo(y.Work) : x.Home != y.Home ? x.Home.CompareTo(y.Home) : x.Age != y.Age ? x.Age.CompareTo(y.Age) : x.Order.CompareTo(y.Order);
+        all.Sort(ByPair);
+        var kept = new List<(Guid Work, Guid Home, int Cost, int Age, int Order)>(all.Count);
+        foreach (var x in all) if (kept.Count == 0 || kept[kept.Count - 1].Work != x.Work || kept[kept.Count - 1].Home != x.Home) kept.Add(x);
+        if (kept.Count > LearnedLimit)
+        {
+            kept.Sort((x, y) => x.Age != y.Age ? x.Age.CompareTo(y.Age) : ByPair(x, y));   // the youngest stay
+            kept.RemoveRange(LearnedLimit, kept.Count - LearnedLimit); kept.Sort(ByPair);
+        }
+        State.LearnedWork = new Guid[kept.Count]; State.LearnedHome = new Guid[kept.Count];
+        State.LearnedCost = new int[kept.Count]; State.LearnedAge = new int[kept.Count];
+        for (int i = 0; i < kept.Count; i++)
+        { State.LearnedWork[i] = kept[i].Work; State.LearnedHome[i] = kept[i].Home; State.LearnedCost[i] = kept[i].Cost; State.LearnedAge[i] = kept[i].Age; }
     }
 }
