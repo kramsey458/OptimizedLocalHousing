@@ -100,7 +100,7 @@
       <article class="card">
         <div class="icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M8.5 12.5l2.4 2.4 4.6-5.3"/></svg></div>
         <h3>Optimal, not first-come-first-served</h3>
-        <p>The whole colony is solved at once with the Hungarian algorithm, so the total commute is the smallest the rules allow. It isn't whatever a greedy pass happens to leave over.</p>
+        <p>Every district is solved exactly with the Hungarian algorithm, so the colony's total commute is the smallest the rules allow. It isn't whatever a greedy pass happens to leave over.</p>
       </article>
       <article class="card">
         <div class="icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="18" r="2"/><circle cx="19" cy="5" r="2"/><path d="M7 18h4a4 4 0 0 0 4-4v-1a4 4 0 0 1 4-4"/></svg></div>
@@ -142,7 +142,7 @@
       <ol class="steps">
         <li><div><strong>Capture</strong><p>Every housed adult beaver, its home and its assigned workplace, in one quick snapshot.</p></div></li>
         <li><div><strong>Price</strong><p>Real route costs from each workplace's 32 nearest homes in its district. Anything farther is estimated, or taken from a recent check, and is re-checked before it is ever used.</p></div></li>
-        <li><div><strong>Solve</strong><p>The best possible way to reassign the adults to the beds that adults occupy today.</p></div></li>
+        <li><div><strong>Solve</strong><p>The best possible way to reassign the adults to the beds that adults occupy today, one district at a time, since nobody moves between districts.</p></div></li>
         <li><div><strong>Verify</strong><p>Every proposed move is priced again with fresh routes. Moves that would strand a beaver, or that don't save enough, are thrown away.</p></div></li>
         <li><div><strong>Apply</strong><p>Whole cycles of moves are applied in a single tick, and rolled back if the game refuses any of them.</p></div></li>
       </ol>

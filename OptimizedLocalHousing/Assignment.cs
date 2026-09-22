@@ -9,7 +9,6 @@ public static class Cost
     public const int Scale = 16;                       // fixed-point units per route-cost unit
     public const int Unreachable = 10_000_000;         // no usable route (larger than any real route)
     public const int MaxReal = 5_000_000;
-    public const long Forbidden = 1_000_000_000;       // adult and home in different districts
     public const int StayBonus = 1 * Scale;            // an adult prefers its current home unless a move saves more
     public const int MinimumGain = Scale / 2;         // a cycle of moves must save at least this in total
     public const int FarMargin = 10 * Scale;           // un-queried homes are estimated this far beyond the worst reachable queried one
@@ -38,7 +37,11 @@ public static class Hungarian
     // After completion p[j] (1-based) is the row assigned to column j-1.
     public static bool Step(long[,] cost, int n, long[] u, long[] v, int[] p, ref int row, long budget, Func<int, long> prepareRow)
     {
-        long ops = 0;
+        long ops = 0; return Step(cost, n, u, v, p, ref row, ref ops, budget, prepareRow);
+    }
+    // The same, counting on from the work already spent (ops), so that one budget can span several assignments.
+    public static bool Step(long[,] cost, int n, long[] u, long[] v, int[] p, ref int row, ref long ops, long budget, Func<int, long> prepareRow)
+    {
         var way = new int[n + 1]; var minv = new long[n + 1]; var used = new bool[n + 1];
         while (row <= n && ops < budget)
         {

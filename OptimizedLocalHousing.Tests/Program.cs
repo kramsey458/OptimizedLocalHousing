@@ -161,10 +161,12 @@ static class Program
     const int DuePass = PassEngine.LearnedPasses + 1;
     static PassEngine Run(IPassWorld f, PassState state = null, int limit = 5000)
     {
-        var e = new PassEngine(f, state); e.RequestPass();
+        var e = Strict(new PassEngine(f, state), "A pass"); e.RequestPass();
         for (int t = 0; t < limit; t++) { e.Tick(); if (!e.Busy && !e.State.Requested) return e; }
         throw new Exception("Pass did not finish");
     }
+    // A fault fails the test at once, with a readable message, instead of leaving an abandoned pass behind.
+    static PassEngine Strict(PassEngine e, string who) { e.Faulted += x => throw new Exception($"{who} faulted: {x.Message}", x); return e; }
     // What a save and load hands the next engine: only what the saved state holds.
     static PassState Reload(PassState state) => JsonConvert.DeserializeObject<PassState>(JsonConvert.SerializeObject(state));
     // Costs verified by earlier passes that the running pass takes instead of an estimate: pairs in its snapshot that
@@ -211,11 +213,11 @@ static class Program
     static void Run(string[] args)
     {
         Test("Hungarian solver matches brute force, including ties and forbidden entries", () => {
-            var rng = new Random(11);
+            var rng = new Random(11); const long Forbidden = 1_000_000_000;   // a pair never to be assigned
             for (int trial = 0; trial < 300; trial++)
             {
                 int n = rng.Next(1, 8); var c = new long[n, n];
-                for (int i = 0; i < n; i++) for (int j = 0; j < n; j++) c[i, j] = rng.Next(0, 4) == 0 ? Cost.Forbidden : rng.Next(0, 6) * (rng.Next(0, 2) == 0 ? 1 : 1000) - 40;
+                for (int i = 0; i < n; i++) for (int j = 0; j < n; j++) c[i, j] = rng.Next(0, 4) == 0 ? Forbidden : rng.Next(0, 6) * (rng.Next(0, 2) == 0 ? 1 : 1000) - 40;
                 var u = new long[n + 1]; var v = new long[n + 1]; var p = new int[n + 1]; int row = 1;
                 Check(Hungarian.Step(c, n, u, v, p, ref row, long.MaxValue, _ => 0), "Did not finish");
                 long got = 0; for (int j = 1; j <= n; j++) got += c[p[j] - 1, j - 1];
@@ -231,6 +233,11 @@ static class Program
             var u2 = new long[n + 1]; var v2 = new long[n + 1]; var p2 = new int[n + 1]; int r2 = 1; int calls = 0;
             while (!Hungarian.Step(c, n, u2, v2, p2, ref r2, 1, _ => 0)) calls++;
             Check(calls >= n - 1 && p1.SequenceEqual(p2) && u1.SequenceEqual(u2) && v1.SequenceEqual(v2), "Paused solve differed");
+            // Counting on from work already spent (one budget over several districts): a spent budget solves no row, and
+            // one operation short of it solves exactly one, charged on top.
+            var u3 = new long[n + 1]; var v3 = new long[n + 1]; var p3 = new int[n + 1]; int r3 = 1; long ops = 100;
+            Check(!Hungarian.Step(c, n, u3, v3, p3, ref r3, ref ops, 100, _ => 0) && r3 == 1 && ops == 100, $"A spent budget solved up to row {r3}, {ops} operations");
+            ops = 99; Check(!Hungarian.Step(c, n, u3, v3, p3, ref r3, ref ops, 100, _ => 7) && r3 == 2 && ops >= 99 + 7 + n, $"One operation short of the budget: up to row {r3}, {ops} operations");
         });
         Test("cycle splitting: simple, complete, deterministic and applicable one at a time", () => {
             var rng = new Random(3);
@@ -257,7 +264,7 @@ static class Program
         Test("the pass reaches the true optimum (brute force) on random small colonies", () => {
             for (int seed = 0; seed < 100; seed++)
             {
-                var f = Colony(seed, homes: 3 + seed % 3, adults: 6 + seed % 3, works: 3, children: seed % 3, districts: seed < 60 ? 1 : 2);
+                var f = Colony(seed, homes: 3 + seed % 3, adults: 6 + seed % 3, works: 3, children: seed % 3, districts: seed < 60 ? 1 : 2 + seed % 2);
                 StartHome = f.People.ToDictionary(p => p.Key, p => p.Value.Home);
                 long best = Best(f); var counts = f.AdultCounts(); var kids = f.People.Values.Where(p => !p.Adult).ToDictionary(p => p.Id, p => p.Home);
                 var e = Run(f);
@@ -326,25 +333,29 @@ static class Program
             // Three districts of 15 homes: padded candidate rows. PaddingTail: pricing ends with a tick that only skips padding.
             // Two districts of 45 homes: the second pass takes costs the first one verified outside the candidate rows.
             // A rejected swap in each of 2 or 16 districts: those costs decide what the later passes do; with 16 the
-            // solve spans several ticks, so a reload lands mid-solve, where the rows solved so far are rebuilt.
+            // solve spans several ticks, so a reload lands mid-solve in a later district, where the rows of that district
+            // solved so far are rebuilt. Six districts of 400 adults: a solve tick ends just as a district is done, so a
+            // reload lands at the start of the next one.
             // Passes 1, 2 and 8 are checked; the eighth prices again the first pass's costs that are still needed.
             foreach (var (name, colony) in new[] { ("1 district", Colony(9, 45, 110, 55, 6)), ("3 districts", Colony(9, 45, 110, 55, 6, 3)), ("2 districts of 45 homes", Colony(9, 90, 220, 90, 6, 2)),
-                ("2 districts, a rejected swap each", FarSwap(2)), ("16 districts, a rejected swap each", FarSwap(16)), ("padding tail", PaddingTail()) })
+                ("2 districts, a rejected swap each", FarSwap(2)), ("16 districts, a rejected swap each", FarSwap(16)), ("padding tail", PaddingTail()),
+                ("6 districts, a solve tick ends with a district", Colony(0, 120, 400, 100, 0, 6)) })
             {
-                var start = colony; PassState saved = null; bool skipOnly = false; int used = 0, rechecked = 0, midSolve = 0; var rejected = new List<int>();
+                var start = colony; PassState saved = null; bool skipOnly = false; int used = 0, rechecked = 0, midSolve = 0, between = 0; var rejected = new List<int>();
                 for (int pass = 1; pass <= DuePass; pass++)
                 {
                     // Each pass starts from the world and the saved state the previous one left.
                     var whole = start.Copy(); var ew = Run(whole, saved == null ? null : Reload(saved)); rejected.Add(ew.LastReport.Rejected);
                     string reference = JsonConvert.SerializeObject(ew.State); int ticks = (int)ew.LastReport.Ticks;
-                    var live = start.Copy(); var el = new PassEngine(live, saved == null ? null : Reload(saved)); el.RequestPass();
+                    var live = start.Copy(); var el = Strict(new PassEngine(live, saved == null ? null : Reload(saved)), $"{name}: pass {pass}"); el.RequestPass();
                     for (int t = 0; t < ticks + 2 && (pass <= 2 || pass == DuePass); t++)
                     {
                         var resumedWorld = start.Copy();   // nothing is applied before the last tick, so the world is unchanged mid-pass
                         if (el.Busy && live.Applied.Count == 0)
                         {
-                            if (pass > 1 && el.State.Stage == 2 && el.State.Row > 1) midSolve++;
-                            var restored = new PassEngine(resumedWorld, Reload(el.State));
+                            if (pass > 1 && el.State.Stage == 2 && el.State.District > 0 && el.State.Row > 1) midSolve++;
+                            if (el.State.Stage == 2 && el.State.District > 0 && el.State.Row == 1) between++;
+                            var restored = Strict(new PassEngine(resumedWorld, Reload(el.State)), $"{name}: resume at tick {t} of pass {pass}");
                             for (int k = 0; k < 5000 && (restored.Busy || restored.State.Requested); k++) restored.Tick();
                             Check(resumedWorld.Fingerprint() == whole.Fingerprint(), $"{name}: resume at tick {t} of pass {pass} housed differently");
                             Check(JsonConvert.SerializeObject(restored.State) == reference, $"{name}: resume at tick {t} of pass {pass} ended in a different state");
@@ -358,12 +369,13 @@ static class Program
                 }
                 Check(name != "padding tail" || skipOnly, "PaddingTail did not end pricing with a tick that only skips padding");
                 Check(!name.StartsWith("2 districts") || used > 0, $"{name}: the second pass used no cost the first one verified");
+                Check(!name.StartsWith("6 districts") || between > 0, $"{name}: no reload landed between two districts' solves");
                 if (name.Contains("rejected swap"))
                 {
                     int districts = name.StartsWith("16") ? 16 : 2;
                     Check(rejected[0] == districts && rejected.Skip(1).All(r => r == 0), $"{name}: cycles rejected per pass {string.Join(", ", rejected)}");
                     Check(rechecked == 2 * districts, $"{name}: pass {DuePass} priced {rechecked} remembered costs again, expected {2 * districts}");
-                    Check(districts == 2 || midSolve > 0, $"{name}: no reload landed mid-solve in a pass that uses remembered costs");
+                    Check(districts == 2 || midSolve > 0, $"{name}: no reload landed mid-solve in a later district, in a pass that uses remembered costs");
                 }
             }
         });
@@ -374,14 +386,17 @@ static class Program
             // Eight passes: the second starts from costs the first one verified, which the saved state must carry, and
             // the eighth prices again those still needed. In the rejected-swap colonies they decide what the later passes
             // do, so a peer that lost them would not keep step; with 16 districts the solve spans several ticks, so peers
-            // also reload mid-solve, where the rows solved so far are rebuilt. Peers reload during passes 1, 2 and 8.
-            string Position(PassEngine e) => $"stage {e.State.Stage} row {e.State.Row} cursor {e.State.Cursor} ticks {e.State.Ticks} queries {e.State.Queries}";
-            // Two districts of 50 homes: learned costs outside the rows; four of 25: padded rows.
+            // also reload mid-solve in a later district, where the rows of that district solved so far are rebuilt.
+            // Peers reload during passes 1, 2 and 8.
+            string Position(PassEngine e) => $"stage {e.State.Stage} district {e.State.District} row {e.State.Row} cursor {e.State.Cursor} ticks {e.State.Ticks} queries {e.State.Queries}";
+            // Two districts of 50 homes: learned costs outside the rows, and a reload mid-solve in the second district;
+            // four of 25: padded rows. Six districts of 400 adults: a solve tick ends just as a district is done.
             foreach (var (name, start, every) in new[] { ("1 district", Colony(19, 100, 300, 130, 10), 5), ("2 districts", Colony(19, 100, 300, 130, 10, 2), 5),
-                ("4 districts", Colony(19, 100, 300, 130, 10, 4), 5), ("2 districts, a rejected swap each", FarSwap(2), 1), ("16 districts, a rejected swap each", FarSwap(16), 1) })
+                ("4 districts", Colony(19, 100, 300, 130, 10, 4), 5), ("2 districts, a rejected swap each", FarSwap(2), 1), ("16 districts, a rejected swap each", FarSwap(16), 1),
+                ("6 districts, a solve tick ends with a district", Colony(0, 120, 400, 100, 0, 6), 5) })
             {
-                var live = start.Copy(); var el = new PassEngine(live);
-                var restored = new List<(int At, PassEngine Engine, Fake World)>(); int t = 0, used = 0, midSolve = 0; var ticks = new List<long>(); var rejected = new List<int>();
+                var live = start.Copy(); var el = Strict(new PassEngine(live), $"{name}: the peer that never reloaded");
+                var restored = new List<(int At, PassEngine Engine, Fake World)>(); int t = 0, used = 0, midSolve = 0, between = 0; var ticks = new List<long>(); var rejected = new List<int>();
                 for (int pass = 1; pass <= DuePass; pass++)
                 {
                     el.RequestPass(); foreach (var (_, engine, _) in restored) engine.RequestPass();   // the day starts on every peer at once
@@ -389,9 +404,10 @@ static class Program
                     {
                         if (el.Busy && (pass <= 2 || pass == DuePass) && (el.State.Stage == 2 || t % every == 0))
                         {
-                            if (pass > 1 && el.State.Stage == 2 && el.State.Row > 1) midSolve++;
+                            if (pass > 1 && el.State.Stage == 2 && el.State.District > 0 && el.State.Row > 1) midSolve++;
+                            if (el.State.Stage == 2 && el.State.District > 0 && el.State.Row == 1) between++;
                             var world = live.Copy();   // nothing is applied before a pass's last tick
-                            restored.Add((t, new PassEngine(world, Reload(el.State)), world));
+                            restored.Add((t, Strict(new PassEngine(world, Reload(el.State)), $"{name}: a peer that reloaded at tick {t}"), world));
                         }
                         el.Tick();
                         if (pass == 2 && el.State.Stage == 1) used = LearnedInUse(el.State);
@@ -408,17 +424,19 @@ static class Program
                 }
                 Check(restored.Count > (every == 1 ? 5 : 40), $"{name}: too few reload points exercised: {restored.Count}");
                 Check(!name.StartsWith("2 districts") || used > 0, $"{name}: the second pass used no cost the first one verified");
+                Check(name != "2 districts" || midSolve > 0, $"{name}: no peer reloaded mid-solve in the second district after pass 1");
+                Check(!name.StartsWith("6 districts") || between > 0, $"{name}: no peer reloaded between two districts' solves");
                 if (name.Contains("rejected swap"))
                 {
                     int districts = name.StartsWith("16") ? 16 : 2;
                     Check(rejected[0] == districts && rejected.Skip(1).All(r => r == 0), $"{name}: cycles rejected per pass {string.Join(", ", rejected)}");
-                    Check(districts == 2 || midSolve > 0, $"{name}: no peer reloaded mid-solve in a pass that uses remembered costs");
+                    Check(districts == 2 || midSolve > 0, $"{name}: no peer reloaded mid-solve in a later district, in a pass that uses remembered costs");
                 }
-                Console.WriteLine($"   {name}: {restored.Count} reload points ({midSolve} mid-solve after pass 1), each in lockstep to the end of {DuePass} passes ({ticks.Sum()} ticks)");
+                Console.WriteLine($"   {name}: {restored.Count} reload points ({midSolve} mid-solve in a later district after pass 1, {between} between districts), each in lockstep to the end of {DuePass} passes ({ticks.Sum()} ticks)");
             }
         });
 
-        Test("work is bounded per tick: route queries stay within budget for a large colony", () => {
+        Test("work is bounded per tick: route queries and solver operations stay within budget", () => {
             foreach (int districts in new[] { 1, 6 })   // six districts of 25 homes: padded candidate rows
             {
                 var f = Colony(4, 150, 400, 120, 30, districts); var e = new PassEngine(f); e.RequestPass(); int worst = 0, ticks = 0;
@@ -439,6 +457,26 @@ static class Program
                 }
             }
             Check(rechecked == 34 && most <= PassEngine.QueriesPerTick, $"17 rejected swaps: {rechecked} costs priced again on pass {DuePass}, {most} route queries in one tick");
+            // One solver budget spans the districts of a tick: a solve tick charges less than SolveOpsPerTick plus the row
+            // it started last (a row of an n-adult district costs at most n(n + 1)), and a tick that leaves rows for the
+            // next one has spent all of it.
+            foreach (var (name, f) in new[] { ("4 districts of 300 adults", Colony(3, 400, 1200, 400, 0, 4)), ("6 districts of 67 adults", Colony(0, 120, 400, 100, 0, 6)),
+                ("16 districts of 34 adults", FarSwap(16)) })
+            {
+                var e = Strict(new PassEngine(f), name); e.RequestPass(); long row = 0, peak = 0; int ticks = 0;
+                for (int t = 0; t < 20000 && (e.Busy || e.State.Requested); t++)
+                {
+                    int stage = e.State.Stage;
+                    if (stage == 2 && row == 0) row = e.State.Snap.AdultDistrict.GroupBy(d => d).Max(d => (long)d.Count() * (d.Count() + 1));
+                    e.Tick();
+                    if (stage != 2) continue;
+                    ticks++; peak = Math.Max(peak, e.SolveOps);
+                    Check(e.SolveOps < PassEngine.SolveOpsPerTick + row, $"{name}: solve tick {ticks} charged {e.SolveOps} operations; the budget is {PassEngine.SolveOpsPerTick}, a row at most {row}");
+                    Check(e.State.Stage != 2 || e.SolveOps >= PassEngine.SolveOpsPerTick, $"{name}: solve tick {ticks} stopped after {e.SolveOps} operations");
+                }
+                Check(!e.Busy && ticks > 1, $"{name}: {ticks} solve ticks");
+                Console.WriteLine($"   {name}: {ticks} solve ticks, at most {peak} solver operations in one");
+            }
         });
         Test("far homes are never chosen without a fresh route check", () => {
             var f = Colony(5, 120, 200, 40); var e = new PassEngine(f); e.RequestPass(); var checkedPairs = new HashSet<(Guid, Guid)>(); var before = f.People.ToDictionary(p => p.Key, p => p.Value.Home);
@@ -695,6 +733,38 @@ static class Program
             }
             Console.WriteLine($"   42 border colonies over {days} days: cycles rejected per day {string.Join(" ", perDay)}; {string.Join(" ", perDayAlone)} when each district is solved on its own");
         });
+        Test("each district is solved on its own: the same homes as a colony of that district alone, in no more solve ticks", () => {
+            // Nobody crosses districts, so the colony's assignment splits into one per district. Solved as one, every
+            // adult's row spans every district's beds, and the solve takes about three times as many ticks.
+            int SolveTicks(Fake f)
+            {
+                var e = new PassEngine(f); Exception fault = null; e.Faulted += x => fault = x; e.RequestPass(); int ticks = 0;
+                for (int t = 0; t < 20000 && (e.Busy || e.State.Requested); t++) { if (e.State.Stage == 2) ticks++; e.Tick(); }
+                Check(fault == null && !e.Busy && !e.State.Requested, $"Did not finish: {fault?.Message}"); return ticks;
+            }
+            // A border colony with its two districts' IDs swapped: the small district comes first, then the big one.
+            Fake SmallFirst(Fake f)
+            {
+                var g = f.Copy(); Guid Swap(Guid d) => d == G(9000) ? G(9001) : d == G(9001) ? G(9000) : d;
+                foreach (var p in g.People.Values) p.District = Swap(p.District);
+                foreach (var h in g.Homes.Values) h.District = Swap(h.District);
+                foreach (var w in g.WorkDistrict.Keys.ToList()) g.WorkDistrict[w] = Swap(g.WorkDistrict[w]);
+                return g;
+            }
+            foreach (var (name, start) in new[] { ("2 districts, 700 adults", Colony(3, 240, 700, 300, 0, 2)), ("3 districts, 900 adults", Colony(3, 300, 900, 300, 0, 3)),
+                ("4 districts, 1,200 adults", Colony(3, 400, 1200, 400, 0, 4)), ("a small district, then a big one", SmallFirst(BorderColony(5))) })
+            {
+                var whole = start.Copy(); int ticks = SolveTicks(whole), alone = 0; var homes = new Dictionary<Guid, Guid>();
+                foreach (var district in start.Homes.Values.Select(h => h.District).Distinct().OrderBy(d => d))
+                {
+                    var part = start.Only(district); alone += SolveTicks(part);
+                    foreach (var p in part.People.Values) homes[p.Id] = p.Home;
+                }
+                Check(ticks <= alone, $"{name}: the solve took {ticks} ticks, but {alone} when each district is solved on its own");
+                Check(whole.People.Values.All(p => homes[p.Id] == p.Home), $"{name}: housed differently from solving each district on its own");
+                Console.WriteLine($"   {name}: {ticks} solve ticks; {alone} solving each district in a colony of its own");
+            }
+        });
         Test("paused homes keep their residents and never gain new ones", () => {
             var f = Colony(14, 30, 80, 30); var paused = f.Homes.Keys.OrderBy(k => k).Take(3).ToList(); foreach (var h in paused) f.Homes[h].Usable = false;
             var residents = f.People.Values.Where(p => paused.Contains(p.Home)).ToDictionary(p => p.Id, p => p.Home);
@@ -733,15 +803,25 @@ static class Program
                 Check(name != "rejected swaps" || rechecked == 4, $"{name}: {rechecked} remembered costs priced again, expected 4");
             }
         });
-        Test("an unknown saved version or stage is discarded, not trusted", () => {
-            // Version 1 (1.0.1) ranked homes from every district and version 2 kept no verified costs: a pass either saved
-            // starts over rather than resuming.
-            foreach (int version in new[] { 1, 2, 99 })
+        Test("an unknown saved version or stage is discarded, not trusted; a version 3 save keeps its remembered costs", () => {
+            // Version 1 (1.0.1) ranked homes from every district, version 2 kept no verified costs and version 3 solved the
+            // whole colony as one assignment: a pass any of them saved starts over rather than resuming. Version 3 kept its
+            // remembered costs as this version does, so they carry over, unless its lists disagree in length.
+            PassState Saved(int version, int ages = 1) => new PassState { Version = version, Stage = 2, Requested = false, Passes = 5,
+                LearnedWork = new[] { G(500) }, LearnedHome = new[] { G(100) }, LearnedCost = new[] { 640 }, LearnedAge = new int[ages] };
+            foreach (var (name, saved, keeps) in new[] { ("Version 1", Saved(1), false), ("Version 2", Saved(2), false), ("Version 3", Saved(3), true),
+                ("Version 3 with mismatched remembered costs", Saved(3, 2), false), ("Version 99", Saved(99), false) })
             {
-                var e = new PassEngine(new Fake(), new PassState { Version = version, Stage = 2, Requested = false, Passes = 5 });
-                Check(e.State.Stage == 0 && e.State.Version == PassState.CurrentVersion && e.State.Requested, $"Version {version} state kept");
-                Check(e.State.Passes == 5, $"Version {version}: the pass count was lost");
+                var e = new PassEngine(new Fake(), saved);
+                Check(e.State.Stage == 0 && e.State.Version == PassState.CurrentVersion && e.State.Requested, $"{name} state kept");
+                Check(e.State.Passes == 5, $"{name}: the pass count was lost");
+                var s = e.State; bool kept = s.LearnedCost.Length == 1 && s.LearnedWork[0] == G(500) && s.LearnedHome[0] == G(100) && s.LearnedCost[0] == 640 && s.LearnedAge[0] == 0;
+                bool none = s.LearnedWork.Length + s.LearnedHome.Length + s.LearnedCost.Length + s.LearnedAge.Length == 0;
+                Check(keeps ? kept : none, $"{name}: remembered costs {(keeps ? "lost" : "kept")}");
             }
+            // An idle version 3 save after a pass whose route check turned down a swap: the next pass does not propose it.
+            var f = FarSwap(); var first = Run(f); var idle = Reload(first.State); idle.Version = 3; var next = Run(f, idle);
+            Check(first.LastReport.Rejected == 1 && next.LastReport.Rejected == 0, $"A version 3 save: {first.LastReport.Rejected}, then {next.LastReport.Rejected} cycles rejected");
         });
         Test("a save from 1.0.1 restarts the pass it was running, and keeps its counters and schedule", () => {
             // Written by the 1.0.1 engine (a87ba72) for this colony: after one pass, mid-way through the next (stage 2),
