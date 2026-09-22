@@ -142,7 +142,7 @@
   <details id="stutter">
     <summary>The game hitches when a pass starts or finishes</summary>
     <div class="answer">
-      <p>The pass is split into steps with per-tick budgets (32 route queries per tick on a colony of a few hundred beavers; a large colony's pass does up to 128, and more solver work per tick, so that it ends within the daytime), but two moments do their work in a single tick: taking the snapshot when a pass starts, and applying the moves when it ends. On a large colony either could cause a brief blip. Frame-time impact hasn't been measured; for scale, a pass on a live colony of about 350 adults, 104 homes and 167 workplaces used about 5,350 route queries over about 183 ticks, with no problems reported.</p>
+      <p>The pass is split into steps with per-tick budgets (32 route queries per tick on a colony of a few hundred beavers; a large colony's pass does up to 128, and more solver work per tick, so that it usually ends within the daytime), but two moments do their work in a single tick: taking the snapshot when a pass starts, and applying the moves when it ends. On a large colony either could cause a brief blip. Frame-time impact hasn't been measured; for scale, a pass on a live colony of about 350 adults, 104 homes and 167 workplaces used about 5,350 route queries over about 183 ticks, with no problems reported.</p>
       <p>If you see a real stutter, please <a href="#report">report it</a> with your colony size and the pass line from the log. Until it's fixed you can disable the mod.</p>
     </div>
   </details>

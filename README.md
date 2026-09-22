@@ -64,8 +64,9 @@ Each pass:
   that it still ends within the day's 512 daytime ticks: at most **128 route queries** and about 1,000,000 solver
   operations per tick (plus the solver row it started last). On test colonies of 1,600 adults in one district a
   pass now takes 480 ticks instead of 1,118 on randomly housed adults, and about 216 instead of 740 once they are
-  settled. The budgets stop growing at about 770 staffed workplaces or 1,150 adults in one district, so a still
-  larger colony's pass takes longer instead (609 ticks on 2,000 randomly housed adults in one district).
+  settled. The route-query budget stops growing at about 770 staffed workplaces, and the solver budget at about
+  1,150 adults in one district (about 920 in each of two, or 800 in each of three), so a still larger colony's
+  pass takes longer instead (609 ticks on 2,000 randomly housed adults in one district).
 - All decisions use integer arithmetic and sorted IDs, and the whole pass state (snapshot, prices, solver rows,
   verification results, and the route costs kept from earlier passes) is saved with the game. Reloading mid-pass,
   or a peer that loads a save taken mid-pass while another peer keeps running, continues exactly where the pass
@@ -107,8 +108,9 @@ That included a hosted co-op session with a second player running the same mod v
 ### What has not been measured
 
 - Frame-time impact. The per-tick work is bounded (32 route queries on a colony of a few hundred adults, at most
-  128 on the largest), but the cost of a real path query has not been timed, nor the larger solver budget of a
-  colony with more than about 730 adults in one district.
+  128 on the largest), but the cost of a real path query has not been timed, nor the larger solver budget that
+  large districts get: more than about 730 adults in one district, about 580 in each of two, or about 500 in each
+  of three.
 - The Iron Teeth faction, and operating systems other than Windows.
 - Multiplayer beyond that one hosted session, and the client's side of it.
 - BeaverBuddies MultiColony (1.4.0-alpha21) in a live session. Its code was audited against this mod: the mod only

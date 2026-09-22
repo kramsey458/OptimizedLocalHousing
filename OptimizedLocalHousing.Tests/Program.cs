@@ -499,9 +499,12 @@ static class Program
             Check(rechecked == 34 && most <= PassEngine.QueriesPerTick, $"17 rejected swaps: {rechecked} costs priced again on pass {DuePass}, {most} route queries in one tick");
             // One solver budget spans the districts of a tick: a solve tick charges less than the pass's budget plus the row
             // it started last (a row of an n-adult district costs at most n(n + 1)), and a tick that leaves rows for the
-            // next one has spent all of it. Two districts of 800 adults get a larger budget than the least one.
+            // next one has spent all of it. Two districts of 800 adults get a larger budget than the least one; in the
+            // second such colony the tick that ends the first district has spent more than the least budget but less than
+            // its own, so it goes on into the second district.
             foreach (var (name, f) in new[] { ("4 districts of 300 adults", Colony(3, 400, 1200, 400, 0, 4)), ("6 districts of 67 adults", Colony(0, 120, 400, 100, 0, 6)),
-                ("16 districts of 34 adults", FarSwap(16)), ("2 districts of 800 adults", Colony(7, 400, 1600, 800, 0, 2, width: 200)) })
+                ("16 districts of 34 adults", FarSwap(16)), ("2 districts of 800 adults", Colony(7, 400, 1600, 800, 0, 2, width: 200)),
+                ("2 districts of 800 adults, another colony", Colony(8, 400, 1600, 800, 0, 2, width: 200)) })
             {
                 var e = Strict(new PassEngine(f), name); e.RequestPass(); long row = 0, peak = 0, budget = 0; int ticks = 0;
                 for (int t = 0; t < 20000 && (e.Busy || e.State.Requested); t++)
@@ -879,11 +882,13 @@ static class Program
             // Version 1 (1.0.1) ranked homes from every district, version 2 kept no verified costs, version 3 solved the
             // whole colony as one assignment and version 4 had fixed budgets per tick: a pass any of them saved starts over
             // rather than resuming, and so does a running pass saved without its budgets. Versions 3 and 4 kept their
-            // remembered costs as this version does, so they carry over, unless the lists disagree in length.
+            // remembered costs as this version does, so they carry over, unless the lists disagree in length. A running
+            // version 4 pass that carries budgets (version 4 saved none) still starts over: its version differs.
             PassState Saved(int version, int ages = 1) => new PassState { Version = version, Stage = 2, Requested = false, Passes = 5,
                 LearnedWork = new[] { G(500) }, LearnedHome = new[] { G(100) }, LearnedCost = new[] { 640 }, LearnedAge = new int[ages] };
+            PassState Budgeted(PassState state) { state.QueryBudget = PassEngine.QueriesPerTick; state.SolveBudget = PassEngine.SolveOpsPerTick; return state; }
             foreach (var (name, saved, keeps) in new[] { ("Version 1", Saved(1), false), ("Version 2", Saved(2), false), ("Version 3", Saved(3), true),
-                ("Version 3 with mismatched remembered costs", Saved(3, 2), false), ("Version 4", Saved(4), true),
+                ("Version 3 with mismatched remembered costs", Saved(3, 2), false), ("Version 4", Saved(4), true), ("Version 4 with budgets", Budgeted(Saved(4)), true),
                 ("A running pass without its budgets", Saved(PassState.CurrentVersion), true), ("Version 99", Saved(99), false) })
             {
                 var e = new PassEngine(new Fake(), saved);
