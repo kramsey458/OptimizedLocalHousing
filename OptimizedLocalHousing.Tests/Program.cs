@@ -336,6 +336,16 @@ static class Program
             f.People[G(11)] = new Person { Id = G(11), Home = G(2), District = G(9000) };
             var e = Run(f); Check(f.People[G(10)].Home == G(2) && e.LastReport.Recovered == 1, "Disconnected commute not repaired");
         });
+        Test("a beaver who moves but stays cut off is not counted as a repaired commute", () => {
+            var f = new Fake(); f.Homes[G(1)] = new Home { Capacity = 1, X = 0 }; f.Homes[G(2)] = new Home { Capacity = 1, X = 50 };
+            f.Works[G(500)] = (25, 0, 0); f.Works[G(501)] = (0, 0, 0);
+            f.Blocked.Add((G(1), G(500))); f.Blocked.Add((G(2), G(500)));   // adult 10's workplace is out of reach from every home
+            f.People[G(10)] = new Person { Id = G(10), Home = G(1), Work = G(500), District = G(9000) };
+            f.People[G(11)] = new Person { Id = G(11), Home = G(2), Work = G(501), District = G(9000) };
+            var e = Run(f);
+            Check(f.People[G(11)].Home == G(1) && e.LastReport.RouteCostSaved == 50, "Adult 11's 50-unit saving was not made");
+            Check(e.LastReport.Recovered == 0, $"{e.LastReport.Recovered} disconnected commute(s) reported repaired, but adult 10 is still cut off");
+        });
         Test("a move is dropped when its route disappears after pricing", () => {
             var f = new Fake(); f.Homes[G(1)] = new Home { Capacity = 1, X = 40 }; f.Homes[G(2)] = new Home { Capacity = 1, X = 1 };
             f.Works[G(500)] = (0, 0, 0);

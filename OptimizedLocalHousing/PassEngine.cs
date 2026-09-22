@@ -306,7 +306,8 @@ public sealed class PassEngine
                 report.Applied++;
                 foreach (int e in edges)
                 {
-                    if (current[e] >= Cost.Unreachable) report.Recovered++;
+                    // Repaired only if the new home reaches work: a cut-off beaver can be moved along and stay cut off.
+                    if (current[e] >= Cost.Unreachable) { if (target[e] < Cost.Unreachable) report.Recovered++; }
                     else report.RouteCostSaved += (double)((long)current[e] - target[e]) / Cost.Scale;
                     State.MovedAdults++;
                 }

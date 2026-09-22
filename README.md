@@ -33,7 +33,7 @@ Each pass:
    re-checked with a real route before it is allowed.
 3. **Solve.** The optimal way to reassign the adults to the beds that adults occupy today.
 4. **Verify.** Every proposed move is re-priced with fresh routes. A move is dropped if the beaver would end up
-   unable to reach work, and a group of moves must save more than half a route-cost unit in total.
+   unable to reach work, and each cycle of moves must save at least half a route-cost unit in total.
 5. **Apply.** Moves are applied as whole cycles (A takes B's bed, B takes C's, C takes A's), in one game tick.
 
 ### Rules it keeps
