@@ -803,15 +803,25 @@ static class Program
                 Check(name != "rejected swaps" || rechecked == 4, $"{name}: {rechecked} remembered costs priced again, expected 4");
             }
         });
-        Test("an unknown saved version or stage is discarded, not trusted", () => {
+        Test("an unknown saved version or stage is discarded, not trusted; a version 3 save keeps its remembered costs", () => {
             // Version 1 (1.0.1) ranked homes from every district, version 2 kept no verified costs and version 3 solved the
-            // whole colony as one assignment: a pass any of them saved starts over rather than resuming.
-            foreach (int version in new[] { 1, 2, 3, 99 })
+            // whole colony as one assignment: a pass any of them saved starts over rather than resuming. Version 3 kept its
+            // remembered costs as this version does, so they carry over, unless its lists disagree in length.
+            PassState Saved(int version, int ages = 1) => new PassState { Version = version, Stage = 2, Requested = false, Passes = 5,
+                LearnedWork = new[] { G(500) }, LearnedHome = new[] { G(100) }, LearnedCost = new[] { 640 }, LearnedAge = new int[ages] };
+            foreach (var (name, saved, keeps) in new[] { ("Version 1", Saved(1), false), ("Version 2", Saved(2), false), ("Version 3", Saved(3), true),
+                ("Version 3 with mismatched remembered costs", Saved(3, 2), false), ("Version 99", Saved(99), false) })
             {
-                var e = new PassEngine(new Fake(), new PassState { Version = version, Stage = 2, Requested = false, Passes = 5 });
-                Check(e.State.Stage == 0 && e.State.Version == PassState.CurrentVersion && e.State.Requested, $"Version {version} state kept");
-                Check(e.State.Passes == 5, $"Version {version}: the pass count was lost");
+                var e = new PassEngine(new Fake(), saved);
+                Check(e.State.Stage == 0 && e.State.Version == PassState.CurrentVersion && e.State.Requested, $"{name} state kept");
+                Check(e.State.Passes == 5, $"{name}: the pass count was lost");
+                var s = e.State; bool kept = s.LearnedCost.Length == 1 && s.LearnedWork[0] == G(500) && s.LearnedHome[0] == G(100) && s.LearnedCost[0] == 640 && s.LearnedAge[0] == 0;
+                bool none = s.LearnedWork.Length + s.LearnedHome.Length + s.LearnedCost.Length + s.LearnedAge.Length == 0;
+                Check(keeps ? kept : none, $"{name}: remembered costs {(keeps ? "lost" : "kept")}");
             }
+            // An idle version 3 save after a pass whose route check turned down a swap: the next pass does not propose it.
+            var f = FarSwap(); var first = Run(f); var idle = Reload(first.State); idle.Version = 3; var next = Run(f, idle);
+            Check(first.LastReport.Rejected == 1 && next.LastReport.Rejected == 0, $"A version 3 save: {first.LastReport.Rejected}, then {next.LastReport.Rejected} cycles rejected");
         });
         Test("a save from 1.0.1 restarts the pass it was running, and keeps its counters and schedule", () => {
             // Written by the 1.0.1 engine (a87ba72) for this colony: after one pass, mid-way through the next (stage 2),

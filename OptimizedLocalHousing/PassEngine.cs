@@ -138,12 +138,24 @@ public sealed class PassEngine
     }
     // A state saved by another version is not trusted: a pass it was running starts over. The lifetime counters carry
     // over, and an idle state keeps its schedule. This depends on the save alone, so every peer does the same.
-    private static PassState Restart(PassState old) => new PassState
+    private static PassState Restart(PassState old)
     {
-        Requested = old.Stage != 0 || old.Requested,
-        Passes = old.Passes, MovedAdults = old.MovedAdults,
-        AppliedCycles = old.AppliedCycles, RejectedCycles = old.RejectedCycles, StaleCycles = old.StaleCycles,
-    };
+        var state = new PassState
+        {
+            Requested = old.Stage != 0 || old.Requested,
+            Passes = old.Passes, MovedAdults = old.MovedAdults,
+            AppliedCycles = old.AppliedCycles, RejectedCycles = old.RejectedCycles, StaleCycles = old.StaleCycles,
+        };
+        // Version 3 kept the remembered costs just as this one does (only the solve stage changed since), so they carry
+        // over and a cycle a route check turned down stays known. A pass changes them only when it finishes.
+        int count = old.LearnedWork?.Length ?? -1;
+        if (old.Version == 3 && count >= 0 && old.LearnedHome?.Length == count && old.LearnedCost?.Length == count && old.LearnedAge?.Length == count)
+        {
+            state.LearnedWork = old.LearnedWork; state.LearnedHome = old.LearnedHome;
+            state.LearnedCost = old.LearnedCost; state.LearnedAge = old.LearnedAge;
+        }
+        return state;
+    }
     public bool Busy => State.Stage != 0;
     public void RequestPass() => State.Requested = true;
 
