@@ -3,6 +3,7 @@
   <ItemGroup>
     <Compile Include="../OptimizedLocalHousing/Assignment.cs" Link="Assignment.cs" />
     <Compile Include="../OptimizedLocalHousing/PassEngine.cs" Link="PassEngine.cs" />
-    <Reference Include="Newtonsoft.Json"><HintPath>C:\Program Files (x86)\Steam\steamapps\common\Timberborn\Timberborn_Data\Managed\Newtonsoft.Json.dll</HintPath></Reference>
+    <!-- From nuget.org so the tests build without the game. 13.0.4 is the version Timberborn 1.1 ships in Timberborn_Data\Managed. -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 </Project>
