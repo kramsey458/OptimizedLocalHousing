@@ -9,9 +9,6 @@ Everyone can't live in the house nearest their workplace, because beds are limit
 minimize the total travel across the whole colony, and that is exactly what this mod solves, once a day, with
 an optimal assignment (the Hungarian algorithm), instead of nudging beavers around one swap at a time.
 
-Optimized Local Housing replaces **Incremental Housing**, which is deprecated and no longer maintained. If you
-used it, disable Incremental Housing before you enable this mod.
-
 ## Installation
 
 1. Download the `OptimizedLocalHousing-vX.Y.Z.zip` file under **Assets** on the
@@ -23,9 +20,8 @@ used it, disable Incremental Housing before you enable this mod.
    first pass starts as soon as the game is ticking, then it runs again at the start of every day. One line per
    pass is written to `Player.log` (look for `[OptimizedLocalHousing]`).
 
-Standalone, no dependencies. **Do not run it together with Incremental Housing, Housing Optimize or Commute
-Balancer.** When a game loads, this mod checks for their mod IDs (`Kyler.IncrementalHousing`, `BobHousingOptimize`,
-`BobCommuteBalancer`, `housingoptimize`). If one is enabled, it logs a warning and does nothing for that game. In
+Standalone, no dependencies. **Do not run it together with Housing Optimize or Commute Balancer.** When a
+game loads, this mod checks for their mod IDs (`BobHousingOptimize`, `BobCommuteBalancer`, `housingoptimize`). If one is enabled, it logs a warning and does nothing for that game. In
 multiplayer, every player must install the same version of the mod and run the same game version.
 
 ## What it does

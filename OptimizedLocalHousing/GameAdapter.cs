@@ -42,7 +42,7 @@ public sealed class HousingService : ILoadableSingleton, IUnloadableSingleton, I
 {
     private static readonly SingletonKey SaveKey = new SingletonKey("OptimizedLocalHousing");
     private static readonly PropertyKey<string> StateKey = new PropertyKey<string>("State");
-    private static readonly string[] Conflicts = { "Kyler.IncrementalHousing", "BobHousingOptimize", "BobCommuteBalancer", "housingoptimize" };
+    private static readonly string[] Conflicts = { "BobHousingOptimize", "BobCommuteBalancer", "housingoptimize" };
     private readonly EventBus _events;
     private readonly DistrictCenterRegistry _districts;
     private readonly EntityRegistry _entities;
