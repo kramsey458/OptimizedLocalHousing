@@ -82,13 +82,16 @@ public sealed class SnapshotBuilder
 
 public sealed class PassState
 {
-    public const int CurrentVersion = 4;         // 2: Near rows hold only the workplace's district, padded with -1
+    public const int CurrentVersion = 5;         // 2: Near rows hold only the workplace's district, padded with -1
                                                  // 3: route costs verified outside the Near rows are kept (Learned*)
                                                  // 4: each district is solved on its own (District, Beds)
+                                                 // 5: per-tick budgets are set for each pass (QueryBudget, SolveBudget)
     public int Version = CurrentVersion;
     public bool Requested = true;                // start a pass at the next opportunity
     public int Stage;                            // 0 idle, 1 route costs, 2 assignment, 3 verification
     public Snapshot Snap;
+    public int QueryBudget;                      // stages 1 and 3: route queries per tick, set from the snapshot
+    public long SolveBudget;                     // stage 2: solver operations per tick, set from the snapshot
     public int Cursor;                           // stage 1: next cost entry; stage 3: next move to verify
     public int District;                         // stage 2: the district being solved, counted in ID order
     public int Row = 1;                          // stage 2: next row of that district's assignment
@@ -113,12 +116,18 @@ public sealed class PassReport
 // One pass = capture the colony, price each workplace's nearest homes in its district, solve each district's optimal
 // assignment, re-check every proposed move against fresh routes, then apply whole cycles of moves. The re-checked costs
 // of homes beyond the nearest are kept for the next passes, in place of estimates, and priced again when they come due
-// while still needed. Each stage is spread over ticks with fixed operation budgets, and the entire state is serializable,
-// so a pass resumes identically after a save/load and on every multiplayer peer.
+// while still needed. Each stage is spread over ticks with operation budgets set from the snapshot when the pass starts,
+// and the entire state is serializable, so a pass resumes identically after a save/load and on every multiplayer peer.
 public sealed class PassEngine
 {
+    // QueriesPerTick and SolveOpsPerTick are the least budgets per tick. A pass is asked for when the day starts, and a
+    // day has 512 daytime ticks (of 768): a large colony's pass takes larger budgets, set from its snapshot, so that
+    // pricing still ends within about PriceTicks, the solve within SolveTicks and the route checks within VerifyTicks
+    // (448 ticks in all). They never exceed the Max* budgets: a still larger colony's pass takes longer instead.
     public const int NearHomes = 32, QueriesPerTick = 32;
     public const long SolveOpsPerTick = 250_000;
+    public const int PriceTicks = 192, SolveTicks = 192, VerifyTicks = 64, MaxQueriesPerTick = 128;
+    public const long MaxSolveOpsPerTick = 1_000_000;
     // A checked cost is used by this many later passes; the last of them prices it again, and so keeps it, while one of
     // the workplace's workers lives in the home or while no route led there. At most LearnedLimit costs are kept.
     public const int LearnedPasses = 7, LearnedLimit = 1024;
@@ -134,10 +143,12 @@ public sealed class PassEngine
     public PassEngine(IPassWorld world, PassState state = null)
     {
         _world = world; State = state ?? new PassState();
-        if (State.Version != PassState.CurrentVersion) State = Restart(State);
+        bool budgeted = State.Stage == 0 || State.QueryBudget >= QueriesPerTick && State.SolveBudget >= SolveOpsPerTick;
+        if (State.Version != PassState.CurrentVersion || !budgeted) State = Restart(State);
     }
-    // A state saved by another version is not trusted: a pass it was running starts over. The lifetime counters carry
-    // over, and an idle state keeps its schedule. This depends on the save alone, so every peer does the same.
+    // A state saved by another version, or a running pass without its budgets, is not trusted: a pass it was running
+    // starts over. The lifetime counters carry over, and an idle state keeps its schedule. This depends on the save alone,
+    // so every peer does the same.
     private static PassState Restart(PassState old)
     {
         var state = new PassState
@@ -146,10 +157,11 @@ public sealed class PassEngine
             Passes = old.Passes, MovedAdults = old.MovedAdults,
             AppliedCycles = old.AppliedCycles, RejectedCycles = old.RejectedCycles, StaleCycles = old.StaleCycles,
         };
-        // Version 3 kept the remembered costs just as this one does (only the solve stage changed since), so they carry
-        // over and a cycle a route check turned down stays known. A pass changes them only when it finishes.
+        // Versions 3 and 4 kept the remembered costs just as this one does (only the solve stage and the budgets changed
+        // since), so they carry over and a cycle a route check turned down stays known. A pass changes them only when it
+        // finishes.
         int count = old.LearnedWork?.Length ?? -1;
-        if (old.Version == 3 && count >= 0 && old.LearnedHome?.Length == count && old.LearnedCost?.Length == count && old.LearnedAge?.Length == count)
+        if (old.Version >= 3 && old.Version <= PassState.CurrentVersion && count >= 0 && old.LearnedHome?.Length == count && old.LearnedCost?.Length == count && old.LearnedAge?.Length == count)
         {
             state.LearnedWork = old.LearnedWork; state.LearnedHome = old.LearnedHome;
             state.LearnedCost = old.LearnedCost; state.LearnedAge = old.LearnedAge;
@@ -212,7 +224,23 @@ public sealed class PassEngine
             }
         }
         Recheck(snap);
-        State.Snap = snap; State.Stage = 1; State.Cursor = 0;
+        State.Snap = snap; Budget(snap); State.Stage = 1; State.Cursor = 0;
+    }
+
+    // The pass's budgets per tick, set from its snapshot alone and saved with it, so every peer, reloaded or not, does the
+    // same work on every tick. Pricing asks one route per real candidate and per recheck; the route checks ask two per
+    // move, and at most every adult moves. Solving a district of n adults took about n^3 / 9 operations on the first pass
+    // over a randomly housed test colony (never more than about n^3 / 2), and far fewer once a colony is settled; n^3 / 8
+    // is taken.
+    private void Budget(Snapshot s)
+    {
+        long queries = s.RecheckCosts.Length;
+        foreach (int home in s.Near) if (home >= 0) queries++;
+        long perTick = Math.Max((queries + PriceTicks - 1) / PriceTicks, (2L * s.Adults.Length + VerifyTicks - 1) / VerifyTicks);
+        State.QueryBudget = (int)Math.Min(Math.Max(perTick, QueriesPerTick), MaxQueriesPerTick);
+        long ops = 0;
+        foreach (var members in Districts()) { long n = members.Length; ops += n * n * n / 8; }
+        State.SolveBudget = Math.Min(Math.Max((ops + SolveTicks - 1) / SolveTicks, SolveOpsPerTick), MaxSolveOpsPerTick);
     }
 
     private static bool InRow(Snapshot s, int w, int home)
@@ -244,7 +272,7 @@ public sealed class PassEngine
     {
         // The cursor runs over the rows' entries, then over the rechecks.
         var s = State.Snap; int k = s.NearK, end = s.Costs.Length + s.RecheckCosts.Length;
-        for (int q = 0; q < QueriesPerTick && State.Cursor < end; State.Cursor++)
+        for (int q = 0; q < State.QueryBudget && State.Cursor < end; State.Cursor++)
         {
             int at = State.Cursor;
             if (at >= s.Costs.Length)
@@ -265,7 +293,8 @@ public sealed class PassEngine
     // Nobody crosses districts, so the colony's assignment is one per district: each is solved on its own, in ID order,
     // over its own adults and the beds they live in. The optimum is the same as for the whole colony at once, which
     // scanned every district's beds for every adult; this takes fewer ticks and a far smaller matrix.
-    private int[] Members(int district)
+    private int[] Members(int district) => Districts()[district];
+    private int[][] Districts()
     {
         if (_members == null)
         {
@@ -276,7 +305,7 @@ public sealed class PassEngine
             _members = new int[members.Length][];
             for (int d = 0; d < members.Length; d++) _members[d] = members[d].ToArray();
         }
-        return _members[district];
+        return _members;
     }
     private void StartDistrict()
     {
@@ -299,14 +328,14 @@ public sealed class PassEngine
             // state alone, so a peer that loaded a save taken mid-pass keeps step, tick for tick, with a peer that did not.
             while (_built < State.Row - 1) BuildRow(members, _built++);
             long before = ops;
-            bool solved = Hungarian.Step(_matrix, n, State.U, State.V, State.P, ref State.Row, ref ops, SolveOpsPerTick, row => { BuildRow(members, row); _built = row + 1; return n; });
+            bool solved = Hungarian.Step(_matrix, n, State.U, State.V, State.P, ref State.Row, ref ops, State.SolveBudget, row => { BuildRow(members, row); _built = row + 1; return n; });
             SolveOps += ops - before;
             if (!solved) return;
             for (int j = 1; j <= n; j++) State.Beds[members[State.P[j] - 1]] = members[j - 1];
             _matrix = null;
             if (++State.District == _members.Length) break;
             StartDistrict();
-            if (ops >= SolveOpsPerTick) return;
+            if (ops >= State.SolveBudget) return;
         }
         State.U = null; State.V = null; State.P = null;
         _moves = null; EnsureMoves();
@@ -375,7 +404,7 @@ public sealed class PassEngine
     {
         EnsureMoves();
         var s = State.Snap;
-        for (int q = 0; q < QueriesPerTick / 2 && State.Cursor < _moves.Count; q++, State.Cursor++)
+        for (int q = 0; q < State.QueryBudget / 2 && State.Cursor < _moves.Count; q++, State.Cursor++)
         {
             var m = _moves[State.Cursor]; int work = s.AdultWork[m[0]];
             if (work < 0) { State.VerifyCurrent[State.Cursor] = 0; State.VerifyTarget[State.Cursor] = 0; continue; }
@@ -430,7 +459,7 @@ public sealed class PassEngine
         State.AppliedCycles += report.Applied; State.RejectedCycles += report.Rejected; State.StaleCycles += report.Stale;
         State.Passes++; Learn(s, current, target);
         State.Snap = null; State.U = null; State.V = null; State.P = null; State.Beds = null; State.VerifyCurrent = null; State.VerifyTarget = null;
-        State.Stage = 0; State.Cursor = 0; State.District = 0; State.Row = 1; Forget();
+        State.QueryBudget = 0; State.SolveBudget = 0; State.Stage = 0; State.Cursor = 0; State.District = 0; State.Row = 1; Forget();
         LastReport = report; Reported?.Invoke(report);
     }
 

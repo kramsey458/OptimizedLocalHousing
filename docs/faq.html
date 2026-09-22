@@ -42,7 +42,7 @@
   <details>
     <summary>How often does it run, and how long does a pass take?</summary>
     <div class="answer">
-      <p>A pass starts the first time the mod sees a save, then at the start of every in-game day. A pass took 147 ticks on a 266-beaver colony in the replay, and about 183 ticks on a live colony of about 350 adults, roughly 90 seconds to two minutes at normal speed. The work is spread across those ticks, with at most 32 route queries per tick.</p>
+      <p>A pass starts the first time the mod sees a save, then at the start of every in-game day. A pass took 147 ticks on a 266-beaver colony in the replay, and about 183 ticks on a live colony of about 350 adults, roughly 90 seconds to two minutes at normal speed. The work is spread across those ticks, with 32 route queries per tick. A larger colony's pass does more per tick (up to 128 route queries), so that it still ends within the day's daytime.</p>
       <p>Moves are applied when a pass finishes, which can be at any time of day. Beavers simply walk to their new home the next time they go home.</p>
     </div>
   </details>
@@ -131,7 +131,7 @@
       <ul>
         <li><a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3438044391">Housing Optimize</a> reassigns beavers once at the start of each day: it unassigns everyone and refills homes first-come-first-served, nearest first, all at once. Its author notes the result isn't guaranteed to be the best.</li>
         <li><a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3663421750">Commute Balancer</a> works gradually over days, moving a beaver to a closer empty home or swapping when the benefit outweighs the other beaver's inconvenience.</li>
-        <li><strong>Optimized Local Housing</strong> solves every district exactly, once a day, for the smallest total commute, keeps every home's number of adults, and spreads the work across ticks with fixed budgets.</li>
+        <li><strong>Optimized Local Housing</strong> solves every district exactly, once a day, for the smallest total commute, keeps every home's number of adults, and spreads the work across ticks with budgets per tick.</li>
       </ul>
       <p>In a replay on one real colony, a first-come-first-served strategy like the one Housing Optimize describes averaged 25.6 (between 23.5 and 29.0 depending on the order workplaces were handled), against 24.1 for this mod, even though that model was given looser bed rules. That was a model with a straight-line stand-in, not a benchmark of either mod. Both of those mods have thousands of subscribers and much more real-world mileage. This one is newer.</p>
     </div>

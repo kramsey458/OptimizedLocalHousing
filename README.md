@@ -57,9 +57,15 @@ Each pass:
 
 ### Cost and multiplayer
 
-- Work is spread over ticks with fixed budgets: **at most 32 route queries per tick**, and at most about
-  250,000 solver operations per tick. A pass takes roughly a fifth of a game day (147 ticks on a 266-beaver
-  colony), never one long stall.
+- Work is spread over ticks with budgets per tick: **32 route queries** and about 250,000 solver operations on a
+  colony of a few hundred adults. A pass takes roughly a fifth of a game day (147 ticks on a 266-beaver colony),
+  never one long stall.
+- A larger colony's pass takes larger budgets, set from the colony when the pass starts and saved with it, so
+  that it still ends within the day's 512 daytime ticks: at most **128 route queries** and about 1,000,000 solver
+  operations per tick (plus the solver row it started last). On test colonies of 1,600 adults in one district a
+  pass now takes 480 ticks instead of 1,118 on randomly housed adults, and about 216 instead of 740 once they are
+  settled. The budgets stop growing at about 770 staffed workplaces or 1,150 adults in one district, so a still
+  larger colony's pass takes longer instead (609 ticks on 2,000 randomly housed adults in one district).
 - All decisions use integer arithmetic and sorted IDs, and the whole pass state (snapshot, prices, solver rows,
   verification results, and the route costs kept from earlier passes) is saved with the game. Reloading mid-pass,
   or a peer that loads a save taken mid-pass while another peer keeps running, continues exactly where the pass
@@ -100,8 +106,9 @@ That included a hosted co-op session with a second player running the same mod v
 
 ### What has not been measured
 
-- Frame-time impact. The per-tick work is bounded (32 route queries), but the cost of a real path query has not
-  been timed.
+- Frame-time impact. The per-tick work is bounded (32 route queries on a colony of a few hundred adults, at most
+  128 on the largest), but the cost of a real path query has not been timed, nor the larger solver budget of a
+  colony with more than about 730 adults in one district.
 - The Iron Teeth faction, and operating systems other than Windows.
 - Multiplayer beyond that one hosted session, and the client's side of it.
 - BeaverBuddies MultiColony (1.4.0-alpha21) in a live session. Its code was audited against this mod: the mod only
@@ -138,8 +145,9 @@ its own (the same homes as a colony of that district alone, in no more ticks), t
 stale-world handling, route costs carried from one pass to the next and priced again when they come due,
 determinism between peers, save/reload at every tick of three passes (the first, the next, and the one where the
 first pass's remembered costs come due; with one district and with several), per-tick work bounds (route
-queries, and solver operations with one budget across districts), and the compiled adapter against the installed
-game's component blacklist. Omitting the two arguments skips the compiled-adapter check.
+queries, and solver operations with one budget across districts), large colonies whose passes end within the
+daytime with budgets set from the colony (in lockstep across a reload mid-pass), and the compiled adapter against
+the installed game's component blacklist. Omitting the two arguments skips the compiled-adapter check.
 
 ## Uninstall
 
