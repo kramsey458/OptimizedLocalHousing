@@ -3,7 +3,8 @@
   <ItemGroup>
     <Compile Include="../OptimizedLocalHousing/Assignment.cs" Link="Assignment.cs" />
     <Compile Include="../OptimizedLocalHousing/PassEngine.cs" Link="PassEngine.cs" />
-    <!-- From nuget.org so the tests build without the game. 13.0.4 is the version Timberborn 1.1 ships in Timberborn_Data\Managed. -->
+    <!-- From nuget.org so the tests build without the game. 13.0.4 is the release Timberborn 1.1 ships in
+         Timberborn_Data\Managed; the game carries its netstandard2.0 build, the tests get its net6.0 build. -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 </Project>

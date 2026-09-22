@@ -4,12 +4,11 @@ name: Tests
 # The test project compiles only the game-independent engine (Assignment.cs, PassEngine.cs) and restores
 # Newtonsoft.Json from nuget.org, so its checks run on a runner without Timberborn. The compiled-adapter check
 # needs the built mod and the game's Managed folder; it is skipped without its two arguments (run it locally).
+# No paths filter: the job is short, and a filtered-out run would leave a required check pending forever.
 on:
   push:
     branches: [main]
-    paths: ["OptimizedLocalHousing/**", "OptimizedLocalHousing.Tests/**", ".github/workflows/tests.yml"]
   pull_request:
-    paths: ["OptimizedLocalHousing/**", "OptimizedLocalHousing.Tests/**", ".github/workflows/tests.yml"]
   workflow_dispatch:
 
 permissions:
@@ -24,5 +23,11 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 8.0.x
+      # The runner image also carries newer SDKs, and without a global.json dotnet picks the newest one.
+      # Pin this job to SDK 8, as the README requires; the global.json exists only on the runner.
+      - name: Use .NET SDK 8
+        run: |
+          Set-Content global.json '{"sdk":{"version":"8.0.100","rollForward":"latestFeature"}}'
+          dotnet --version
       - name: Run the game-free checks
         run: dotnet run --project OptimizedLocalHousing.Tests -c Release
