@@ -3,7 +3,7 @@
 **Website:** https://timbermods.github.io/OptimizedLocalHousing/ (install guide, troubleshooting, FAQ)
 
 A Timberborn 1.1 mod (built against **1.1.2.4**) that moves adult beavers into the homes that give the
-**shortest total commute** between where they live and where they work. Version **1.0.1**.
+**shortest total commute** between where they live and where they work. Version **1.1.0**.
 
 Everyone can't live in the house nearest their workplace, because beds are limited. The best you can do is
 minimize the total travel across the whole colony, and that is exactly what this mod solves, once a day, with
@@ -161,6 +161,23 @@ Disable the mod and restart. Beavers keep their current homes.
 
 ## Changelog
 
+- **1.1.0**: better homes near district borders, fewer repeated rejections, and shorter passes on large colonies.
+  All co-op players must update together.
+  - A workplace now prices only the homes in its own district. The game's route search never leaves a district,
+    so those queries always failed (about 10-20% of all queries in two-district colonies).
+  - Route costs found while re-checking moves to far homes are remembered in the save, so a move that was turned
+    down is not proposed and rejected again every day. After seven passes a remembered cost is checked again if a
+    worker still lives in that home or there was no route, so a road that comes back is noticed.
+  - Each district is solved on its own: the same result in a third to a half of the solve ticks, and far less
+    memory, in colonies with several districts.
+  - A large colony's pass takes larger per-tick budgets, set from the colony when the pass starts, so it ends
+    within the day's daytime (480 ticks instead of 1,118 for 1,600 adults in one district). Colonies of a few
+    hundred adults keep the same budgets as before.
+  - The pass log's "disconnected commutes repaired" no longer counts a beaver that was moved but still can't reach
+    its workplace.
+  - A pass that was running when an older save was made starts over once after the update. Idle saves keep their
+    schedule, and the log's pass count carries on.
+  - Development: the tests build without the game and run on GitHub Actions.
 - **1.0.1**: a peer that loads a save taken mid-pass now keeps step, tick for tick, with a peer that never reloaded
   (the rebuild after a load was charged to that tick's solver budget, so the pass could end a tick later on one
   computer). A test covers it. No change in what the mod decides.
