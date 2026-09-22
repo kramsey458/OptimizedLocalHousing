@@ -13,7 +13,7 @@ an optimal assignment (the Hungarian algorithm), instead of nudging beavers arou
 
 1. Download the `OptimizedLocalHousing-vX.Y.Z.zip` file under **Assets** on the
    [latest release](https://github.com/timbermods/OptimizedLocalHousing/releases/latest) (not "Source code").
-2. Close Timberborn. Extract the ZIP into `Documents/Timberborn/Mods`. It contains one
+2. Close Timberborn. Extract the ZIP into `Documents\Timberborn\Mods`. It contains one
    `OptimizedLocalHousing` folder.
 3. Launch Timberborn, enable **Optimized Local Housing** in the Mods menu, and restart.
 4. Load your save (back up important saves first, as with any mod). On a save the mod has not seen before, the
