@@ -9,6 +9,9 @@ Everyone can't live in the house nearest their workplace, because beds are limit
 minimize the total travel across the whole colony, and that is exactly what this mod solves, once a day, with
 an optimal assignment (the Hungarian algorithm), instead of nudging beavers around one swap at a time.
 
+Optimized Local Housing replaces **Incremental Housing**, which is deprecated and no longer maintained. If you
+used it, disable Incremental Housing before you enable this mod.
+
 ## Installation
 
 1. Download the `OptimizedLocalHousing-vX.Y.Z.zip` file under **Assets** on the
