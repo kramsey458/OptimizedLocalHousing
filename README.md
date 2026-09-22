@@ -29,8 +29,8 @@ Each pass:
 1. **Capture.** Every housed adult beaver, its home, and its assigned workplace.
 2. **Price.** For every workplace, real route costs (`Accessible.FindRoadPath`, so ziplines and stairs count)
    from the 32 nearest homes in its district. Homes in other districts are never queried, because the game's
-   roads never lead from one district to another. Homes farther away are estimated, and any move to one is
-   re-checked with a real route before it is allowed.
+   route search never leaves a district. Homes farther away are estimated, and any move to one is re-checked
+   with a real route before it is allowed.
 3. **Solve.** The optimal way to reassign the adults to the beds that adults occupy today.
 4. **Verify.** Every proposed move is re-priced with fresh routes. A move is dropped if the beaver would end up
    unable to reach work, and each cycle of moves must save at least half a route-cost unit in total.

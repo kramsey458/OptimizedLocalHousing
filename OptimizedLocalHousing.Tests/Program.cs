@@ -121,6 +121,18 @@ static class Program
         foreach (var h in f.Homes) h.Value.Capacity = f.People.Values.Count(p => p.Home == h.Key);
         return f;
     }
+    // District 9000: 30 homes and one workplace; district 9001: 2 homes and a workplace with a higher ID. Rows hold 32
+    // homes, so pricing makes 30 + 2 real queries, exactly one tick's budget, then spends a tick only skipping padding.
+    static Fake PaddingTail()
+    {
+        var rng = new Random(7); var f = new Fake();
+        for (int h = 0; h < 32; h++)
+            f.Homes[G(100 + h)] = new Home { X = h < 30 ? rng.Next(0, 60) : rng.Next(60, 70), Y = rng.Next(0, 60), District = G(h < 30 ? 9000 : 9001) };
+        f.Works[G(5000)] = (30, 30, 0); f.Works[G(5001)] = (65, 30, 0); f.WorkDistrict[G(5001)] = G(9001);
+        Populate(f, rng, 70);
+        foreach (var h in f.Homes) h.Value.Capacity = f.People.Values.Count(p => p.Home == h.Key);
+        return f;
+    }
     static PassEngine Run(Fake f, PassState state = null, int limit = 5000)
     {
         var e = new PassEngine(f, state); e.RequestPass();
@@ -260,10 +272,11 @@ static class Program
             }
         });
         Test("saving and reloading at any tick of a pass gives exactly the uninterrupted result", () => {
-            foreach (int districts in new[] { 1, 3 })   // three districts of 15 homes: padded candidate rows
+            // Three districts of 15 homes: padded candidate rows. PaddingTail: pricing ends with a tick that only skips padding.
+            foreach (var (name, start) in new[] { ("1 district", Colony(9, 45, 110, 55, 6)), ("3 districts", Colony(9, 45, 110, 55, 6, 3)), ("padding tail", PaddingTail()) })
             {
-                var start = Colony(9, 45, 110, 55, 6, districts); var whole = start.Copy(); var ew = Run(whole);
-                string reference = JsonConvert.SerializeObject(ew.State); int ticks = (int)ew.LastReport.Ticks;
+                var whole = start.Copy(); var ew = Run(whole);
+                string reference = JsonConvert.SerializeObject(ew.State); int ticks = (int)ew.LastReport.Ticks; bool skipOnly = false;
                 var live = start.Copy(); var el = new PassEngine(live); el.RequestPass();
                 for (int t = 0; t < ticks + 2; t++)
                 {
@@ -272,11 +285,13 @@ static class Program
                     {
                         var restored = new PassEngine(resumedWorld, JsonConvert.DeserializeObject<PassState>(JsonConvert.SerializeObject(el.State)));
                         for (int k = 0; k < 5000 && (restored.Busy || restored.State.Requested); k++) restored.Tick();
-                        Check(resumedWorld.Fingerprint() == whole.Fingerprint(), $"{districts} district(s): resume at tick {t} housed differently");
-                        Check(JsonConvert.SerializeObject(restored.State) == reference, $"{districts} district(s): resume at tick {t} ended in a different state");
+                        Check(resumedWorld.Fingerprint() == whole.Fingerprint(), $"{name}: resume at tick {t} housed differently");
+                        Check(JsonConvert.SerializeObject(restored.State) == reference, $"{name}: resume at tick {t} ended in a different state");
                     }
-                    el.Tick();
+                    int calls = live.Calls, stage = el.State.Stage; el.Tick();
+                    if (stage == 1 && el.State.Stage == 2 && live.Calls == calls) skipOnly = true;
                 }
+                Check(name != "padding tail" || skipOnly, "PaddingTail did not end pricing with a tick that only skips padding");
             }
         });
         Test("a peer that reloaded mid-pass stays in lockstep, tick for tick, with one that did not", () => {
@@ -381,6 +396,20 @@ static class Program
             var e = Run(f);
             Check(e.LastReport.Moves == 0 && e.LastReport.Rejected == 0, $"{e.LastReport.Moves} moves proposed, {e.LastReport.Rejected} cycle(s) rejected");
         });
+        Test("one home that can't reach a workplace does not make its unpriced homes look unreachable", () => {
+            // 33 one-bed homes in a row and two workplaces at X=0, each pricing the 32 nearest homes. Workplace 500's
+            // worker lives in the unpriced home at X=32, and one of its priced homes can't reach it. Everyone else works
+            // at 501, so every arrangement costs the same: moving anyone gains nothing and would be rejected.
+            var f = new Fake(); f.Works[G(500)] = (0, 0, 0); f.Works[G(501)] = (0, 0, 0);
+            for (int i = 0; i <= 32; i++)
+            {
+                f.Homes[G(100 + i)] = new Home { Capacity = 1, X = i };
+                f.People[G(10 + i)] = new Person { Id = G(10 + i), Home = G(100 + i), Work = G(501), District = G(9000) };
+            }
+            f.People[G(42)].Work = G(500); f.Blocked.Add((G(131), G(500)));
+            var e = Run(f);
+            Check(e.LastReport.Moves == 0 && e.LastReport.Rejected == 0, $"{e.LastReport.Moves} moves proposed, {e.LastReport.Rejected} cycle(s) rejected");
+        });
         Test("beavers who changed home or job mid-pass are skipped; everyone else is still moved", () => {
             var f = Colony(12, 40, 100, 45); var trial = f.Copy(); Run(trial);
             var movers = f.People.Values.Where(p => trial.People[p.Id].Home != p.Home && f.Works.ContainsKey(p.Work)).OrderBy(p => p.Id).Take(2).ToList();
@@ -404,27 +433,38 @@ static class Program
             // The game's road pathfinding never leaves a district, so a query for a home in another district is wasted.
             for (int seed = 0; seed < 5; seed++)
             {
-                var f = Colony(20 + seed, homes: 70, adults: 180, works: 60, districts: 2); Run(f);
+                var f = Colony(20 + seed, homes: 70, adults: 180, works: 60, districts: 2); var e = new PassEngine(f); e.RequestPass();
+                for (int t = 0; t < 1000 && e.State.Stage < 2; t++) e.Tick();
+                // Every workplace still prices its own district's nearest homes, as many as the row holds.
+                var s = e.State.Snap; int expected = 0;
+                for (int w = 0; w < s.Works.Length; w++) expected += Math.Min(s.NearK, s.HomeDistrict.Count(d => d == f.DistrictOf(s.Works[w])));
+                Check(e.State.Stage == 2 && f.Calls == expected, $"seed {20 + seed}: {f.Calls} route queries while pricing, expected {expected}");
+                for (int t = 0; t < 5000 && (e.Busy || e.State.Requested); t++) e.Tick();
                 Check(f.CrossCalls == 0, $"seed {20 + seed}: {f.CrossCalls} of {f.Calls} route queries asked for a route between districts");
             }
         });
         Test("beside a district border, the pass does as well as solving each district on its own", () => {
             // The small district's homes are the nearest ones to the big district's workplaces. They must not crowd out
             // the big district's own candidates, nor make its unpriced homes look unreachable.
+            int rejected = 0, referenceRejected = 0;
             for (int seed = 0; seed < 42; seed++)
             {
                 var start = BorderColony(seed); var whole = start.Copy(); PassEngine e = null;
                 for (int pass = 0; pass < 6; pass++) e = Run(whole);
-                double alone = 0;
+                double alone = 0; int aloneRejected = 0;
                 foreach (var district in new[] { G(9000), G(9001) })
                 {
-                    var part = start.Only(district);
-                    for (int pass = 0; pass < 6; pass++) Run(part);
-                    alone += part.Total();
+                    var part = start.Only(district); PassEngine p = null;
+                    for (int pass = 0; pass < 6; pass++) p = Run(part);
+                    alone += part.Total(); aloneRejected += p.LastReport.Rejected;
                 }
                 Check(whole.Total() <= alone, $"seed {seed}: commute {whole.Total():F0} after 6 passes, but {alone:F0} when each district is solved on its own");
-                Check(e.LastReport.Rejected == 0, $"seed {seed}: pass 6 still rejected {e.LastReport.Rejected} cycle(s)");
+                // Some colonies reject the same cycle every day even with one district (verified costs are not kept
+                // between passes); the border must not add to that. For these seeds the reference rejects none.
+                Check(e.LastReport.Rejected <= aloneRejected, $"seed {seed}: pass 6 still rejected {e.LastReport.Rejected} cycle(s), {aloneRejected} when each district is solved on its own");
+                rejected += e.LastReport.Rejected; referenceRejected += aloneRejected;
             }
+            Console.WriteLine($"   42 border colonies: {rejected} cycle(s) rejected on pass 6, {referenceRejected} when each district is solved on its own");
         });
         Test("paused homes keep their residents and never gain new ones", () => {
             var f = Colony(14, 30, 80, 30); var paused = f.Homes.Keys.OrderBy(k => k).Take(3).ToList(); foreach (var h in paused) f.Homes[h].Usable = false;
