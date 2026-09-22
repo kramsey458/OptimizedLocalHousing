@@ -272,10 +272,12 @@ public sealed class PassEngine
         State.U = new long[n + 1]; State.V = new long[n + 1]; State.P = new int[n + 1]; State.Row = 1;
     }
 
+    // Operations the latest solve tick charged, summed apart from the budget check. Only the tests read it; never saved.
+    internal long SolveOps;
     private void SolveStep()
     {
         // A tick's budget carries on from a district that is done into the next one.
-        long ops = 0;
+        long ops = 0; SolveOps = 0;
         while (true)
         {
             var members = Members(State.District); int n = members.Length;
@@ -284,7 +286,10 @@ public sealed class PassEngine
             // come. That work is not charged to this tick's budget: how many rows a tick solves must depend on the saved
             // state alone, so a peer that loaded a save taken mid-pass keeps step, tick for tick, with a peer that did not.
             while (_built < State.Row - 1) BuildRow(members, _built++);
-            if (!Hungarian.Step(_matrix, n, State.U, State.V, State.P, ref State.Row, ref ops, SolveOpsPerTick, row => { BuildRow(members, row); _built = row + 1; return n; })) return;
+            long before = ops;
+            bool solved = Hungarian.Step(_matrix, n, State.U, State.V, State.P, ref State.Row, ref ops, SolveOpsPerTick, row => { BuildRow(members, row); _built = row + 1; return n; });
+            SolveOps += ops - before;
+            if (!solved) return;
             for (int j = 1; j <= n; j++) State.Beds[members[State.P[j] - 1]] = members[j - 1];
             _matrix = null;
             if (++State.District == _members.Length) break;

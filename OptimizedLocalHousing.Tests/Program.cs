@@ -161,10 +161,12 @@ static class Program
     const int DuePass = PassEngine.LearnedPasses + 1;
     static PassEngine Run(IPassWorld f, PassState state = null, int limit = 5000)
     {
-        var e = new PassEngine(f, state); e.RequestPass();
+        var e = Strict(new PassEngine(f, state), "A pass"); e.RequestPass();
         for (int t = 0; t < limit; t++) { e.Tick(); if (!e.Busy && !e.State.Requested) return e; }
         throw new Exception("Pass did not finish");
     }
+    // A fault fails the test at once, with a readable message, instead of leaving an abandoned pass behind.
+    static PassEngine Strict(PassEngine e, string who) { e.Faulted += x => throw new Exception($"{who} faulted: {x.Message}", x); return e; }
     // What a save and load hands the next engine: only what the saved state holds.
     static PassState Reload(PassState state) => JsonConvert.DeserializeObject<PassState>(JsonConvert.SerializeObject(state));
     // Costs verified by earlier passes that the running pass takes instead of an estimate: pairs in its snapshot that
@@ -231,6 +233,11 @@ static class Program
             var u2 = new long[n + 1]; var v2 = new long[n + 1]; var p2 = new int[n + 1]; int r2 = 1; int calls = 0;
             while (!Hungarian.Step(c, n, u2, v2, p2, ref r2, 1, _ => 0)) calls++;
             Check(calls >= n - 1 && p1.SequenceEqual(p2) && u1.SequenceEqual(u2) && v1.SequenceEqual(v2), "Paused solve differed");
+            // Counting on from work already spent (one budget over several districts): a spent budget solves no row, and
+            // one operation short of it solves exactly one, charged on top.
+            var u3 = new long[n + 1]; var v3 = new long[n + 1]; var p3 = new int[n + 1]; int r3 = 1; long ops = 100;
+            Check(!Hungarian.Step(c, n, u3, v3, p3, ref r3, ref ops, 100, _ => 0) && r3 == 1 && ops == 100, $"A spent budget solved up to row {r3}, {ops} operations");
+            ops = 99; Check(!Hungarian.Step(c, n, u3, v3, p3, ref r3, ref ops, 100, _ => 7) && r3 == 2 && ops >= 99 + 7 + n, $"One operation short of the budget: up to row {r3}, {ops} operations");
         });
         Test("cycle splitting: simple, complete, deterministic and applicable one at a time", () => {
             var rng = new Random(3);
@@ -340,7 +347,7 @@ static class Program
                     // Each pass starts from the world and the saved state the previous one left.
                     var whole = start.Copy(); var ew = Run(whole, saved == null ? null : Reload(saved)); rejected.Add(ew.LastReport.Rejected);
                     string reference = JsonConvert.SerializeObject(ew.State); int ticks = (int)ew.LastReport.Ticks;
-                    var live = start.Copy(); var el = new PassEngine(live, saved == null ? null : Reload(saved)); el.RequestPass();
+                    var live = start.Copy(); var el = Strict(new PassEngine(live, saved == null ? null : Reload(saved)), $"{name}: pass {pass}"); el.RequestPass();
                     for (int t = 0; t < ticks + 2 && (pass <= 2 || pass == DuePass); t++)
                     {
                         var resumedWorld = start.Copy();   // nothing is applied before the last tick, so the world is unchanged mid-pass
@@ -348,7 +355,7 @@ static class Program
                         {
                             if (pass > 1 && el.State.Stage == 2 && el.State.District > 0 && el.State.Row > 1) midSolve++;
                             if (el.State.Stage == 2 && el.State.District > 0 && el.State.Row == 1) between++;
-                            var restored = new PassEngine(resumedWorld, Reload(el.State));
+                            var restored = Strict(new PassEngine(resumedWorld, Reload(el.State)), $"{name}: resume at tick {t} of pass {pass}");
                             for (int k = 0; k < 5000 && (restored.Busy || restored.State.Requested); k++) restored.Tick();
                             Check(resumedWorld.Fingerprint() == whole.Fingerprint(), $"{name}: resume at tick {t} of pass {pass} housed differently");
                             Check(JsonConvert.SerializeObject(restored.State) == reference, $"{name}: resume at tick {t} of pass {pass} ended in a different state");
@@ -388,7 +395,7 @@ static class Program
                 ("4 districts", Colony(19, 100, 300, 130, 10, 4), 5), ("2 districts, a rejected swap each", FarSwap(2), 1), ("16 districts, a rejected swap each", FarSwap(16), 1),
                 ("6 districts, a solve tick ends with a district", Colony(0, 120, 400, 100, 0, 6), 5) })
             {
-                var live = start.Copy(); var el = new PassEngine(live);
+                var live = start.Copy(); var el = Strict(new PassEngine(live), $"{name}: the peer that never reloaded");
                 var restored = new List<(int At, PassEngine Engine, Fake World)>(); int t = 0, used = 0, midSolve = 0, between = 0; var ticks = new List<long>(); var rejected = new List<int>();
                 for (int pass = 1; pass <= DuePass; pass++)
                 {
@@ -400,7 +407,7 @@ static class Program
                             if (pass > 1 && el.State.Stage == 2 && el.State.District > 0 && el.State.Row > 1) midSolve++;
                             if (el.State.Stage == 2 && el.State.District > 0 && el.State.Row == 1) between++;
                             var world = live.Copy();   // nothing is applied before a pass's last tick
-                            restored.Add((t, new PassEngine(world, Reload(el.State)), world));
+                            restored.Add((t, Strict(new PassEngine(world, Reload(el.State)), $"{name}: a peer that reloaded at tick {t}"), world));
                         }
                         el.Tick();
                         if (pass == 2 && el.State.Stage == 1) used = LearnedInUse(el.State);
@@ -429,7 +436,7 @@ static class Program
             }
         });
 
-        Test("work is bounded per tick: route queries stay within budget for a large colony", () => {
+        Test("work is bounded per tick: route queries and solver operations stay within budget", () => {
             foreach (int districts in new[] { 1, 6 })   // six districts of 25 homes: padded candidate rows
             {
                 var f = Colony(4, 150, 400, 120, 30, districts); var e = new PassEngine(f); e.RequestPass(); int worst = 0, ticks = 0;
@@ -450,6 +457,26 @@ static class Program
                 }
             }
             Check(rechecked == 34 && most <= PassEngine.QueriesPerTick, $"17 rejected swaps: {rechecked} costs priced again on pass {DuePass}, {most} route queries in one tick");
+            // One solver budget spans the districts of a tick: a solve tick charges less than SolveOpsPerTick plus the row
+            // it started last (a row of an n-adult district costs at most n(n + 1)), and a tick that leaves rows for the
+            // next one has spent all of it.
+            foreach (var (name, f) in new[] { ("4 districts of 300 adults", Colony(3, 400, 1200, 400, 0, 4)), ("6 districts of 67 adults", Colony(0, 120, 400, 100, 0, 6)),
+                ("16 districts of 34 adults", FarSwap(16)) })
+            {
+                var e = Strict(new PassEngine(f), name); e.RequestPass(); long row = 0, peak = 0; int ticks = 0;
+                for (int t = 0; t < 20000 && (e.Busy || e.State.Requested); t++)
+                {
+                    int stage = e.State.Stage;
+                    if (stage == 2 && row == 0) row = e.State.Snap.AdultDistrict.GroupBy(d => d).Max(d => (long)d.Count() * (d.Count() + 1));
+                    e.Tick();
+                    if (stage != 2) continue;
+                    ticks++; peak = Math.Max(peak, e.SolveOps);
+                    Check(e.SolveOps < PassEngine.SolveOpsPerTick + row, $"{name}: solve tick {ticks} charged {e.SolveOps} operations; the budget is {PassEngine.SolveOpsPerTick}, a row at most {row}");
+                    Check(e.State.Stage != 2 || e.SolveOps >= PassEngine.SolveOpsPerTick, $"{name}: solve tick {ticks} stopped after {e.SolveOps} operations");
+                }
+                Check(!e.Busy && ticks > 1, $"{name}: {ticks} solve ticks");
+                Console.WriteLine($"   {name}: {ticks} solve ticks, at most {peak} solver operations in one");
+            }
         });
         Test("far homes are never chosen without a fresh route check", () => {
             var f = Colony(5, 120, 200, 40); var e = new PassEngine(f); e.RequestPass(); var checkedPairs = new HashSet<(Guid, Guid)>(); var before = f.People.ToDictionary(p => p.Key, p => p.Value.Home);

@@ -137,9 +137,9 @@ random colonies with one to three districts, route queries that stay inside a di
 its own (the same homes as a colony of that district alone, in no more ticks), the safety rules above,
 stale-world handling, route costs carried from one pass to the next and priced again when they come due,
 determinism between peers, save/reload at every tick of three passes (the first, the next, and the one where the
-first pass's remembered costs come due; with one district and with several), per-tick work bounds, and the
-compiled adapter against the installed game's component blacklist. Omitting the two arguments skips the
-compiled-adapter check.
+first pass's remembered costs come due; with one district and with several), per-tick work bounds (route
+queries, and solver operations with one budget across districts), and the compiled adapter against the installed
+game's component blacklist. Omitting the two arguments skips the compiled-adapter check.
 
 ## Uninstall
 
