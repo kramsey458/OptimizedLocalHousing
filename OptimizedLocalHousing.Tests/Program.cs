@@ -230,6 +230,34 @@ static class Program
                 el.Tick();
             }
         });
+        Test("a peer that reloaded mid-pass stays in lockstep, tick for tick, with one that did not", () => {
+            // A multiplayer peer may load a save taken mid-pass (a rehost, a rejoin) while another peer never
+            // reloaded. From then on both must do the same work each tick: a pass that finished one tick later on one
+            // computer would move beavers at a different tick there, which is a desync.
+            var start = Colony(19, homes: 100, adults: 300, works: 130, children: 10);
+            var live = start.Copy(); var el = new PassEngine(live); el.RequestPass();
+            var restored = new List<(int At, PassEngine Engine, Fake World)>();
+            string Position(PassEngine e) => $"stage {e.State.Stage} row {e.State.Row} cursor {e.State.Cursor} ticks {e.State.Ticks} queries {e.State.Queries}";
+            for (int t = 0; t < 5000 && (el.Busy || el.State.Requested); t++)
+            {
+                if (el.Busy && live.Applied.Count == 0 && (el.State.Stage == 2 || t % 10 == 0))
+                {
+                    var world = start.Copy();
+                    restored.Add((t, new PassEngine(world, JsonConvert.DeserializeObject<PassState>(JsonConvert.SerializeObject(el.State))), world));
+                }
+                el.Tick();
+                foreach (var (at, engine, _) in restored)
+                {
+                    engine.Tick();
+                    Check(Position(engine) == Position(el), $"A peer that reloaded at tick {at} is at {Position(engine)} while the other is at {Position(el)} after tick {t}");
+                }
+            }
+            Check(restored.Count > 20, "Too few reload points exercised: " + restored.Count);
+            string reference = JsonConvert.SerializeObject(el.State);
+            foreach (var (at, engine, world) in restored)
+                Check(JsonConvert.SerializeObject(engine.State) == reference && world.Fingerprint() == live.Fingerprint(), $"A peer that reloaded at tick {at} ended differently");
+            Console.WriteLine($"   300 adults: {restored.Count} reload points, each in lockstep for the whole pass ({el.LastReport.Ticks} ticks)");
+        });
 
         Test("work is bounded per tick: route queries stay within budget for a large colony", () => {
             var f = Colony(4, 150, 400, 120, 30); var e = new PassEngine(f); e.RequestPass(); int worst = 0, ticks = 0;

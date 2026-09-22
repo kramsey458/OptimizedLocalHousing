@@ -179,10 +179,11 @@ public sealed class PassEngine
     {
         var s = State.Snap; int n = s.Adults.Length;
         if (_matrix == null) { _matrix = new long[n, n]; _built = 0; }
-        // After a load the rows solved so far are rebuilt first; they are needed by the rows still to come.
-        long rebuilt = 0;
-        while (_built < State.Row - 1) { BuildRow(_built++); rebuilt += n; }
-        if (!Hungarian.Step(_matrix, n, State.U, State.V, State.P, ref State.Row, SolveOpsPerTick - rebuilt, row => { BuildRow(row); _built = row + 1; return n; })) return;
+        // After a load the rows solved so far are rebuilt first; they are needed by the rows still to come. That work
+        // is not charged to this tick's budget: how many rows a tick solves must depend on the saved state alone, so a
+        // peer that loaded a save taken mid-pass keeps step, tick for tick, with a peer that did not.
+        while (_built < State.Row - 1) BuildRow(_built++);
+        if (!Hungarian.Step(_matrix, n, State.U, State.V, State.P, ref State.Row, SolveOpsPerTick, row => { BuildRow(row); _built = row + 1; return n; })) return;
         _moves = null; EnsureMoves();
         State.VerifyCurrent = new int[_moves.Count]; State.VerifyTarget = new int[_moves.Count];
         State.Cursor = 0; State.Stage = 3;

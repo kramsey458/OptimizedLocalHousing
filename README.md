@@ -3,7 +3,7 @@
 **Website:** https://timbermods.github.io/OptimizedLocalHousing/ (install guide, troubleshooting, FAQ)
 
 A Timberborn 1.1 mod (built against **1.1.2.4**) that moves adult beavers into the homes that give the
-**shortest total commute** between where they live and where they work. Version **1.0.0**, the first stable release.
+**shortest total commute** between where they live and where they work. Version **1.0.1**.
 
 Everyone can't live in the house nearest their workplace, because beds are limited. The best you can do is
 minimize the total travel across the whole colony, and that is exactly what this mod solves, once a day, with
@@ -53,8 +53,9 @@ Each pass:
   250,000 solver operations per tick. A pass takes roughly a fifth of a game day (147 ticks on a 266-beaver
   colony), never one long stall.
 - All decisions use integer arithmetic and sorted IDs, and the whole pass state (snapshot, prices, solver rows,
-  verification results) is saved with the game. Reloading mid-pass, or a second player joining, continues
-  exactly where the pass was, and every peer reaches the same result. There is no wall-clock or frame-time
+  verification results) is saved with the game. Reloading mid-pass, or a peer that loads a save taken
+  mid-pass while another peer keeps running, continues exactly where the pass was and does the same work on every
+  following tick, so every peer applies the same moves on the same tick. There is no wall-clock or frame-time
   rule anywhere.
 - The saved state is a few hundred bytes when idle and a few tens of KB during a pass. Uninstalling is safe:
   beavers just keep the homes they have.
@@ -92,6 +93,10 @@ That included a hosted co-op session with a second player running the same mod v
   been timed.
 - The Iron Teeth faction, and operating systems other than Windows.
 - Multiplayer beyond that one hosted session, and the client's side of it.
+- BeaverBuddies MultiColony (1.4.0-alpha21) in a live session. Its code was audited against this mod: the mod only
+  ticks inside the simulation, draws no random numbers, uses no wall-clock or frame time, never moves a beaver
+  between districts (so colonies stay separate), and nothing it touches is patched by BeaverBuddies. Both players
+  need the same version enabled; BeaverBuddies warns at join time when the mod lists differ.
 
 ## Limits
 
@@ -124,6 +129,13 @@ blacklist. Omitting the two arguments skips the compiled-adapter check.
 ## Uninstall
 
 Disable the mod and restart. Beavers keep their current homes.
+
+## Changelog
+
+- **1.0.1**: a peer that loads a save taken mid-pass now keeps step, tick for tick, with a peer that never reloaded
+  (the rebuild after a load was charged to that tick's solver budget, so the pass could end a tick later on one
+  computer). A test covers it. No change in what the mod decides.
+- **1.0.0**: first stable release.
 
 ## License
 
