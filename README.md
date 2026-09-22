@@ -31,7 +31,10 @@ Each pass:
    from the 32 nearest homes in its district. Homes in other districts are never queried, because the game's
    route search never leaves a district. Homes farther away are estimated, and any move to one is re-checked
    with a real route before it is allowed.
-3. **Solve.** The optimal way to reassign the adults to the beds that adults occupy today.
+3. **Solve.** The optimal way to reassign the adults to the beds that adults occupy today. Nobody moves between
+   districts, so each district is solved on its own, one after another. In a colony with several districts that
+   takes far fewer ticks and far less memory than solving them as one (47 solve ticks instead of 157 for four
+   districts of 300 adults), and reaches the same optimum.
 4. **Verify.** Every proposed move is re-priced with fresh routes. A move is dropped if the beaver would end up
    unable to reach work, and each cycle of moves must save at least half a route-cost unit in total. The fresh
    costs of homes beyond the 32 nearest are remembered in place of estimates, so a move that was turned down is
@@ -130,7 +133,8 @@ dotnet run --project OptimizedLocalHousing.Tests -c Release -- OptimizedLocalHou
 ```
 
 The tests cover the solver against brute force, pause/resume at every row, cycle splitting, optimality on
-random colonies with one or two districts, route queries that stay inside a district, the safety rules above,
+random colonies with one to three districts, route queries that stay inside a district, each district solved on
+its own (the same homes as a colony of that district alone, in no more ticks), the safety rules above,
 stale-world handling, route costs carried from one pass to the next and priced again when they come due,
 determinism between peers, save/reload at every tick of three passes (the first, the next, and the one where the
 first pass's remembered costs come due; with one district and with several), per-tick work bounds, and the

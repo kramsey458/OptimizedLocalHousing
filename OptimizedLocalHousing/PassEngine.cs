@@ -82,15 +82,18 @@ public sealed class SnapshotBuilder
 
 public sealed class PassState
 {
-    public const int CurrentVersion = 3;         // 2: Near rows hold only the workplace's district, padded with -1
+    public const int CurrentVersion = 4;         // 2: Near rows hold only the workplace's district, padded with -1
                                                  // 3: route costs verified outside the Near rows are kept (Learned*)
+                                                 // 4: each district is solved on its own (District, Beds)
     public int Version = CurrentVersion;
     public bool Requested = true;                // start a pass at the next opportunity
     public int Stage;                            // 0 idle, 1 route costs, 2 assignment, 3 verification
     public Snapshot Snap;
     public int Cursor;                           // stage 1: next cost entry; stage 3: next move to verify
-    public int Row = 1;                          // stage 2: next row of the assignment
-    public long[] U, V; public int[] P;          // stage 2 solver state
+    public int District;                         // stage 2: the district being solved, counted in ID order
+    public int Row = 1;                          // stage 2: next row of that district's assignment
+    public long[] U, V; public int[] P;          // stage 2 solver state of that district
+    public int[] Beds;                           // stages 2-3: per adult, the adult whose bed it gets (itself until solved)
     public int[] VerifyCurrent, VerifyTarget;    // stage 3: fresh route costs per move
     public long Queries, Ticks;                  // of the running pass
     public long Passes, MovedAdults, AppliedCycles, RejectedCycles, StaleCycles;   // lifetime
@@ -107,10 +110,10 @@ public sealed class PassReport
     public double RouteCostSaved;
 }
 
-// One pass = capture the colony, price each workplace's nearest homes in its district, solve the optimal assignment,
-// re-check every proposed move against fresh routes, then apply whole cycles of moves. The re-checked costs of homes
-// beyond the nearest are kept for the next passes, in place of estimates, and priced again when they come due while
-// still needed. Each stage is spread over ticks with fixed operation budgets, and the entire state is serializable,
+// One pass = capture the colony, price each workplace's nearest homes in its district, solve each district's optimal
+// assignment, re-check every proposed move against fresh routes, then apply whole cycles of moves. The re-checked costs
+// of homes beyond the nearest are kept for the next passes, in place of estimates, and priced again when they come due
+// while still needed. Each stage is spread over ticks with fixed operation budgets, and the entire state is serializable,
 // so a pass resumes identically after a save/load and on every multiplayer peer.
 public sealed class PassEngine
 {
@@ -124,7 +127,8 @@ public sealed class PassEngine
     public PassReport LastReport { get; private set; }
     public event Action<PassReport> Reported;
     public event Action<Exception> Faulted;
-    private long[,] _matrix; private int _built;   // rebuilt from the snapshot after a load; never saved
+    private long[,] _matrix; private int _built;   // of the district being solved; rebuilt after a load, never saved
+    private int[][] _members;                       // adult indices per district, both in ID order; from the snapshot
     private List<int[]> _moves;                     // [adult index, from home, to home]
 
     public PassEngine(IPassWorld world, PassState state = null)
@@ -163,7 +167,7 @@ public sealed class PassEngine
             default: throw new InvalidOperationException("Unknown pass stage " + State.Stage);
         }
     }
-    private void Forget() { _matrix = null; _built = 0; _moves = null; _known = null; _far = null; }
+    private void Forget() { _matrix = null; _built = 0; _members = null; _moves = null; _known = null; _far = null; }
 
     private void Begin()
     {
@@ -241,29 +245,63 @@ public sealed class PassEngine
             State.Queries++; q++;
         }
         if (State.Cursor < end) return;
-        int n = s.Adults.Length;
-        State.U = new long[n + 1]; State.V = new long[n + 1]; State.P = new int[n + 1]; State.Row = 1; State.Stage = 2;
+        State.Beds = new int[s.Adults.Length];
+        for (int i = 0; i < State.Beds.Length; i++) State.Beds[i] = i;
+        State.District = 0; StartDistrict(); State.Stage = 2;
+    }
+
+    // Nobody crosses districts, so the colony's assignment is one per district: each is solved on its own, in ID order,
+    // over its own adults and the beds they live in. The optimum is the same as for the whole colony at once, which
+    // scanned every district's beds for every adult; this takes fewer ticks and a far smaller matrix.
+    private int[] Members(int district)
+    {
+        if (_members == null)
+        {
+            var s = State.Snap; var districts = new List<Guid>(new SortedSet<Guid>(s.AdultDistrict));
+            var members = new List<int>[districts.Count];
+            for (int d = 0; d < members.Length; d++) members[d] = new List<int>();
+            for (int i = 0; i < s.Adults.Length; i++) members[districts.BinarySearch(s.AdultDistrict[i])].Add(i);
+            _members = new int[members.Length][];
+            for (int d = 0; d < members.Length; d++) _members[d] = members[d].ToArray();
+        }
+        return _members[district];
+    }
+    private void StartDistrict()
+    {
+        int n = Members(State.District).Length;
+        State.U = new long[n + 1]; State.V = new long[n + 1]; State.P = new int[n + 1]; State.Row = 1;
     }
 
     private void SolveStep()
     {
-        var s = State.Snap; int n = s.Adults.Length;
-        if (_matrix == null) { _matrix = new long[n, n]; _built = 0; }
-        // After a load the rows solved so far are rebuilt first; they are needed by the rows still to come. That work
-        // is not charged to this tick's budget: how many rows a tick solves must depend on the saved state alone, so a
-        // peer that loaded a save taken mid-pass keeps step, tick for tick, with a peer that did not.
-        while (_built < State.Row - 1) BuildRow(_built++);
-        if (!Hungarian.Step(_matrix, n, State.U, State.V, State.P, ref State.Row, SolveOpsPerTick, row => { BuildRow(row); _built = row + 1; return n; })) return;
+        // A tick's budget carries on from a district that is done into the next one.
+        long ops = 0;
+        while (true)
+        {
+            var members = Members(State.District); int n = members.Length;
+            if (_matrix == null) { _matrix = new long[n, n]; _built = 0; }
+            // After a load the district's rows solved so far are rebuilt first; they are needed by the rows still to
+            // come. That work is not charged to this tick's budget: how many rows a tick solves must depend on the saved
+            // state alone, so a peer that loaded a save taken mid-pass keeps step, tick for tick, with a peer that did not.
+            while (_built < State.Row - 1) BuildRow(members, _built++);
+            if (!Hungarian.Step(_matrix, n, State.U, State.V, State.P, ref State.Row, ref ops, SolveOpsPerTick, row => { BuildRow(members, row); _built = row + 1; return n; })) return;
+            for (int j = 1; j <= n; j++) State.Beds[members[State.P[j] - 1]] = members[j - 1];
+            _matrix = null;
+            if (++State.District == _members.Length) break;
+            StartDistrict();
+            if (ops >= SolveOpsPerTick) return;
+        }
+        State.U = null; State.V = null; State.P = null;
         _moves = null; EnsureMoves();
         State.VerifyCurrent = new int[_moves.Count]; State.VerifyTarget = new int[_moves.Count];
         State.Cursor = 0; State.Stage = 3;
     }
 
-    // Row i of the cost matrix: what each existing bed would cost adult i.
+    // A row of the district's cost matrix: what each of the district's existing beds would cost that row's adult.
     private Dictionary<int, int>[] _known; private long[] _far;
-    private void BuildRow(int i)
+    private void BuildRow(int[] members, int row)
     {
-        var s = State.Snap; int n = s.Adults.Length, k = s.NearK;
+        var s = State.Snap; int n = members.Length, k = s.NearK, i = members[row];
         if (_known == null)
         {
             _known = new Dictionary<int, int>[s.Works.Length]; _far = new long[s.Works.Length];
@@ -293,14 +331,13 @@ public sealed class PassEngine
         int own = s.AdultHome[i], work = s.AdultWork[i];
         for (int j = 0; j < n; j++)
         {
-            int bed = s.AdultHome[j];   // bed j is the one adult j lives in today; beds in one home are interchangeable
-            if (s.AdultDistrict[i] != s.HomeDistrict[bed]) { _matrix[i, j] = Cost.Forbidden; continue; }
+            int bed = s.AdultHome[members[j]];   // the bed the district's adult j lives in today; beds in one home are alike
             long c = 0;
             if (work >= 0)
                 c = _known[work].TryGetValue(bed, out var known) ? known
                     : _far[work] + (long)Cost.Scale * Geometry.Distance(s.HomePos, bed, s.WorkPos, work);
             if (bed == own) c -= Cost.StayBonus;
-            _matrix[i, j] = c;
+            _matrix[row, j] = c;
         }
     }
 
@@ -309,12 +346,10 @@ public sealed class PassEngine
     {
         if (_moves != null) return;
         var s = State.Snap; int n = s.Adults.Length;
-        var bedOf = new int[n];
-        for (int j = 1; j <= n; j++) bedOf[State.P[j] - 1] = j - 1;
         _moves = new List<int[]>();
         for (int i = 0; i < n; i++)
         {
-            int to = s.AdultHome[bedOf[i]];
+            int to = s.AdultHome[State.Beds[i]];
             if (to != s.AdultHome[i]) _moves.Add(new[] { i, s.AdultHome[i], to });
         }
     }
@@ -377,8 +412,8 @@ public sealed class PassEngine
         }
         State.AppliedCycles += report.Applied; State.RejectedCycles += report.Rejected; State.StaleCycles += report.Stale;
         State.Passes++; Learn(s, current, target);
-        State.Snap = null; State.U = null; State.V = null; State.P = null; State.VerifyCurrent = null; State.VerifyTarget = null;
-        State.Stage = 0; State.Cursor = 0; State.Row = 1; Forget();
+        State.Snap = null; State.U = null; State.V = null; State.P = null; State.Beds = null; State.VerifyCurrent = null; State.VerifyTarget = null;
+        State.Stage = 0; State.Cursor = 0; State.District = 0; State.Row = 1; Forget();
         LastReport = report; Reported?.Invoke(report);
     }
 
