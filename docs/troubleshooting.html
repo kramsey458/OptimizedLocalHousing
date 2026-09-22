@@ -109,7 +109,7 @@
       <ul>
         <li><strong>adults / homes / workplaces:</strong> how many the pass considered.</li>
         <li><strong>move cycles applied:</strong> groups of beavers that swapped beds around. Zero is the correct answer when the colony is already as good as it can be. A second pass on an optimized colony changes nothing.</li>
-        <li><strong>rejected:</strong> the fresh route check threw a proposed cycle away, because a beaver would end up unable to reach work, or the cycle didn't save at least half a route-cost unit. The route costs it found are remembered for the next seven passes, so the same cycle isn't proposed again every day.</li>
+        <li><strong>rejected:</strong> the fresh route check threw a proposed cycle away, because a beaver would end up unable to reach work, or the cycle didn't save at least half a route-cost unit. The route costs it found are remembered (and checked again when they come due), so the same cycle isn't proposed again every day.</li>
         <li><strong>stale:</strong> someone in the cycle changed home or job, died, or a home couldn't take them, between the snapshot and the moment of applying. Small numbers are normal. These beavers are reconsidered in the next pass.</li>
         <li><strong>disconnected commutes repaired:</strong> beavers whose old home couldn't reach their workplace and whose new home can.</li>
         <li><strong>route cost saved:</strong> the total drop in commute across the beavers that moved.</li>
