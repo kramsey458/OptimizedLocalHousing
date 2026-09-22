@@ -3,7 +3,7 @@
 **Website:** https://timbermods.github.io/OptimizedLocalHousing/ (install guide, troubleshooting, FAQ)
 
 A Timberborn 1.1 mod (built against **1.1.2.4**) that moves adult beavers into the homes that give the
-**shortest total commute** between where they live and where they work. Version **1.1.0**.
+**shortest total commute** between where they live and where they work. Version **1.1.1**.
 
 Everyone can't live in the house nearest their workplace, because beds are limited. The best you can do is
 minimize the total travel across the whole colony, and that is exactly what this mod solves, once a day, with
@@ -118,7 +118,7 @@ That included a hosted co-op session with a second player running the same mod v
   of three.
 - The Iron Teeth faction, and operating systems other than Windows.
 - Multiplayer beyond that one hosted session, and the client's side of it. No live two-player session has been
-  played on 1.1.0 yet.
+  played on 1.1.0 or 1.1.1 yet.
 - BeaverBuddies MultiColony (1.4.0-alpha21) in a live session. Its code was audited against this mod: the mod only
   ticks inside the simulation, draws no random numbers, uses no wall-clock or frame time, never moves a beaver
   between districts (so colonies stay separate), and nothing it touches is patched by BeaverBuddies. Every player
@@ -167,6 +167,9 @@ Disable the mod and restart. Beavers keep their current homes.
 
 ## Changelog
 
+- **1.1.1**: maintenance release. The conflict check now covers only Housing Optimize and Commute Balancer.
+  How passes work, and what is saved, are unchanged from 1.1.0. As always, every co-op player installs the same
+  version.
 - **1.1.0**: better homes near district borders, fewer repeated rejections, and shorter passes on large colonies.
   All co-op players must update together.
   - A workplace now prices only the homes in its own district. The game's route search never leaves a district,
