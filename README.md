@@ -33,7 +33,9 @@ Each pass:
    with a real route before it is allowed.
 3. **Solve.** The optimal way to reassign the adults to the beds that adults occupy today.
 4. **Verify.** Every proposed move is re-priced with fresh routes. A move is dropped if the beaver would end up
-   unable to reach work, and each cycle of moves must save at least half a route-cost unit in total.
+   unable to reach work, and each cycle of moves must save at least half a route-cost unit in total. The fresh
+   costs of homes beyond the 32 nearest are kept for the next seven passes in place of estimates, so a move that
+   was turned down is not proposed again every day (anything proposed is still re-priced first).
 5. **Apply.** Moves are applied as whole cycles (A takes B's bed, B takes C's, C takes A's), in one game tick.
 
 ### Rules it keeps
@@ -54,12 +56,14 @@ Each pass:
   250,000 solver operations per tick. A pass takes roughly a fifth of a game day (147 ticks on a 266-beaver
   colony), never one long stall.
 - All decisions use integer arithmetic and sorted IDs, and the whole pass state (snapshot, prices, solver rows,
-  verification results) is saved with the game. Reloading mid-pass, or a peer that loads a save taken
-  mid-pass while another peer keeps running, continues exactly where the pass was and does the same work on every
-  following tick, so every peer applies the same moves on the same tick. There is no wall-clock or frame-time
-  rule anywhere.
-- The saved state is a few hundred bytes when idle and a few tens of KB during a pass. Uninstalling is safe:
-  beavers just keep the homes they have.
+  verification results, and the route costs kept from earlier passes) is saved with the game. Reloading mid-pass,
+  or a peer that loads a save taken mid-pass while another peer keeps running, continues exactly where the pass
+  was and does the same work on every following tick, so every peer applies the same moves on the same tick.
+  There is no wall-clock or frame-time rule anywhere.
+- The saved state is a few hundred bytes when idle. For seven days after a pass that moved many beavers it also
+  holds the route costs that pass checked, capped at 1,024 (about 11 KB for 240 adults, 90 KB at the cap). During a
+  pass it is some tens of KB on a colony of a few hundred beavers. Uninstalling is safe: beavers just keep the
+  homes they have.
 
 ## Results
 
@@ -124,9 +128,10 @@ dotnet run --project OptimizedLocalHousing.Tests -c Release -- OptimizedLocalHou
 
 The tests cover the solver against brute force, pause/resume at every row, cycle splitting, optimality on
 random colonies with one or two districts, route queries that stay inside a district, the safety rules above,
-stale-world handling, determinism between peers, save/reload at every tick of a pass (with one district and
-with several), per-tick work bounds, and the compiled adapter against the installed game's component
-blacklist. Omitting the two arguments skips the compiled-adapter check.
+stale-world handling, route costs carried from one pass to the next, determinism between peers, save/reload at
+every tick of two consecutive passes (with one district and with several), per-tick work bounds, and the
+compiled adapter against the installed game's component blacklist. Omitting the two arguments skips the
+compiled-adapter check.
 
 ## Uninstall
 

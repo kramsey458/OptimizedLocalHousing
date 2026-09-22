@@ -62,7 +62,7 @@
   <details>
     <summary>What does "shortest" mean here?</summary>
     <div class="answer">
-      <p>It uses the game's own route cost between a home and the beaver's assigned workplace, so stairs, platforms and ziplines count. It isn't straight-line distance. To keep the work small, each workplace prices the 32 nearest homes in its own district by block distance; anything farther is only estimated, and every move is re-priced with fresh routes before it happens.</p>
+      <p>It uses the game's own route cost between a home and the beaver's assigned workplace, so stairs, platforms and ziplines count. It isn't straight-line distance. To keep the work small, each workplace prices the 32 nearest homes in its own district by block distance; anything farther is only estimated, and every move is re-priced with fresh routes before it happens. Those fresh costs are remembered for the next seven passes in place of the estimates.</p>
     </div>
   </details>
 
@@ -114,7 +114,7 @@
 
   <details>
     <summary>Is it safe for my save? What if I remove it?</summary>
-    <div class="answer"><p>The mod stores a small amount of data in your save: a few hundred bytes when idle and a few tens of kilobytes during a pass. If you remove the mod, the data is ignored and beavers keep their current homes. As with any mod, keep a backup of important saves.</p></div>
+    <div class="answer"><p>The mod stores a small amount of data in your save: a few hundred bytes when idle (for seven days after a pass that moved many beavers, up to about 90 kilobytes of route costs it checked) and a few tens of kilobytes during a pass on a colony of a few hundred beavers. If you remove the mod, the data is ignored and beavers keep their current homes. As with any mod, keep a backup of important saves.</p></div>
   </details>
 
   <h2 id="compat">Compatibility and comparisons</h2>
