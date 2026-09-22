@@ -459,8 +459,33 @@ static class Program
             // Version 1 (1.0.1) ranked homes from every district: a pass it saved starts over rather than resuming.
             foreach (int version in new[] { 1, 99 })
             {
-                var e = new PassEngine(new Fake(), new PassState { Version = version, Stage = 2 });
+                var e = new PassEngine(new Fake(), new PassState { Version = version, Stage = 2, Requested = false, Passes = 5 });
                 Check(e.State.Stage == 0 && e.State.Version == PassState.CurrentVersion && e.State.Requested, $"Version {version} state kept");
+                Check(e.State.Passes == 5, $"Version {version}: the pass count was lost");
+            }
+        });
+        Test("a save from 1.0.1 restarts the pass it was running, and keeps its counters and schedule", () => {
+            // Written by the 1.0.1 engine (a87ba72) for this colony: after one pass, mid-way through the next (stage 2),
+            // and idle.
+            const string running = """{"Version":1,"Requested":false,"Stage":2,"Snap":{"Adults":["0000000a-0000-0000-0000-000000000000","0000000b-0000-0000-0000-000000000000","0000000c-0000-0000-0000-000000000000"],"AdultDistrict":["00002328-0000-0000-0000-000000000000","00002328-0000-0000-0000-000000000000","00002328-0000-0000-0000-000000000000"],"AdultHome":[0,2,1],"AdultWork":[0,1,-1],"Homes":["00000001-0000-0000-0000-000000000000","00000002-0000-0000-0000-000000000000","00000003-0000-0000-0000-000000000000"],"HomeDistrict":["00002328-0000-0000-0000-000000000000","00002328-0000-0000-0000-000000000000","00002328-0000-0000-0000-000000000000"],"HomePos":[0,0,0,10,0,0,20,0,0],"Works":["000001f4-0000-0000-0000-000000000000","000001f5-0000-0000-0000-000000000000"],"WorkPos":[0,0,0,20,0,0],"NearK":3,"Near":[0,1,2,2,1,0],"Costs":[80,240,400,80,240,400]},"Cursor":6,"Row":1,"U":[0,0,0,0],"V":[0,0,0,0],"P":[0,0,0,0],"VerifyCurrent":null,"VerifyTarget":null,"Queries":6,"Ticks":1,"Passes":1,"MovedAdults":2,"AppliedCycles":1,"RejectedCycles":0,"StaleCycles":0}""";
+            const string idle = """{"Version":1,"Requested":false,"Stage":0,"Snap":null,"Cursor":0,"Row":1,"U":null,"V":null,"P":null,"VerifyCurrent":null,"VerifyTarget":null,"Queries":10,"Ticks":3,"Passes":1,"MovedAdults":2,"AppliedCycles":1,"RejectedCycles":0,"StaleCycles":0}""";
+            Fake World()
+            {
+                var f = new Fake(); f.Works[G(500)] = (0, 0, 0); f.Works[G(501)] = (20, 0, 0);
+                for (int h = 1; h <= 3; h++) f.Homes[G(h)] = new Home { Capacity = 1, X = (h - 1) * 10 };
+                f.People[G(10)] = new Person { Id = G(10), Home = G(1), Work = G(500), District = G(9000) };
+                f.People[G(11)] = new Person { Id = G(11), Home = G(3), Work = G(501), District = G(9000) };
+                f.People[G(12)] = new Person { Id = G(12), Home = G(2), District = G(9000) };
+                return f;
+            }
+            foreach (var (name, json, restarts) in new[] { ("running", running, true), ("idle", idle, false) })
+            {
+                var e = new PassEngine(World(), JsonConvert.DeserializeObject<PassState>(json)); Exception fault = null; e.Faulted += x => fault = x;
+                Check(e.State.Version == PassState.CurrentVersion && e.State.Stage == 0 && e.State.Snap == null, $"{name}: the 1.0.1 state was kept");
+                Check(e.State.Passes == 1 && e.State.MovedAdults == 2 && e.State.AppliedCycles == 1, $"{name}: the lifetime counters were lost");
+                Check(e.State.Requested == restarts, $"{name}: pass requested {e.State.Requested}, expected {restarts}");
+                for (int t = 0; t < 100 && (e.Busy || e.State.Requested); t++) e.Tick();
+                Check(fault == null && !e.Busy && e.State.Passes == (restarts ? 2 : 1), $"{name}: {fault?.Message ?? $"{e.State.Passes} passes"}");
             }
         });
 

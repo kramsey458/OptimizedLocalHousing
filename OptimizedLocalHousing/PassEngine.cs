@@ -118,8 +118,16 @@ public sealed class PassEngine
     public PassEngine(IPassWorld world, PassState state = null)
     {
         _world = world; State = state ?? new PassState();
-        if (State.Version != PassState.CurrentVersion) State = new PassState();
+        if (State.Version != PassState.CurrentVersion) State = Restart(State);
     }
+    // A state saved by another version is not trusted: a pass it was running starts over. The lifetime counters carry
+    // over, and an idle state keeps its schedule. This depends on the save alone, so every peer does the same.
+    private static PassState Restart(PassState old) => new PassState
+    {
+        Requested = old.Stage != 0 || old.Requested,
+        Passes = old.Passes, MovedAdults = old.MovedAdults,
+        AppliedCycles = old.AppliedCycles, RejectedCycles = old.RejectedCycles, StaleCycles = old.StaleCycles,
+    };
     public bool Busy => State.Stage != 0;
     public void RequestPass() => State.Requested = true;
 
