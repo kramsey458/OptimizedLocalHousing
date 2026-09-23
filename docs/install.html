@@ -5,37 +5,36 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Install guide: Optimized Local Housing</title>
 <meta name="description" content="Step-by-step install guide for the Optimized Local Housing Timberborn mod: download, folder layout, enabling the mod, checking that it works, multiplayer, updating and uninstalling.">
+<meta name="theme-color" content="#e6e1d6">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <script>try{var t=localStorage.getItem('olh-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="preload" href="fonts/libre-caslon-text-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
 <header class="site-header">
-  <div class="wrap bar">
-    <a class="brand" href="index.html"><img src="favicon.svg" alt="" width="32" height="32"> Optimized Local Housing</a>
+  <div class="wrap masthead">
+    <a class="brand" href="index.html"><img src="favicon.svg" alt="" width="30" height="30"> Optimized Local Housing</a>
     <nav class="nav" aria-label="Main">
-      <a href="index.html">Home</a>
-      <a href="index.html#features">Features</a>
+      <a href="index.html#how">How it works</a>
       <a href="install.html" aria-current="page">Install</a>
       <a href="troubleshooting.html">Troubleshooting</a>
       <a href="faq.html">FAQ</a>
       <a href="https://github.com/timbermods/OptimizedLocalHousing">GitHub</a>
-      <button class="theme-btn" id="theme-toggle" type="button">Dark mode</button>
     </nav>
+    <button class="theme-btn" id="theme-toggle" type="button">Dark mode</button>
   </div>
 </header>
 
-<main id="main" class="doc">
-<div class="wrap narrow">
-  <span class="eyebrow">Guide</span>
-  <h1>Install guide</h1>
-  <p class="lead">About five minutes. You need Timberborn 1.1 and nothing else: no other mods are required.</p>
-
-  <div class="notice" role="note">
-    <p><strong>Back up first.</strong> As with any mod, keep a copy of your save so you can undo the moves the mod makes.</p>
+<main id="main">
+<div class="page-head">
+  <div class="wrap">
+    <h1>Install guide</h1>
+    <p class="lead">About five minutes. You need Timberborn 1.1 and nothing else: no other mods are required.</p>
   </div>
-
+</div>
+<div class="wrap doc-grid">
   <nav class="toc" aria-label="On this page">
     <p>On this page</p>
     <ul>
@@ -49,8 +48,13 @@
       <li><a href="#checksum">Verify the download</a></li>
     </ul>
   </nav>
+  <div class="doc-body">
+  <div class="notice stock" role="note">
+    <p><strong>Back up first.</strong> As with any mod, keep a copy of your save so you can undo the moves the mod makes.</p>
+  </div>
 
-  <h2 id="requirements">Requirements</h2>
+
+  <h2 class="first" id="requirements">Requirements</h2>
   <ul>
     <li><strong>Timberborn 1.1.</strong> The mod is built against 1.1.2.4 and asks for 1.1.0.0 or newer. A future game update could break it.</li>
     <li><strong>Windows.</strong> That is the only system it has been checked on. It is an ordinary game mod, so other systems may work, but the Mods folder is in a different place there.</li>
@@ -60,16 +64,19 @@
 
   <h2 id="steps">Step by step</h2>
   <ol class="steps">
-    <li><div><strong>Back up your save</strong><p>Copy the save you want to use from <code>Documents\Timberborn\Saves</code> so you can go back if you don't like the result.</p></div></li>
-    <li><div><strong>Download the mod</strong><p>Get <a href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="download"><code><span data-release="asset-name">OptimizedLocalHousing-v1.1.1.zip</span></code></a> from the <a href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="notes">release page</a>. It is listed under <strong>Assets</strong>; don't download "Source code". The mod is distributed from GitHub, not the Steam Workshop.</p></div></li>
-    <li><div><strong>Close Timberborn</strong><p>Make sure the game is fully closed before you copy files into its Mods folder.</p></div></li>
-    <li><div><strong>Extract into your Mods folder</strong><p>Extract the ZIP into <code>Documents\Timberborn\Mods</code>. It contains one folder, <code>OptimizedLocalHousing</code>, and you should end up with the layout <a href="#layout">shown below</a>. If you extracted into a new folder, you may have a doubled <code>OptimizedLocalHousing\OptimizedLocalHousing</code>. Move the inner one up.</p></div></li>
-    <li><div><strong>Enable it and restart</strong><p>Start Timberborn, open <strong>Mods</strong> from the main menu, tick <strong>Optimized Local Housing</strong>, and restart the game when it asks. Menu wording can differ a little between game versions.</p></div></li>
-    <li><div><strong>Load your save and let the game run</strong><p>On a save the mod hasn't seen before, the first pass starts as soon as the game is ticking (not while paused). After that it runs at the start of every in-game day. <a href="#verify">Check that it ran.</a></p></div></li>
+    <li><strong>Back up your save</strong><p>Copy the save you want to use from <code>Documents\Timberborn\Saves</code> so you can go back if you don't like the result.</p></li>
+    <li><strong>Download the mod</strong><p><a class="btn btn-primary" href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="download"><span>Download <span data-release="version">1.1.1</span></span></a></p><p>Get <a href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="download"><code><span data-release="asset-name">OptimizedLocalHousing-v1.1.1.zip</span></code></a> from the <a href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="notes">release page</a>. It is listed under <strong>Assets</strong>; don't download "Source code". The mod is distributed from GitHub, not the Steam Workshop.</p></li>
+    <li><strong>Close Timberborn</strong><p>Make sure the game is fully closed before you copy files into its Mods folder.</p></li>
+    <li><strong>Extract into your Mods folder</strong><p>Extract the ZIP into <code>Documents\Timberborn\Mods</code>. It contains one folder, <code>OptimizedLocalHousing</code>, and you should end up with the layout <a href="#layout">shown below</a>. If you extracted into a new folder, you may have a doubled <code>OptimizedLocalHousing\OptimizedLocalHousing</code>: move the inner one up (the <a href="#layout">layout</a> shows both).</p></li>
+    <li><strong>Enable it and restart</strong><p>Start Timberborn, open <strong>Mods</strong> from the main menu, tick <strong>Optimized Local Housing</strong>, and restart the game when it asks. Don't run them together: Optimized Local Housing turns itself off if Housing Optimize or Commute Balancer is enabled. Menu wording can differ a little between game versions.</p></li>
+    <li><strong>Load your save and let the game run</strong><p>On a save the mod hasn't seen before, the first pass starts as soon as the game is ticking (not while paused). After that it runs at the start of every in-game day. <a href="#verify">Check that it ran.</a></p></li>
   </ol>
 
   <h2 id="layout">Folder layout</h2>
   <p>This is what a correct install looks like. The game reads the manifest and the DLL from the <code>version-1.1</code> folder.</p>
+<div class="tree-pair">
+    <figure class="right">
+      <figcaption>Right</figcaption>
 <pre class="tree"><code>Documents\Timberborn\Mods\
 └── OptimizedLocalHousing\
     ├── LICENSE
@@ -78,6 +85,19 @@
         ├── manifest.json
         └── Scripts\
             └── OptimizedLocalHousing.dll</code></pre>
+    </figure>
+    <figure class="wrong">
+      <figcaption>Wrong: a doubled folder</figcaption>
+<pre class="tree"><code>Documents\Timberborn\Mods\
+└── OptimizedLocalHousing\
+    └── OptimizedLocalHousing\
+        ├── LICENSE
+        ├── README.md
+        └── version-1.1\
+            └── ...</code></pre>
+    </figure>
+  </div>
+  <p>With a doubled folder the game doesn't find the mod. Move the inner <code>OptimizedLocalHousing</code> folder up one level and delete the empty one.</p>
 
   <h2 id="verify">Check that it works</h2>
   <p>The mod has no menu and no settings. It writes one line to the game log at startup and one line after every pass.</p>
@@ -86,18 +106,28 @@
     <li>Search for <code>[OptimizedLocalHousing]</code>. You should see this at startup:
 <pre><code class="log-line">[OptimizedLocalHousing] <span data-release="version">1.1.1</span> loaded.</code></pre></li>
     <li>After a pass finishes you should see a summary line (roughly 90 seconds to two minutes at normal game speed on a colony of a few hundred beavers, faster at higher speeds). This is a real line from a live game, and your numbers will differ:
-<pre><code class="log-line">[OptimizedLocalHousing] Pass 26: 356 adults, 104 homes, 167 workplaces; 5354 route queries over 182 ticks; 2 move cycles applied (0 rejected, 0 stale), 0 disconnected commutes repaired, route cost saved 177.</code></pre></li>
+<div class="passline">
+          <code class="pl-raw">[OptimizedLocalHousing] Pass 26: 356 adults, 104 homes, 167 workplaces; 5354 route queries over 182 ticks; 2 move cycles applied (0 rejected, 0 stale), 0 disconnected commutes repaired, route cost saved 177.</code>
+          <dl>
+            <dt>356 adults, 104 homes, 167 workplaces</dt><dd>who was in the plan</dd>
+            <dt>5354 route queries over 182 ticks</dt><dd>the work, spread out</dd>
+            <dt>2 move cycles applied</dt><dd>groups of beavers who swapped beds</dd>
+            <dt>0 rejected, 0 stale</dt><dd>moves thrown out at the fresh check, or because something changed during the pass</dd>
+            <dt>0 disconnected commutes repaired</dt><dd>beavers moved to a home that can reach their work</dd>
+            <dt>route cost saved 177</dt><dd>how much shorter the colony's walk got</dd>
+          </dl>
+        </div></li>
   </ol>
   <p>No line, or an error line? Head to <a href="troubleshooting.html">Troubleshooting</a>.</p>
 
   <h2 id="multiplayer">Multiplayer</h2>
-  <p>Every player must install the <strong>same version</strong> of the mod and run the same game version, because the mod changes which beaver lives where and all players' games have to agree. The pass is designed to give the same result on every machine and to resume correctly after a save, a reload or a join. It has been used in a live hosted co-op session (about 11,000 ticks and 15 passes) with no desync reported by the host. That session ran the 1.0 code, and 1.1.0 hasn't yet been played live by two players, so if you try it please <a href="https://github.com/timbermods/OptimizedLocalHousing/issues/new">tell us how it went</a>.</p>
+  <p>Every player must install the <strong>same version</strong> of the mod and run the same game version, because the mod changes which beaver lives where and all players' games have to agree. The pass is designed to give the same result on every machine and to resume correctly after a save, a reload or a join. It has been used in a live hosted co-op session (about 11,000 ticks and 15 passes) with no desync reported by the host. That session ran the code the stable release started from; this release hasn't been played live by two players yet, so if you try it please <a href="https://github.com/timbermods/OptimizedLocalHousing/issues/new">tell us how it went</a>.</p>
 
   <h2 id="update">Updating</h2>
   <ol>
     <li>Close the game and delete the old <code>Mods\OptimizedLocalHousing</code> folder.</li>
     <li>Extract the new ZIP into <code>Mods</code> as above.</li>
-    <li>Start the game. Your saves keep working, including saves from earlier versions. If a pass was running when the save was made, it starts over once after the update. Idle saves keep their schedule, and the pass count carries on.</li>
+    <li>Start the game. Your saves keep working.</li>
     <li>In multiplayer, every player must update to the same version together.</li>
   </ol>
 
@@ -110,12 +140,13 @@
   <p>The hash should be:</p>
 <pre><code><span data-release="sha256">cc6b905d0021c3119f15a85186d6a7197e7955bed890d0134d0c6a2f2f654059</span></code></pre>
   <p>The same hash is in the <code>SHA256SUMS</code> file attached to the release.</p>
+  </div>
 </div>
 </main>
 
 <footer class="site-footer">
   <div class="wrap foot">
-    <div><strong>Optimized Local Housing</strong><br>Free and open source, MIT licensed. An unofficial community mod for Timberborn. Not affiliated with or endorsed by Mechanistry.</div>
+    <div><strong>Optimized Local Housing</strong><p>Free and open source, MIT licensed, maintained by <a href="https://github.com/timbermods">Timbermods</a>. An unofficial community mod for Timberborn. Not affiliated with or endorsed by Mechanistry. Housing Optimize and Commute Balancer are Bobingabout's.</p></div>
     <div><h2>Guides</h2><ul><li><a href="install.html">Install guide</a></li><li><a href="troubleshooting.html">Troubleshooting</a></li><li><a href="faq.html">FAQ</a></li></ul></div>
     <div><h2>Project</h2><ul><li><a href="https://github.com/timbermods/OptimizedLocalHousing">Source on GitHub</a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="notes">Latest release</a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/issues">Issues</a></li><li><a href="https://timbermods.github.io/">More mods from Timbermods</a></li></ul></div>
   </div>

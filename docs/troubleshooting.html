@@ -5,41 +5,53 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Troubleshooting: Optimized Local Housing</title>
 <meta name="description" content="Fixes for common Optimized Local Housing problems in Timberborn: the mod not appearing, no log lines, no beavers moving, disabled by another mod, stutters, multiplayer desyncs, and how to report a bug.">
+<meta name="theme-color" content="#e6e1d6">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <script>try{var t=localStorage.getItem('olh-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="preload" href="fonts/libre-caslon-text-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
 <header class="site-header">
-  <div class="wrap bar">
-    <a class="brand" href="index.html"><img src="favicon.svg" alt="" width="32" height="32"> Optimized Local Housing</a>
+  <div class="wrap masthead">
+    <a class="brand" href="index.html"><img src="favicon.svg" alt="" width="30" height="30"> Optimized Local Housing</a>
     <nav class="nav" aria-label="Main">
-      <a href="index.html">Home</a>
-      <a href="index.html#features">Features</a>
+      <a href="index.html#how">How it works</a>
       <a href="install.html">Install</a>
       <a href="troubleshooting.html" aria-current="page">Troubleshooting</a>
       <a href="faq.html">FAQ</a>
       <a href="https://github.com/timbermods/OptimizedLocalHousing">GitHub</a>
-      <button class="theme-btn" id="theme-toggle" type="button">Dark mode</button>
     </nav>
+    <button class="theme-btn" id="theme-toggle" type="button">Dark mode</button>
   </div>
 </header>
 
-<main id="main" class="doc">
-<div class="wrap narrow trouble">
-  <span class="eyebrow">Guide</span>
-  <h1>Troubleshooting</h1>
-  <p class="lead">Most questions can be answered from the game log. Start there, then find your symptom below.</p>
-
-  <h2 id="log">First: read the log</h2>
+<main id="main">
+<div class="page-head">
+  <div class="wrap">
+    <h1>Troubleshooting</h1>
+    <p class="lead">Most questions can be answered from the game log. Start there, then find your symptom below.</p>
+  </div>
+</div>
+<div class="wrap doc-grid">
+  <nav class="toc" aria-label="On this page">
+    <p>On this page</p>
+    <ul>
+      <li><a href="#log">First: read the log</a></li>
+      <li><a href="#symptoms">Find your symptom</a></li>
+      <li><a href="#report">Reporting a problem</a></li>
+    </ul>
+  </nav>
+  <div class="doc-body">
+  <h2 class="first" id="log">First: read the log</h2>
   <p>The mod has no menu, so everything it does is reported in the game log:</p>
   <ul>
     <li>Current session: <code>%USERPROFILE%\AppData\LocalLow\Mechanistry\Timberborn\Player.log</code></li>
     <li>Previous session: <code>Player-prev.log</code> in the same folder</li>
   </ul>
   <p>Search for <code>[OptimizedLocalHousing]</code>. These are all the messages it can write:</p>
-  <table>
+  <div class="table-scroll"><table>
     <thead><tr><th>Message</th><th>Meaning</th></tr></thead>
     <tbody>
       <tr><td><code><span data-release="version">1.1.1</span> loaded.</code></td><td>The mod started. Normal.</td></tr>
@@ -49,11 +61,11 @@
       <tr><td><code>Pass abandoned until the next day: …</code></td><td>An error stopped a pass. <a href="#abandoned">Report it</a>.</td></tr>
       <tr><td><code>A move cycle failed and was rolled back: …</code></td><td>The game refused a move. <a href="#rollback">Report it</a>.</td></tr>
     </tbody>
-  </table>
+  </table></div>
 
   <h2 id="symptoms">Find your symptom</h2>
 
-  <details id="not-listed">
+  <details class="q" id="not-listed">
     <summary>The mod isn't in the Mods list</summary>
     <div class="answer">
       <ul>
@@ -65,7 +77,7 @@
     </div>
   </details>
 
-  <details id="no-log">
+  <details class="q" id="no-log">
     <summary>It's enabled, but there is no <code>[OptimizedLocalHousing]</code> line in the log</summary>
     <div class="answer">
       <ul>
@@ -76,7 +88,7 @@
     </div>
   </details>
 
-  <details id="no-pass">
+  <details class="q" id="no-pass">
     <summary>It says <code>loaded.</code> but I never see a <code>Pass</code> line</summary>
     <div class="answer">
       <ul>
@@ -88,7 +100,7 @@
     </div>
   </details>
 
-  <details id="disabled">
+  <details class="q" id="disabled">
     <summary>The log says <code>Disabled because another housing assignment mod is enabled</code></summary>
     <div class="answer">
       <p>Optimized Local Housing turns itself off when it sees another mod that reassigns beavers' homes, because two of them would keep undoing each other. The message ends with the ID it found. It checks for these:</p>
@@ -101,7 +113,7 @@
     </div>
   </details>
 
-  <details id="zero">
+  <details class="q" id="zero">
     <summary>The pass line says <code>0 move cycles applied</code>, or the numbers look strange</summary>
     <div class="answer">
       <p>Reading the line: <code>Pass 34: 345 adults, 104 homes, 167 workplaces; 5394 route queries over 183 ticks; 4 move cycles applied (1 rejected, 2 stale), 0 disconnected commutes repaired, route cost saved 717.</code></p>
@@ -117,7 +129,7 @@
     </div>
   </details>
 
-  <details id="still-far">
+  <details class="q" id="still-far">
     <summary>Some beavers still seem to walk a long way to work</summary>
     <div class="answer">
       <ul>
@@ -131,14 +143,14 @@
     </div>
   </details>
 
-  <details id="families">
+  <details class="q" id="families">
     <summary>Everyone moved at once, or parents ended up away from their children</summary>
     <div class="answer">
       <p>Expected on the first pass of a badly housed colony: the best arrangement can differ from the current one for most adults. Children never move, so a child can end up in a home with different adults than before. Every home still has the same number of adults, so babies and breeding capacity are untouched. Later passes move only a few beavers. If you dislike the first result, load a backup save and don't install the mod.</p>
     </div>
   </details>
 
-  <details id="stutter">
+  <details class="q" id="stutter">
     <summary>The game hitches when a pass starts or finishes</summary>
     <div class="answer">
       <p>The pass is split into steps with per-tick budgets (32 route queries per tick on a colony of a few hundred beavers; a large colony's pass does up to 128, and more solver work per tick, so that it usually ends within the daytime), but two moments do their work in a single tick: taking the snapshot when a pass starts, and applying the moves when it ends. On a large colony either could cause a brief blip. Frame-time impact hasn't been measured; for scale, a pass on a live colony of about 350 adults, 104 homes and 167 workplaces used about 5,350 route queries over about 183 ticks, with no problems reported.</p>
@@ -146,28 +158,28 @@
     </div>
   </details>
 
-  <details id="abandoned">
+  <details class="q" id="abandoned">
     <summary>The log says <code>Pass abandoned until the next day</code></summary>
     <div class="answer">
       <p>An unexpected error stopped the pass. It is contained: no beavers are left half-moved, the game keeps running, and the mod tries again the next day. Copy the full message, which includes the error and where it happened, and <a href="#report">report it</a>. That is a bug we want to hear about.</p>
     </div>
   </details>
 
-  <details id="rollback">
+  <details class="q" id="rollback">
     <summary>The log says <code>A move cycle failed and was rolled back</code></summary>
     <div class="answer">
       <p>The game refused one of the assignments in a cycle. The mod put every beaver in that cycle back in its original home, so nothing is lost. If it happens repeatedly, <a href="#report">report it</a> with the message.</p>
     </div>
   </details>
 
-  <details id="state">
+  <details class="q" id="state">
     <summary>The log says <code>Saved state ignored</code></summary>
     <div class="answer">
-      <p>The mod couldn't read its own data from the save. It starts fresh, at no cost to your colony. Data from an older version of the mod is normally read without this message: a pass that was running when the save was made starts over once.</p>
+      <p>The mod couldn't read its own data from the save. It starts fresh, at no cost to your colony.</p>
     </div>
   </details>
 
-  <details id="multiplayer">
+  <details class="q" id="multiplayer">
     <summary>Multiplayer: the game desynced, or players see different homes</summary>
     <div class="answer">
       <ul>
@@ -178,14 +190,14 @@
     </div>
   </details>
 
-  <details id="update">
+  <details class="q" id="update">
     <summary>It stopped working after a Timberborn update</summary>
     <div class="answer">
       <p>The mod is built against Timberborn 1.1.2.4. A game update can change the parts it relies on. Look in the log for an error mentioning <code>OptimizedLocalHousing</code>, disable the mod until a matching release is available, and check the <a href="https://github.com/timbermods/OptimizedLocalHousing/releases">releases page</a>.</p>
     </div>
   </details>
 
-  <details id="undo">
+  <details class="q" id="undo">
     <summary>I want to undo what it did</summary>
     <div class="answer">
       <p>Disabling or deleting the mod stops further changes but doesn't move anyone back. To undo the moves already made, load a save from before you installed it. That is why you should try it on a copy first.</p>
@@ -201,12 +213,13 @@
     <li>Roughly how many beavers, homes and workplaces you have, and whether you were playing solo or in multiplayer.</li>
     <li>What you expected and what happened. If it's safe to share, a copy of the save.</li>
   </ul>
+  </div>
 </div>
 </main>
 
 <footer class="site-footer">
   <div class="wrap foot">
-    <div><strong>Optimized Local Housing</strong><br>Free and open source, MIT licensed. An unofficial community mod for Timberborn. Not affiliated with or endorsed by Mechanistry.</div>
+    <div><strong>Optimized Local Housing</strong><p>Free and open source, MIT licensed, maintained by <a href="https://github.com/timbermods">Timbermods</a>. An unofficial community mod for Timberborn. Not affiliated with or endorsed by Mechanistry. Housing Optimize and Commute Balancer are Bobingabout's.</p></div>
     <div><h2>Guides</h2><ul><li><a href="install.html">Install guide</a></li><li><a href="troubleshooting.html">Troubleshooting</a></li><li><a href="faq.html">FAQ</a></li></ul></div>
     <div><h2>Project</h2><ul><li><a href="https://github.com/timbermods/OptimizedLocalHousing">Source on GitHub</a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="notes">Latest release</a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/issues">Issues</a></li><li><a href="https://timbermods.github.io/">More mods from Timbermods</a></li></ul></div>
   </div>

@@ -119,7 +119,7 @@ That included a hosted co-op session with a second player running the same mod v
 - The Iron Teeth faction, and operating systems other than Windows.
 - Multiplayer beyond that one hosted session, and the client's side of it. No live two-player session has been
   played on 1.1.0 or 1.1.1 yet.
-- BeaverBuddies MultiColony (1.4.0-alpha21) in a live session. Its code was audited against this mod: the mod only
+- BeaverBuddies MultiColony in a live session. Its code was audited against this mod: the mod only
   ticks inside the simulation, draws no random numbers, uses no wall-clock or frame time, never moves a beaver
   between districts (so colonies stay separate), and nothing it touches is patched by BeaverBuddies. Every player
   needs the same version enabled; BeaverBuddies warns at join time when the mod lists differ.

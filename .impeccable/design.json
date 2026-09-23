@@ -1,0 +1,630 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-23T20:03:15+00:00",
+  "title": "Design System: Optimized Local Housing",
+  "extensions": {
+    "colorMeta": {
+      "drafting-blue": {
+        "role": "primary",
+        "displayName": "Drafting Blue",
+        "canonical": "oklch(48.1% 0.110 254)",
+        "tonalRamp": [
+          "oklch(15% 0.110 254)",
+          "oklch(25% 0.110 254)",
+          "oklch(35% 0.110 254)",
+          "oklch(45% 0.110 254)",
+          "oklch(55% 0.110 254)",
+          "oklch(65% 0.110 254)",
+          "oklch(80% 0.110 254)",
+          "oklch(95% 0.110 254)"
+        ]
+      },
+      "drafting-blue-deep": {
+        "role": "primary",
+        "displayName": "Drafting Blue Deep (hover)",
+        "canonical": "oklch(39.3% 0.094 255)",
+        "tonalRamp": [
+          "oklch(15% 0.094 255)",
+          "oklch(25% 0.094 255)",
+          "oklch(35% 0.094 255)",
+          "oklch(45% 0.094 255)",
+          "oklch(55% 0.094 255)",
+          "oklch(65% 0.094 255)",
+          "oklch(80% 0.094 255)",
+          "oklch(95% 0.094 255)"
+        ]
+      },
+      "madder": {
+        "role": "secondary",
+        "displayName": "Madder",
+        "canonical": "oklch(53.5% 0.151 32)",
+        "tonalRamp": [
+          "oklch(15% 0.151 32)",
+          "oklch(25% 0.151 32)",
+          "oklch(35% 0.151 32)",
+          "oklch(45% 0.151 32)",
+          "oklch(55% 0.151 32)",
+          "oklch(65% 0.151 32)",
+          "oklch(80% 0.151 32)",
+          "oklch(95% 0.151 32)"
+        ]
+      },
+      "lumber-brown": {
+        "role": "tertiary",
+        "displayName": "Lumber Brown (workplace L, diagrams only)",
+        "canonical": "oklch(51.1% 0.089 63)",
+        "tonalRamp": [
+          "oklch(15% 0.089 63)",
+          "oklch(25% 0.089 63)",
+          "oklch(35% 0.089 63)",
+          "oklch(45% 0.089 63)",
+          "oklch(55% 0.089 63)",
+          "oklch(65% 0.089 63)",
+          "oklch(80% 0.089 63)",
+          "oklch(95% 0.089 63)"
+        ]
+      },
+      "farm-green": {
+        "role": "tertiary",
+        "displayName": "Farm Green (workplace F, diagrams only)",
+        "canonical": "oklch(53.7% 0.118 127)",
+        "tonalRamp": [
+          "oklch(15% 0.118 127)",
+          "oklch(25% 0.118 127)",
+          "oklch(35% 0.118 127)",
+          "oklch(45% 0.118 127)",
+          "oklch(55% 0.118 127)",
+          "oklch(65% 0.118 127)",
+          "oklch(80% 0.118 127)",
+          "oklch(95% 0.118 127)"
+        ]
+      },
+      "water-teal": {
+        "role": "tertiary",
+        "displayName": "Water Teal (workplace W, diagrams only)",
+        "canonical": "oklch(52.3% 0.084 228)",
+        "tonalRamp": [
+          "oklch(15% 0.084 228)",
+          "oklch(25% 0.084 228)",
+          "oklch(35% 0.084 228)",
+          "oklch(45% 0.084 228)",
+          "oklch(55% 0.084 228)",
+          "oklch(65% 0.084 228)",
+          "oklch(80% 0.084 228)",
+          "oklch(95% 0.084 228)"
+        ]
+      },
+      "linen-board": {
+        "role": "neutral",
+        "displayName": "Linen Board",
+        "canonical": "oklch(91.1% 0.016 86)",
+        "tonalRamp": [
+          "oklch(15% 0.016 86)",
+          "oklch(25% 0.016 86)",
+          "oklch(35% 0.016 86)",
+          "oklch(45% 0.016 86)",
+          "oklch(55% 0.016 86)",
+          "oklch(65% 0.016 86)",
+          "oklch(80% 0.016 86)",
+          "oklch(95% 0.016 86)"
+        ]
+      },
+      "card-stock": {
+        "role": "neutral",
+        "displayName": "Card Stock",
+        "canonical": "oklch(98.0% 0.010 87)",
+        "tonalRamp": [
+          "oklch(15% 0.010 87)",
+          "oklch(25% 0.010 87)",
+          "oklch(35% 0.010 87)",
+          "oklch(45% 0.010 87)",
+          "oklch(55% 0.010 87)",
+          "oklch(65% 0.010 87)",
+          "oklch(80% 0.010 87)",
+          "oklch(95% 0.010 87)"
+        ]
+      },
+      "card-back": {
+        "role": "neutral",
+        "displayName": "Card Back",
+        "canonical": "oklch(92.0% 0.023 87)",
+        "tonalRamp": [
+          "oklch(15% 0.023 87)",
+          "oklch(25% 0.023 87)",
+          "oklch(35% 0.023 87)",
+          "oklch(45% 0.023 87)",
+          "oklch(55% 0.023 87)",
+          "oklch(65% 0.023 87)",
+          "oklch(80% 0.023 87)",
+          "oklch(95% 0.023 87)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "oklch(24.5% 0.010 81)",
+        "tonalRamp": [
+          "oklch(15% 0.010 81)",
+          "oklch(25% 0.010 81)",
+          "oklch(35% 0.010 81)",
+          "oklch(45% 0.010 81)",
+          "oklch(55% 0.010 81)",
+          "oklch(65% 0.010 81)",
+          "oklch(80% 0.010 81)",
+          "oklch(95% 0.010 81)"
+        ]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Ink Muted",
+        "canonical": "oklch(44.9% 0.018 81)",
+        "tonalRamp": [
+          "oklch(15% 0.018 81)",
+          "oklch(25% 0.018 81)",
+          "oklch(35% 0.018 81)",
+          "oklch(45% 0.018 81)",
+          "oklch(55% 0.018 81)",
+          "oklch(65% 0.018 81)",
+          "oklch(80% 0.018 81)",
+          "oklch(95% 0.018 81)"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Rule",
+        "canonical": "oklch(83.2% 0.022 83)",
+        "tonalRamp": [
+          "oklch(15% 0.022 83)",
+          "oklch(25% 0.022 83)",
+          "oklch(35% 0.022 83)",
+          "oklch(45% 0.022 83)",
+          "oklch(55% 0.022 83)",
+          "oklch(65% 0.022 83)",
+          "oklch(80% 0.022 83)",
+          "oklch(95% 0.022 83)"
+        ]
+      },
+      "button-ink": {
+        "role": "neutral",
+        "displayName": "Button Ink",
+        "canonical": "oklch(100.0% 0.000 0)",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(25% 0 0)",
+          "oklch(35% 0 0)",
+          "oklch(45% 0 0)",
+          "oklch(55% 0 0)",
+          "oklch(65% 0 0)",
+          "oklch(80% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "drafting-blue-dark": {
+        "role": "primary",
+        "displayName": "Drafting Blue by Lamplight",
+        "canonical": "oklch(76.6% 0.084 255)",
+        "tonalRamp": [
+          "oklch(15% 0.084 255)",
+          "oklch(25% 0.084 255)",
+          "oklch(35% 0.084 255)",
+          "oklch(45% 0.084 255)",
+          "oklch(55% 0.084 255)",
+          "oklch(65% 0.084 255)",
+          "oklch(80% 0.084 255)",
+          "oklch(95% 0.084 255)"
+        ]
+      },
+      "drafting-blue-deep-dark": {
+        "role": "primary",
+        "displayName": "Drafting Blue Hover by Lamplight",
+        "canonical": "oklch(84.1% 0.057 256)",
+        "tonalRamp": [
+          "oklch(15% 0.057 256)",
+          "oklch(25% 0.057 256)",
+          "oklch(35% 0.057 256)",
+          "oklch(45% 0.057 256)",
+          "oklch(55% 0.057 256)",
+          "oklch(65% 0.057 256)",
+          "oklch(80% 0.057 256)",
+          "oklch(95% 0.057 256)"
+        ]
+      },
+      "madder-dark": {
+        "role": "secondary",
+        "displayName": "Madder by Lamplight",
+        "canonical": "oklch(72.9% 0.121 34)",
+        "tonalRamp": [
+          "oklch(15% 0.121 34)",
+          "oklch(25% 0.121 34)",
+          "oklch(35% 0.121 34)",
+          "oklch(45% 0.121 34)",
+          "oklch(55% 0.121 34)",
+          "oklch(65% 0.121 34)",
+          "oklch(80% 0.121 34)",
+          "oklch(95% 0.121 34)"
+        ]
+      },
+      "lumber-brown-dark": {
+        "role": "tertiary",
+        "displayName": "Lumber Brown by Lamplight",
+        "canonical": "oklch(72.7% 0.097 65)",
+        "tonalRamp": [
+          "oklch(15% 0.097 65)",
+          "oklch(25% 0.097 65)",
+          "oklch(35% 0.097 65)",
+          "oklch(45% 0.097 65)",
+          "oklch(55% 0.097 65)",
+          "oklch(65% 0.097 65)",
+          "oklch(80% 0.097 65)",
+          "oklch(95% 0.097 65)"
+        ]
+      },
+      "farm-green-dark": {
+        "role": "tertiary",
+        "displayName": "Farm Green by Lamplight",
+        "canonical": "oklch(77.6% 0.123 126)",
+        "tonalRamp": [
+          "oklch(15% 0.123 126)",
+          "oklch(25% 0.123 126)",
+          "oklch(35% 0.123 126)",
+          "oklch(45% 0.123 126)",
+          "oklch(55% 0.123 126)",
+          "oklch(65% 0.123 126)",
+          "oklch(80% 0.123 126)",
+          "oklch(95% 0.123 126)"
+        ]
+      },
+      "water-teal-dark": {
+        "role": "tertiary",
+        "displayName": "Water Teal by Lamplight",
+        "canonical": "oklch(76.0% 0.082 224)",
+        "tonalRamp": [
+          "oklch(15% 0.082 224)",
+          "oklch(25% 0.082 224)",
+          "oklch(35% 0.082 224)",
+          "oklch(45% 0.082 224)",
+          "oklch(55% 0.082 224)",
+          "oklch(65% 0.082 224)",
+          "oklch(80% 0.082 224)",
+          "oklch(95% 0.082 224)"
+        ]
+      },
+      "lamplit-board": {
+        "role": "neutral",
+        "displayName": "Lamplit Board",
+        "canonical": "oklch(23.0% 0.008 264)",
+        "tonalRamp": [
+          "oklch(15% 0.008 264)",
+          "oklch(25% 0.008 264)",
+          "oklch(35% 0.008 264)",
+          "oklch(45% 0.008 264)",
+          "oklch(55% 0.008 264)",
+          "oklch(65% 0.008 264)",
+          "oklch(80% 0.008 264)",
+          "oklch(95% 0.008 264)"
+        ]
+      },
+      "card-stock-dark": {
+        "role": "neutral",
+        "displayName": "Card Stock by Lamplight",
+        "canonical": "oklch(28.0% 0.010 261)",
+        "tonalRamp": [
+          "oklch(15% 0.010 261)",
+          "oklch(25% 0.010 261)",
+          "oklch(35% 0.010 261)",
+          "oklch(45% 0.010 261)",
+          "oklch(55% 0.010 261)",
+          "oklch(65% 0.010 261)",
+          "oklch(80% 0.010 261)",
+          "oklch(95% 0.010 261)"
+        ]
+      },
+      "card-back-dark": {
+        "role": "neutral",
+        "displayName": "Card Back by Lamplight",
+        "canonical": "oklch(25.1% 0.009 256)",
+        "tonalRamp": [
+          "oklch(15% 0.009 256)",
+          "oklch(25% 0.009 256)",
+          "oklch(35% 0.009 256)",
+          "oklch(45% 0.009 256)",
+          "oklch(55% 0.009 256)",
+          "oklch(65% 0.009 256)",
+          "oklch(80% 0.009 256)",
+          "oklch(95% 0.009 256)"
+        ]
+      },
+      "ink-dark": {
+        "role": "neutral",
+        "displayName": "Ink by Lamplight",
+        "canonical": "oklch(92.6% 0.017 85)",
+        "tonalRamp": [
+          "oklch(15% 0.017 85)",
+          "oklch(25% 0.017 85)",
+          "oklch(35% 0.017 85)",
+          "oklch(45% 0.017 85)",
+          "oklch(55% 0.017 85)",
+          "oklch(65% 0.017 85)",
+          "oklch(80% 0.017 85)",
+          "oklch(95% 0.017 85)"
+        ]
+      },
+      "ink-muted-dark": {
+        "role": "neutral",
+        "displayName": "Ink Muted by Lamplight",
+        "canonical": "oklch(74.4% 0.020 80)",
+        "tonalRamp": [
+          "oklch(15% 0.020 80)",
+          "oklch(25% 0.020 80)",
+          "oklch(35% 0.020 80)",
+          "oklch(45% 0.020 80)",
+          "oklch(55% 0.020 80)",
+          "oklch(65% 0.020 80)",
+          "oklch(80% 0.020 80)",
+          "oklch(95% 0.020 80)"
+        ]
+      },
+      "rule-dark": {
+        "role": "neutral",
+        "displayName": "Rule by Lamplight",
+        "canonical": "oklch(36.7% 0.013 262)",
+        "tonalRamp": [
+          "oklch(15% 0.013 262)",
+          "oklch(25% 0.013 262)",
+          "oklch(35% 0.013 262)",
+          "oklch(45% 0.013 262)",
+          "oklch(55% 0.013 262)",
+          "oklch(65% 0.013 262)",
+          "oklch(80% 0.013 262)",
+          "oklch(95% 0.013 262)"
+        ]
+      },
+      "button-ink-dark": {
+        "role": "neutral",
+        "displayName": "Button Ink by Lamplight",
+        "canonical": "oklch(21.4% 0.036 262)",
+        "tonalRamp": [
+          "oklch(15% 0.036 262)",
+          "oklch(25% 0.036 262)",
+          "oklch(35% 0.036 262)",
+          "oklch(45% 0.036 262)",
+          "oklch(55% 0.036 262)",
+          "oklch(65% 0.036 262)",
+          "oklch(80% 0.036 262)",
+          "oklch(95% 0.036 262)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Home page title only."
+      },
+      "display-guide": {
+        "displayName": "Display (guides)",
+        "purpose": "Guide and 404 page titles."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section heads; guide h2 steps down to clamp(1.55rem, 2.8vw, 2rem) with a rule above."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card heads and rules-key heads; Caslon 700 at 1.02-1.15rem also sets step names, field terms, table heads and button text."
+      },
+      "pitch": {
+        "displayName": "Pitch",
+        "purpose": "Caslon italic in drafting blue, the one line under the home title."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "All reading text, system-ui."
+      },
+      "body-large": {
+        "displayName": "Lead",
+        "purpose": "Lead and section intros, 56-64ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Nav and controls; strong text is 650."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Figure captions, legends, compare labels."
+      },
+      "figure": {
+        "displayName": "Figure",
+        "purpose": "Evidence numbers: readout totals, bar values, tooltip value; tabular."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Log lines and Pass-line field names on a strict character grid."
+      }
+    },
+    "textures": [
+      {
+        "name": "board",
+        "value": "textures/board-light.webp / board-dark.webp",
+        "purpose": "Page ground under the board colour; procedural, docs/textures/make_textures.py, provenance sidecars beside each file."
+      },
+      {
+        "name": "card",
+        "value": "textures/card-light.webp / card-dark.webp",
+        "purpose": "Card stock and code blocks under the card colour."
+      }
+    ],
+    "shadows": [
+      {
+        "name": "pin",
+        "value": "0 2px 2px rgba(0, 0, 0, .25)",
+        "purpose": "The two madder pins on a pinned card; the only resting shadow."
+      },
+      {
+        "name": "tooltip-lift",
+        "value": "0 10px 24px -10px rgba(0, 0, 0, .5)",
+        "purpose": "The ink chart tooltip while shown on hover or focus; never at rest."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-lift",
+        "value": "cubic-bezier(.2, .8, .2, 1)",
+        "purpose": "Button 1px lift and background over 150ms; FAQ chevron turn over 200ms."
+      },
+      {
+        "name": "ease-seat",
+        "value": "cubic-bezier(.45, 0, .2, 1)",
+        "purpose": "Place cards moving round their cycle over 900ms; walk lines hidden in transit (opacity .3s)."
+      },
+      {
+        "name": "tooltip-fade",
+        "value": "opacity .12s",
+        "purpose": "Chart tooltip in and out."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "transition: none; animation: none",
+        "purpose": "All motion off; cards jump to their seats and totals still update."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "stack-hero",
+        "value": "960px"
+      },
+      {
+        "name": "stack-columns",
+        "value": "860px"
+      },
+      {
+        "name": "phone",
+        "value": "720px"
+      },
+      {
+        "name": "plan-lettering",
+        "value": "560px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one filled action: Download, Run the day's pass, Go to the home page.",
+      "html": "<a class=\"ds-btn ds-btn-primary\" href=\"#\"><svg viewBox=\"0 0 18 18\" aria-hidden=\"true\"><path d=\"M9 2v10M4.5 7.5L9 12l4.5-4.5M3 15.5h12\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg><span>Download v1.1.1</span></a>",
+      "css": ":host,:root{--ground:#e6e1d6;--card:#fbf8f1;--card-back:#ebe4d4;--ink:#23201b;--muted:#5a544a;--rule:#cfc7b8;--rule-strong:#23201b;--band:rgba(35,32,27,.04);--blue:#2d5f9a;--blue-hover:#1f4677;--madder:#b4432f;--btn-ink:#fff;--focus:#2d5f9a;--pin:#b4432f;--w-L:#8a5a2b;--w-F:#5b7a24;--w-W:#2a7390;--display:\"Libre Caslon Text\",Georgia,\"Times New Roman\",serif;--font:system-ui,-apple-system,\"Segoe UI\",Roboto,\"Helvetica Neue\",Arial,sans-serif;--mono:ui-monospace,\"Cascadia Mono\",Consolas,monospace} .ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:50px;padding:0 22px;border-radius:2px;font:700 1.08rem/1 var(--display);text-decoration:none;border:1.5px solid transparent;cursor:pointer;transition:transform .15s cubic-bezier(.2,.8,.2,1),background-color .15s}.ds-btn svg{width:18px;height:18px;flex:none}.ds-btn:focus-visible{outline:3px solid var(--focus);outline-offset:3px}.ds-btn-primary{background:var(--blue);color:var(--btn-ink)}.ds-btn-primary:hover{background:var(--blue-hover);transform:translateY(-1px)}.ds-btn-primary:active{transform:none}"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary actions beside a primary: Install guide, Report a problem.",
+      "html": "<a class=\"ds-btn ds-btn-ghost\" href=\"#\">Install guide</a>",
+      "css": ":host,:root{--ground:#e6e1d6;--card:#fbf8f1;--card-back:#ebe4d4;--ink:#23201b;--muted:#5a544a;--rule:#cfc7b8;--rule-strong:#23201b;--band:rgba(35,32,27,.04);--blue:#2d5f9a;--blue-hover:#1f4677;--madder:#b4432f;--btn-ink:#fff;--focus:#2d5f9a;--pin:#b4432f;--w-L:#8a5a2b;--w-F:#5b7a24;--w-W:#2a7390;--display:\"Libre Caslon Text\",Georgia,\"Times New Roman\",serif;--font:system-ui,-apple-system,\"Segoe UI\",Roboto,\"Helvetica Neue\",Arial,sans-serif;--mono:ui-monospace,\"Cascadia Mono\",Consolas,monospace} .ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:50px;padding:0 22px;border-radius:2px;font:700 1.08rem/1 var(--display);text-decoration:none;border:1.5px solid transparent;cursor:pointer;transition:transform .15s cubic-bezier(.2,.8,.2,1),background-color .15s}.ds-btn svg{width:18px;height:18px;flex:none}.ds-btn:focus-visible{outline:3px solid var(--focus);outline-offset:3px}.ds-btn-ghost{background:transparent;color:var(--ink);border-color:var(--rule-strong)}.ds-btn-ghost:hover{background:var(--band);transform:translateY(-1px)}"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": "nav-link",
+      "description": "Header nav: muted system labels, current page in ink with a drafting-blue underline, and the text theme toggle.",
+      "html": "<nav class=\"ds-nav\"><a href=\"#\">How it works</a><a href=\"#\" aria-current=\"page\">Install</a><a href=\"#\">FAQ</a><button class=\"ds-theme\" type=\"button\">Dark mode</button></nav>",
+      "css": ":host,:root{--ground:#e6e1d6;--card:#fbf8f1;--card-back:#ebe4d4;--ink:#23201b;--muted:#5a544a;--rule:#cfc7b8;--rule-strong:#23201b;--band:rgba(35,32,27,.04);--blue:#2d5f9a;--blue-hover:#1f4677;--madder:#b4432f;--btn-ink:#fff;--focus:#2d5f9a;--pin:#b4432f;--w-L:#8a5a2b;--w-F:#5b7a24;--w-W:#2a7390;--display:\"Libre Caslon Text\",Georgia,\"Times New Roman\",serif;--font:system-ui,-apple-system,\"Segoe UI\",Roboto,\"Helvetica Neue\",Arial,sans-serif;--mono:ui-monospace,\"Cascadia Mono\",Consolas,monospace} .ds-nav{display:flex;align-items:center;gap:2px;font-family:var(--font);border-bottom:1px solid var(--rule-strong)}.ds-nav a{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;color:var(--muted);text-decoration:none;font-weight:600;font-size:.98rem;border-bottom:2px solid transparent}.ds-nav a:hover{color:var(--ink)}.ds-nav a[aria-current=page]{color:var(--ink);border-bottom-color:var(--blue)}.ds-nav a:focus-visible,.ds-theme:focus-visible{outline:3px solid var(--focus);outline-offset:3px}.ds-theme{margin-left:8px;min-height:44px;padding:0 14px;background:transparent;color:var(--ink);border:1px solid var(--rule);border-radius:2px;font:600 .92rem/1 var(--font);cursor:pointer}.ds-theme:hover{border-color:var(--ink)}"
+    },
+    {
+      "name": "Pinned Card Stock",
+      "kind": "card",
+      "refersTo": "card-stock",
+      "description": "The one surface: card stock at a 1px rule edge on the board; plan figures carry two madder pins, the only resting shadow.",
+      "html": "<div class=\"ds-board\"><figure class=\"ds-stock ds-pinned\"><h3>Tonight's seating plan</h3><p>Three homes, three workplaces, eight adults.</p></figure></div>",
+      "css": ":host,:root{--ground:#e6e1d6;--card:#fbf8f1;--card-back:#ebe4d4;--ink:#23201b;--muted:#5a544a;--rule:#cfc7b8;--rule-strong:#23201b;--band:rgba(35,32,27,.04);--blue:#2d5f9a;--blue-hover:#1f4677;--madder:#b4432f;--btn-ink:#fff;--focus:#2d5f9a;--pin:#b4432f;--w-L:#8a5a2b;--w-F:#5b7a24;--w-W:#2a7390;--display:\"Libre Caslon Text\",Georgia,\"Times New Roman\",serif;--font:system-ui,-apple-system,\"Segoe UI\",Roboto,\"Helvetica Neue\",Arial,sans-serif;--mono:ui-monospace,\"Cascadia Mono\",Consolas,monospace} .ds-board{background:var(--ground);padding:24px}.ds-stock{margin:0;position:relative;background:var(--card);border:1px solid var(--rule);border-radius:2px;padding:30px 20px 18px;color:var(--ink);font:400 1.0625rem/1.62 var(--font)}.ds-stock h3{font:700 1.28rem/1.2 var(--display);margin:0 0 .3em}.ds-stock p{margin:0;color:var(--muted)}.ds-pinned::before,.ds-pinned::after{content:\"\";position:absolute;top:10px;width:10px;height:10px;border-radius:50%;background:var(--pin);box-shadow:0 2px 2px rgba(0,0,0,.25)}.ds-pinned::before{left:12px}.ds-pinned::after{right:12px}"
+    },
+    {
+      "name": "Place Card on a Table",
+      "kind": "custom",
+      "refersTo": "place-card",
+      "description": "Signature: a home table with one tick per bed, a tented place card (darker back face above the fold), and before/after walk lines at stroke 1.4.",
+      "html": "<svg class=\"ds-hall\" viewBox=\"0 0 260 150\" role=\"img\" aria-label=\"A place card beside a home table with its walk lines\"><line class=\"ds-walk ds-before\" x1=\"70\" y1=\"40\" x2=\"230\" y2=\"140\"/><line class=\"ds-walk ds-after\" x1=\"70\" y1=\"40\" x2=\"150\" y2=\"140\"/><g class=\"ds-table\"><circle cx=\"70\" cy=\"100\" r=\"30\"/><text x=\"70\" y=\"104\">Home A</text><line class=\"ds-tick\" x1=\"49\" y1=\"78\" x2=\"44\" y2=\"73\"/><line class=\"ds-tick\" x1=\"91\" y1=\"78\" x2=\"96\" y2=\"73\"/><line class=\"ds-tick\" x1=\"70\" y1=\"130\" x2=\"70\" y2=\"137\"/></g><g transform=\"translate(70 40)\"><rect class=\"ds-back\" x=\"-40\" y=\"-16\" width=\"80\" height=\"9\" rx=\"1.5\"/><rect class=\"ds-card\" x=\"-40\" y=\"-7\" width=\"80\" height=\"23\" rx=\"1.5\"/><circle class=\"ds-chip\" cx=\"-27\" cy=\"5\" r=\"7.5\"/><text class=\"ds-mark\" x=\"-27\" y=\"8.5\">W</text><text class=\"ds-name\" x=\"-16\" y=\"10.5\">Sorrel</text></g></svg>",
+      "css": ":host,:root{--ground:#e6e1d6;--card:#fbf8f1;--card-back:#ebe4d4;--ink:#23201b;--muted:#5a544a;--rule:#cfc7b8;--rule-strong:#23201b;--band:rgba(35,32,27,.04);--blue:#2d5f9a;--blue-hover:#1f4677;--madder:#b4432f;--btn-ink:#fff;--focus:#2d5f9a;--pin:#b4432f;--w-L:#8a5a2b;--w-F:#5b7a24;--w-W:#2a7390;--display:\"Libre Caslon Text\",Georgia,\"Times New Roman\",serif;--font:system-ui,-apple-system,\"Segoe UI\",Roboto,\"Helvetica Neue\",Arial,sans-serif;--mono:ui-monospace,\"Cascadia Mono\",Consolas,monospace} .ds-hall{display:block;width:100%;max-width:360px;background:var(--card);border:1px solid var(--rule);border-radius:2px}.ds-walk{stroke-width:1.4;fill:none}.ds-before{stroke:var(--madder);stroke-dasharray:4 4}.ds-after{stroke:var(--blue)}.ds-table circle{fill:var(--card);stroke:var(--ink);stroke-width:1.4}.ds-table text{font:700 11.5px var(--display);fill:var(--ink);text-anchor:middle}.ds-tick{stroke:var(--ink);stroke-width:1.4}.ds-card{fill:var(--card);stroke:var(--ink);stroke-width:1.4}.ds-back{fill:var(--card-back);stroke:var(--ink);stroke-width:1.4}.ds-chip{fill:var(--w-W)}.ds-mark{font:700 9px var(--font);fill:#fff;text-anchor:middle}.ds-name{font:italic 400 15.5px var(--display);fill:var(--ink)}"
+    },
+    {
+      "name": "Field List",
+      "kind": "custom",
+      "refersTo": "card-stock",
+      "description": "Evidence as labelled fields: Caslon tabular term, muted meaning, hairline between rows. Pass-line fields swap the term to mono.",
+      "html": "<dl class=\"ds-fields\"><dt>55% shorter</dt><dd>the average commute after one pass</dd><dt>147 ticks</dt><dd>for the whole pass, about a fifth of a game day</dd><dt>0 changes</dt><dd>from a second pass</dd></dl>",
+      "css": ":host,:root{--ground:#e6e1d6;--card:#fbf8f1;--card-back:#ebe4d4;--ink:#23201b;--muted:#5a544a;--rule:#cfc7b8;--rule-strong:#23201b;--band:rgba(35,32,27,.04);--blue:#2d5f9a;--blue-hover:#1f4677;--madder:#b4432f;--btn-ink:#fff;--focus:#2d5f9a;--pin:#b4432f;--w-L:#8a5a2b;--w-F:#5b7a24;--w-W:#2a7390;--display:\"Libre Caslon Text\",Georgia,\"Times New Roman\",serif;--font:system-ui,-apple-system,\"Segoe UI\",Roboto,\"Helvetica Neue\",Arial,sans-serif;--mono:ui-monospace,\"Cascadia Mono\",Consolas,monospace} .ds-fields{display:grid;grid-template-columns:max-content minmax(0,1fr);margin:0;font:400 .95rem/1.5 var(--font)}.ds-fields dt,.ds-fields dd{margin:0;padding:8px 0;border-top:1px solid var(--rule)}.ds-fields dt{padding-right:16px;font:700 1.02rem/1.35 var(--display);font-variant-numeric:tabular-nums;color:var(--ink)}.ds-fields dd{color:var(--muted)}"
+    },
+    {
+      "name": "Rules Key",
+      "kind": "custom",
+      "refersTo": "card-stock",
+      "description": "Ruled two-column key in place of icon tiles: Caslon title and muted paragraph under a hairline.",
+      "html": "<ul class=\"ds-key\"><li><h3>Real routes, not straight lines</h3><p>Homes are priced with the game's own route cost.</p></li><li><h3>Families and breeding stay safe</h3><p>Every home keeps exactly the same number of adults.</p></li></ul>",
+      "css": ":host,:root{--ground:#e6e1d6;--card:#fbf8f1;--card-back:#ebe4d4;--ink:#23201b;--muted:#5a544a;--rule:#cfc7b8;--rule-strong:#23201b;--band:rgba(35,32,27,.04);--blue:#2d5f9a;--blue-hover:#1f4677;--madder:#b4432f;--btn-ink:#fff;--focus:#2d5f9a;--pin:#b4432f;--w-L:#8a5a2b;--w-F:#5b7a24;--w-W:#2a7390;--display:\"Libre Caslon Text\",Georgia,\"Times New Roman\",serif;--font:system-ui,-apple-system,\"Segoe UI\",Roboto,\"Helvetica Neue\",Arial,sans-serif;--mono:ui-monospace,\"Cascadia Mono\",Consolas,monospace} .ds-key{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 32px;margin:0;padding:0;list-style:none;font:400 1.0625rem/1.62 var(--font)}.ds-key li{padding:18px 0;border-top:1px solid var(--rule)}.ds-key h3{font:700 1.28rem/1.2 var(--display);color:var(--ink);margin:0 0 .25em}.ds-key p{margin:0;color:var(--muted)}"
+    },
+    {
+      "name": "FAQ Disclosure",
+      "kind": "custom",
+      "refersTo": "nav-link",
+      "description": "Ruled details row with a masked chevron that turns over 200ms; hover turns the question blue.",
+      "html": "<details class=\"ds-q\"><summary>Does it fill empty beds?</summary><div class=\"ds-a\"><p>No. Empty beds are left to the game's own assigner.</p></div></details>",
+      "css": ":host,:root{--ground:#e6e1d6;--card:#fbf8f1;--card-back:#ebe4d4;--ink:#23201b;--muted:#5a544a;--rule:#cfc7b8;--rule-strong:#23201b;--band:rgba(35,32,27,.04);--blue:#2d5f9a;--blue-hover:#1f4677;--madder:#b4432f;--btn-ink:#fff;--focus:#2d5f9a;--pin:#b4432f;--w-L:#8a5a2b;--w-F:#5b7a24;--w-W:#2a7390;--display:\"Libre Caslon Text\",Georgia,\"Times New Roman\",serif;--font:system-ui,-apple-system,\"Segoe UI\",Roboto,\"Helvetica Neue\",Arial,sans-serif;--mono:ui-monospace,\"Cascadia Mono\",Consolas,monospace} .ds-q{border-top:1px solid var(--rule);font:400 1.0625rem/1.62 var(--font);color:var(--ink)}.ds-q summary{list-style:none;display:grid;grid-template-columns:minmax(0,1fr) 24px;gap:12px;align-items:center;min-height:56px;padding:10px 0;cursor:pointer;font-weight:650;font-size:1.04rem}.ds-q summary::-webkit-details-marker{display:none}.ds-q summary::after{content:\"\";width:20px;height:20px;justify-self:end;background:var(--ink);-webkit-mask:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 8l5 5 5-5' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\") center/contain no-repeat;mask:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 8l5 5 5-5' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\") center/contain no-repeat;transition:transform .2s cubic-bezier(.2,.8,.2,1)}.ds-q[open] summary::after{transform:rotate(180deg)}.ds-q summary:hover{color:var(--blue)}.ds-q summary:focus-visible{outline:3px solid var(--focus);outline-offset:3px}.ds-a{padding:0 0 20px}.ds-a p{margin:0}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Seating Chart",
+    "overview": "The site is a host's planner's board. A linen-grey board carries card stock pinned to it; on the cards the hall is drafted as a seating plan: homes are round tables with one seat tick per bed, workplaces are small labelled plaques, and adult beavers are tented place cards with their names lettered in Caslon italic. The plan as the game left it is drawn in dashed madder, the plan as arranged in solid drafting blue. Every diagram is drawn with one stroke weight on a plain grid, depth comes from flat stacked card, and the only thing that casts a shadow is a pin.\n\nDensity is a well-set printed program: generous section padding, long ruled lists rather than tiles, hairline rules between every row, and a serif display face (the face of printed invitations and place cards) against a plain system body. Evidence is set as figures and labelled field lists, never as stat tiles. The two themes are the same board: daylight linen, and the same board by lamplight with the inks lifted.\n\nConfirmed rejections: the shared Timbermods landing template (cream paper, icon tiles, stat tiles, pill badges, eyebrows), gradients, stacked drop shadows, and Fraunces (tried first, dropped as overused).",
+    "keyCharacteristics": [
+      "Card stock on a textured linen board, meeting it at a 1px rule edge with a 2px corner.",
+      "Blue means after, madder means before, everywhere: walk lines, chart bars, tree captions, the readout.",
+      "One stroke weight (1.4) for every drawn line in every diagram.",
+      "Libre Caslon Text 700 for headings, numbers and labels on cards; its italic for names and the pitch; system-ui for reading.",
+      "Ruled lists, field lists and tables carry the content; hairline rules separate every row."
+    ],
+    "rules": [
+      {
+        "name": "The Before-and-After Rule",
+        "body": "Madder is the plan as it was, drafting blue is the plan as arranged. Never swap them and never use either as decoration; if a thing isn't before or after (or a link, focus or pin), it is ink.",
+        "section": "colors"
+      },
+      {
+        "name": "The Workplace Hues Stay in the Hall Rule",
+        "body": "Brown, green and teal exist to tell three workplaces apart inside a diagram. They never colour text, buttons or sections.",
+        "section": "colors"
+      },
+      {
+        "name": "The Caslon for Things on Cards Rule",
+        "body": "Headings, names, numbers and anything lettered on a card are Caslon; anything you read at length is system-ui. Names of guests are always Caslon italic.",
+        "section": "typography"
+      },
+      {
+        "name": "The Numbers Are Figures Rule",
+        "body": "Evidence numbers are set as Caslon 700 with tabular figures in a labelled field list or a readout, never as oversized stat tiles.",
+        "section": "typography"
+      },
+      {
+        "name": "The Only Pins Cast Shadows Rule",
+        "body": "Cards meet the board at a 1px rule edge and cast nothing. A pin is the one resting shadow on the page; don't add shadows to cards, buttons or diagrams.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** keep blue for after and madder for before on every chart, diagram, caption and readout.",
+      "**Do** draw every diagram line at stroke 1.4 in ink or a drafting ink, on card-stock fills, and state depth with the card back's tone, not shading.",
+      "**Do** set content as ruled lists, labelled field lists and tables with 1px rule hairlines between rows.",
+      "**Do** put headings, names, numbers and card lettering in Libre Caslon Text (names in italic), and reading text in system-ui.",
+      "**Do** keep corners at 2px or less and circles for tables, pins, kits, chips and step numerals only.",
+      "**Do** keep 44px touch targets, a 3px focus outline at 3px offset, and a reduced-motion path where motion is switched off and the outcome still shows.",
+      "**Do** give every chart a direct label and a table view."
+    ],
+    "donts": [
+      "**Don't** bring back the Timbermods landing template: cream paper, icon tiles, stat tiles, pill badges or eyebrows.",
+      "**Don't** add shadows to cards, buttons or diagrams; the pin is the only resting shadow.",
+      "**Don't** use gradients.",
+      "**Don't** use the workplace hues outside the diagrams.",
+      "**Don't** use Fraunces or any display face besides Libre Caslon Text.",
+      "**Don't** use official Timberborn logos or key art; the site's marks are its own favicon and simple line icons."
+    ]
+  }
+}

@@ -5,41 +5,55 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FAQ: Optimized Local Housing</title>
 <meta name="description" content="Frequently asked questions about the Optimized Local Housing Timberborn mod: how it works, breeding and children, how it compares to other housing mods, multiplayer, compatibility and settings.">
+<meta name="theme-color" content="#e6e1d6">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <script>try{var t=localStorage.getItem('olh-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<link rel="preload" href="fonts/libre-caslon-text-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
 <header class="site-header">
-  <div class="wrap bar">
-    <a class="brand" href="index.html"><img src="favicon.svg" alt="" width="32" height="32"> Optimized Local Housing</a>
+  <div class="wrap masthead">
+    <a class="brand" href="index.html"><img src="favicon.svg" alt="" width="30" height="30"> Optimized Local Housing</a>
     <nav class="nav" aria-label="Main">
-      <a href="index.html">Home</a>
-      <a href="index.html#features">Features</a>
+      <a href="index.html#how">How it works</a>
       <a href="install.html">Install</a>
       <a href="troubleshooting.html">Troubleshooting</a>
       <a href="faq.html" aria-current="page">FAQ</a>
       <a href="https://github.com/timbermods/OptimizedLocalHousing">GitHub</a>
-      <button class="theme-btn" id="theme-toggle" type="button">Dark mode</button>
     </nav>
+    <button class="theme-btn" id="theme-toggle" type="button">Dark mode</button>
   </div>
 </header>
 
-<main id="main" class="doc">
-<div class="wrap narrow faq">
-  <span class="eyebrow">Guide</span>
-  <h1>Frequently asked questions</h1>
-  <p class="lead">Straight answers, including the ones that aren't flattering. If yours isn't here, <a href="https://github.com/timbermods/OptimizedLocalHousing/issues/new">ask on GitHub</a>.</p>
+<main id="main">
+<div class="page-head">
+  <div class="wrap">
+    <h1>Frequently asked questions</h1>
+    <p class="lead">Straight answers, including the ones that aren't flattering. If yours isn't here, <a href="https://github.com/timbermods/OptimizedLocalHousing/issues/new">ask on GitHub</a>.</p>
+  </div>
+</div>
+<div class="wrap doc-grid">
+  <nav class="toc" aria-label="On this page">
+    <p>On this page</p>
+    <ul>
+      <li><a href="#basics">The basics</a></li>
+      <li><a href="#deciding">How it decides</a></li>
+      <li><a href="#safety">Breeding, children and saves</a></li>
+      <li><a href="#compat">Compatibility and comparisons</a></li>
+      <li><a href="#project">The project</a></li>
+    </ul>
+  </nav>
+  <div class="doc-body">
+  <h2 class="first" id="basics">The basics</h2>
 
-  <h2 id="basics">The basics</h2>
-
-  <details>
+  <details class="q" id="what-does-it-do-in">
     <summary>What does it do, in one sentence?</summary>
     <div class="answer"><p>Once a day it works out the arrangement of adult beavers into their existing beds that makes the colony's total home-to-workplace travel as short as possible, and moves the beavers that need moving.</p></div>
   </details>
 
-  <details>
+  <details class="q" id="how-often-does-it-run">
     <summary>How often does it run, and how long does a pass take?</summary>
     <div class="answer">
       <p>A pass starts as soon as the game is ticking the first time the mod sees a save, then at the start of every in-game day. A pass took 147 ticks on a 266-beaver colony in the replay, and about 183 ticks on a live colony of about 350 adults, roughly 90 seconds to two minutes at normal speed. The work is spread across those ticks, with up to 32 route queries per tick. A larger colony's pass does more per tick (up to 128 route queries), so that it still ends within the day's daytime; only the very largest colonies' passes run longer.</p>
@@ -47,26 +61,26 @@
     </div>
   </details>
 
-  <details>
+  <details class="q" id="does-it-have-settings">
     <summary>Does it have settings?</summary>
     <div class="answer" data-release-pinned="1.1.1"><p>No. The mod has no menu and no options. The tuning values are constants in the source if you're willing to rebuild it: <code>NearHomes</code> and <code>QueriesPerTick</code> in <a href="https://github.com/timbermods/OptimizedLocalHousing/blob/main/OptimizedLocalHousing/PassEngine.cs">PassEngine.cs</a>, and <code>StayBonus</code> in <a href="https://github.com/timbermods/OptimizedLocalHousing/blob/main/OptimizedLocalHousing/Assignment.cs">Assignment.cs</a>. A relaxed "let adult counts change" option was considered and dropped, and <a href="#vacant">the reason is below</a>.</p></div>
   </details>
 
-  <details>
+  <details class="q" id="what-is-a-move-cycle">
     <summary>What is a "move cycle"?</summary>
     <div class="answer"><p>A group of beavers that each take the next beaver's bed, and the last takes the first's, like A→B→C→A. Every home in the cycle ends up with as many adults as it started with. Cycles are applied all at once, or not at all if anything about them has changed. A simple two-beaver swap is the smallest cycle.</p></div>
   </details>
 
   <h2 id="deciding">How it decides</h2>
 
-  <details>
+  <details class="q" id="what-does-shortest-mean-here">
     <summary>What does "shortest" mean here?</summary>
     <div class="answer">
       <p>It uses the game's own route cost between a home and the beaver's assigned workplace, so stairs, platforms and ziplines count. It isn't straight-line distance. To keep the work small, each workplace prices the 32 nearest homes in its own district by block distance; anything farther is only estimated, and every move is re-priced with fresh routes before it happens. Those fresh costs are remembered in place of the estimates for the next seven passes. The seventh checks a cost again, and keeps it, if one of that workplace's workers lives in the home or there was no route.</p>
     </div>
   </details>
 
-  <details>
+  <details class="q" id="why-didn-t-a-particular">
     <summary>Why didn't a particular beaver move?</summary>
     <div class="answer">
       <ul>
@@ -79,12 +93,12 @@
     </div>
   </details>
 
-  <details>
+  <details class="q" id="what-happens-to-unemployed-adults">
     <summary>What happens to unemployed adults?</summary>
     <div class="answer"><p>They don't care where they live, so they are treated as free to take whatever bed is left. That means an unemployed beaver may give up a home next to a workplace so a working beaver can have it.</p></div>
   </details>
 
-  <details id="vacant">
+  <details class="q" id="vacant">
     <summary>Why doesn't it fill empty beds, or let homes end up with different numbers of adults?</summary>
     <div class="answer">
       <p>We tested exactly that, and it isn't worth it. On the real 266-beaver colony we replayed, letting the solver change how many adults each home holds shortened the average commute by only about 4% (24.0 to 23.1). But it used up the beds where babies could be born: homes able to have a baby fell from 11 to 1. Keeping those baby beds empty brought the gain back to nothing.</p>
@@ -94,7 +108,7 @@
 
   <h2 id="safety">Breeding, children and saves</h2>
 
-  <details id="breeding">
+  <details class="q" id="breeding">
     <summary>Does it affect breeding?</summary>
     <div class="answer">
       <p>It's built not to. In the game's code a baby needs a home with a free bed, at least two adults, and fewer children than half its adults. Optimized Local Housing keeps every home's number of adults exactly the same and never moves children, so each home keeps the same free beds and the same number of pairs. The chance of a birth in each home is untouched.</p>
@@ -102,29 +116,29 @@
     </div>
   </details>
 
-  <details>
+  <details class="q" id="will-children-be-separated-from">
     <summary>Will children be separated from their parents?</summary>
     <div class="answer"><p>Children never move, but the adults in their home may change, especially on the first pass. We haven't found any game mechanic that ties a child to specific adults, but we can't rule one out. If it matters to you, <a href="troubleshooting.html#families">try it on a copy first</a>.</p></div>
   </details>
 
-  <details>
+  <details class="q" id="can-a-beaver-end-up">
     <summary>Can a beaver end up homeless, or in a home it can't reach?</summary>
     <div class="answer"><p>No beaver is made homeless, by design. Every move is applied as a whole cycle in one tick and rolled back if the game refuses any part of it. Every destination's route to the beaver's workplace is checked with a fresh query first, and a cycle is thrown away if it would leave a beaver who can reach work today unable to. A beaver whose commute is already broken is moved to a home that can reach its workplace when a bed can be arranged. If none can, it may be moved to another home that is also cut off, when that helps the others.</p></div>
   </details>
 
-  <details>
+  <details class="q" id="is-it-safe-for-my">
     <summary>Is it safe for my save? What if I remove it?</summary>
     <div class="answer"><p>The mod stores a small amount of data in your save: a few hundred bytes to a few kilobytes when idle (for seven days after a pass that moved many beavers, up to about 90 kilobytes of route costs it checked), and during a pass about 100 kilobytes on a colony of 350 to 400 beavers, more on larger ones. If you remove the mod, the data is ignored and beavers keep their current homes. As with any mod, keep a backup of important saves.</p></div>
   </details>
 
   <h2 id="compat">Compatibility and comparisons</h2>
 
-  <details id="conflicts">
+  <details class="q" id="conflicts">
     <summary>Can I use it with Housing Optimize or Commute Balancer?</summary>
-    <div class="answer"><p>No. Two housing mods would keep reassigning each other's work. Optimized Local Housing checks for these mods when a game loads and turns itself off, with a warning in the log, if one is enabled. Pick one. See <a href="troubleshooting.html#disabled">Troubleshooting</a>.</p></div>
+    <div class="answer"><p>No. Two housing mods would keep reassigning each other's work. Optimized Local Housing checks for these mods when a game loads and turns itself off, with a warning in the log, if one is enabled. Don't run them together: Optimized Local Housing turns itself off if Housing Optimize or Commute Balancer is enabled. Pick one. See <a href="troubleshooting.html#disabled">Troubleshooting</a>.</p></div>
   </details>
 
-  <details>
+  <details class="q" id="how-is-it-different-from">
     <summary>How is it different from Bobingabout's Housing Optimize and Commute Balancer?</summary>
     <div class="answer">
       <p>As described on their Workshop pages:</p>
@@ -137,7 +151,7 @@
     </div>
   </details>
 
-  <details>
+  <details class="q" id="is-it-the-best-housing">
     <summary>Is it the best housing mod?</summary>
     <div class="answer">
       <p>We don't claim that. Because it solves the assignment exactly, it should reach the shortest total commute among the approaches above, and the tests support that. It has now run in live single-player and co-op play, but with far less mileage than long-established mods, and commute isn't the only thing that matters: stability, disruption and real-world track record count too.</p>
@@ -145,17 +159,17 @@
     </div>
   </details>
 
-  <details>
+  <details class="q" id="does-it-work-in-multiplayer">
     <summary>Does it work in multiplayer, or with BeaverBuddies?</summary>
-    <div class="answer"><p>It is designed for it. It uses whole-number math and sorted IDs, and the entire pass state is saved with the game, so every player should reach the same result even across a reload or a mid-pass join. Every player must install the same version of the mod and run the same game version. It has been used in a live hosted co-op session (about 11,000 ticks and 15 passes) with a second player on the same version, and the host's log shows no desync. That session ran the 1.0 code, and 1.1.0 hasn't yet been played live by two players, so treat it as encouraging rather than conclusive.</p></div>
+    <div class="answer"><p>It is designed for it. It uses whole-number math and sorted IDs, and the entire pass state is saved with the game, so every player should reach the same result even across a reload or a mid-pass join. Every player must install the same version of the mod and run the same game version. It has been used in a live hosted co-op session (about 11,000 ticks and 15 passes) with a second player on the same version, and the host's log shows no desync. That session ran the code the stable release started from; this release hasn't been played live by two players yet, so treat it as encouraging rather than conclusive.</p></div>
   </details>
 
-  <details>
+  <details class="q" id="does-it-work-with-the">
     <summary>Does it work with the Iron Teeth faction?</summary>
     <div class="answer"><p>It hasn't been tested. It was developed and replayed on a Folktails colony, and it only handles beaver dwellers.</p></div>
   </details>
 
-  <details>
+  <details class="q" id="which-game-versions-operating-systems">
     <summary>Which game versions, operating systems and mods does it need?</summary>
     <div class="answer">
       <ul>
@@ -168,26 +182,27 @@
 
   <h2 id="project">The project</h2>
 
-  <details>
+  <details class="q" id="is-it-open-source">
     <summary>Is it open source?</summary>
     <div class="answer"><p>Yes, under the MIT license. The source, the test suite and the build script are on <a href="https://github.com/timbermods/OptimizedLocalHousing">GitHub</a>.</p></div>
   </details>
 
-  <details>
+  <details class="q" id="is-it-stable">
     <summary>Is it stable?</summary>
-    <div class="answer" data-release-pinned="1.1.1"><p>Yes. The latest release, 1.1.1, is a stable release. The first stable release, 1.0.0, was the same code as the earlier v0.1.0 preview, promoted after 16 consecutive passes in a live game, including a hosted co-op session, ran with no errors, warnings or rollbacks. 1.0.1 fixed a multiplayer timing bug after a mid-pass reload. 1.1.0 improves homes near district borders and shortens passes on large colonies, and is covered by automated tests that run on every change. 1.1.1 is a maintenance release that leaves passes unchanged. “Stable” means that evidence plus the automated tests, not that every situation has been tried. See <a href="index.html#status">what is tested and what isn't</a>.</p></div>
+    <div class="answer" data-release-pinned="1.1.1"><p>Yes. The code the stable release started from ran 16 consecutive passes in a live game, including a hosted co-op session, with no errors, warnings or rollbacks. This release's newer changes (pricing homes by district, remembered route costs, solving each district on its own, bigger budgets for large colonies) are covered by automated tests that run on every change, but haven't been played in a live game yet. "Stable" means that evidence plus the automated tests, not that every situation has been tried. See <a href="index.html#status">what is tested and what isn't</a>.</p></div>
   </details>
 
-  <details>
+  <details class="q" id="how-do-i-report-a">
     <summary>How do I report a bug or suggest something?</summary>
     <div class="answer"><p>Open an issue on <a href="https://github.com/timbermods/OptimizedLocalHousing/issues/new">GitHub</a>. The <a href="troubleshooting.html#report">troubleshooting page</a> lists what to include.</p></div>
   </details>
+  </div>
 </div>
 </main>
 
 <footer class="site-footer">
   <div class="wrap foot">
-    <div><strong>Optimized Local Housing</strong><br>Free and open source, MIT licensed. An unofficial community mod for Timberborn. Not affiliated with or endorsed by Mechanistry.</div>
+    <div><strong>Optimized Local Housing</strong><p>Free and open source, MIT licensed, maintained by <a href="https://github.com/timbermods">Timbermods</a>. An unofficial community mod for Timberborn. Not affiliated with or endorsed by Mechanistry. Housing Optimize and Commute Balancer are Bobingabout's.</p></div>
     <div><h2>Guides</h2><ul><li><a href="install.html">Install guide</a></li><li><a href="troubleshooting.html">Troubleshooting</a></li><li><a href="faq.html">FAQ</a></li></ul></div>
     <div><h2>Project</h2><ul><li><a href="https://github.com/timbermods/OptimizedLocalHousing">Source on GitHub</a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="notes">Latest release</a></li><li><a href="https://github.com/timbermods/OptimizedLocalHousing/issues">Issues</a></li><li><a href="https://timbermods.github.io/">More mods from Timbermods</a></li></ul></div>
   </div>
