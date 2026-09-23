@@ -168,7 +168,7 @@ Confirmed rejections: the shared Timbermods landing template (cream paper, icon 
 - Card stock on a textured linen board, meeting it at a 1px rule edge with a 2px corner.
 - Blue means after, madder means before, everywhere: walk lines, chart bars, tree captions, the readout.
 - One stroke weight (1.4) for every drawn line in every diagram.
-- Libre Caslon Text 700 for headings, numbers and labels on cards; its italic for names and the pitch; system-ui for reading.
+- Libre Caslon Text 700 for headings, numbers and labels on cards; its 400 italic for names and the pitch (the only two Caslon faces shipped); system-ui for reading.
 - Ruled lists, field lists and tables carry the content; hairline rules separate every row.
 
 ## Colors
@@ -201,7 +201,7 @@ A quiet paper-and-ink palette with two drafting inks that carry meaning, plus th
 
 ## Typography
 
-**Display Font:** Libre Caslon Text 400, 400 italic, 700 (self-hosted woff2, OFL), with Georgia, Times New Roman, serif
+**Display Font:** Libre Caslon Text 700 and 400 italic only (self-hosted woff2 in `docs/fonts/`, OFL; there is no roman 400), with Georgia, Times New Roman, serif
 **Body Font:** system-ui stack
 **Label/Mono Font:** ui-monospace, Cascadia Mono, Consolas stack, for log lines and Pass-line field names
 

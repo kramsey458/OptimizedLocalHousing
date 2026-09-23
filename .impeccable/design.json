@@ -579,7 +579,7 @@
       "Card stock on a textured linen board, meeting it at a 1px rule edge with a 2px corner.",
       "Blue means after, madder means before, everywhere: walk lines, chart bars, tree captions, the readout.",
       "One stroke weight (1.4) for every drawn line in every diagram.",
-      "Libre Caslon Text 700 for headings, numbers and labels on cards; its italic for names and the pitch; system-ui for reading.",
+      "Libre Caslon Text 700 for headings, numbers and labels on cards; its 400 italic for names and the pitch (the only two Caslon faces shipped); system-ui for reading.",
       "Ruled lists, field lists and tables carry the content; hairline rules separate every row."
     ],
     "rules": [
