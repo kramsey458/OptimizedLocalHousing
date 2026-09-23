@@ -86,10 +86,11 @@ Success, in order:
 ## Capabilities and Constraints
 
 - **Stack and hosting:** plain static HTML, CSS and small vanilla JS in `docs/` on `main`, no build step. Pages:
-  `index.html` (hero, why, features, how a pass works, what it always / never does, results, tested vs not),
-  `install.html`, `troubleshooting.html`, `faq.html`, `404.html`, plus `style.css`, `site.js` (theme toggle stored as
-  `olh-theme`, the results-chart tooltip, and opening the `<details>` entry a `#hash` points at), `release.js`,
-  `favicon.svg` and `.nojekyll`. GitHub Pages serves **`main:/docs`** (legacy build) at
+  `index.html` (hero with the seating plan, why, features, how a pass works, what it always / never does, the
+  comparison, results, tested vs not), `install.html`, `troubleshooting.html`, `faq.html`, `404.html`, plus
+  `style.css`, `site.js` (theme toggle stored as `olh-theme`, the results-chart tooltip, and opening the `<details>`
+  entry a `#hash` points at), `seating.js` (the hero demo), `release.js`, `favicon.svg`, `fonts/` (Libre Caslon Text,
+  OFL), `textures/` and `.nojekyll`. GitHub Pages serves **`main:/docs`** (legacy build) at
   https://timbermods.github.io/OptimizedLocalHousing/, so a change is live once it is merged to `main`. One of the
   timbermods sites; https://timbermods.github.io/ is the catalog the footer links to.
 - **Site tests and CI:** none. Nothing in `OptimizedLocalHousing.Tests/` or `.github/workflows/tests.yml` checks
@@ -131,16 +132,15 @@ Success, in order:
     in 20 cycles; a second pass changed nothing). Always say it's a stand-in.
   - Present it as "stable means this evidence plus the automated tests, not that every situation has been tried",
     without scaring people off.
-- **Mismatches in the current site to fix, not copy:**
-  - The home page says "41 automated checks pass on every change": the suite has 41, but CI runs 40; the
-    compiled-adapter check runs only locally with the game.
-  - `install.html` (Multiplayer) and the FAQ multiplayer answer say only "1.1.0 hasn't yet been played live by two
-    players"; the truth is neither 1.1.0 nor 1.1.1 has (the home page already says so).
-  - The FAQ's "Is it stable?" answer walks through 1.0.0, 1.0.1, 1.1.0 and 1.1.1: version history that belongs in the
-    README changelog. Keep only the evidence.
-  - The Updating steps and the "Saved state ignored" answer mention saves from earlier versions and a pass that
-    restarts once; keep that to the one upgrade fact players need, or drop it.
-  - The README (not the site) still names MultiColony "1.4.0-alpha21" as the audited version.
+- **How the shipped site states these facts (keep it this way):**
+  - The home page's Tested list says "41 automated checks: 40 run on every change, and one runs against the installed
+    game" (CI runs 40; the compiled-adapter check runs only locally with the game).
+  - The home status, `install.html` (Multiplayer), the FAQ multiplayer and "Is it stable?" answers and the
+    troubleshooting multiplayer entry say the live session ran the code the stable release started from, and that
+    this release hasn't been played live by two players. None of them walks through version history.
+  - The Updating steps and the "Saved state ignored" answer carry no old-save notes (fresh games are assumed).
+  - Neither the README nor the site names a MultiColony version: its code was audited against this mod, not played
+    with it.
 
 ## Brand Commitments
 
@@ -155,12 +155,15 @@ Success, in order:
 
 ## Evidence on Hand
 
-- **Images:** only `docs/favicon.svg`. There is no mod icon PNG, no Open Graph image, no `Media/` folder.
-- **Diagrams drawn for the site:** the hero's before/after SVG (captioned "Illustration only, not real data") and the
-  move-cycle diagram. They are illustrations, not screenshots.
+- **Images:** `docs/favicon.svg` and the procedural board and card textures in `docs/textures/` (made by
+  `make_textures.py`). There is no mod icon PNG, no Open Graph image, no `Media/` folder.
+- **Diagrams drawn for the site:** the hero's seating plan (a toy hall of three homes, three workplaces and eight
+  made-up beavers; `seating.js` works out the best arrangement on the page, 185 → 144; captioned as an illustration
+  with straight-line distances) and the move-cycle figure, which redraws that same pass. They are illustrations, not
+  screenshots.
 - **Real data:** the replay results above (the bar chart and its table); the live log figures (16 passes, about 183
   ticks and 5,350 route queries each, 0 to 4 cycles); two real `Pass` lines from the maintainer's log (Pass 26 and
-  Pass 34, quoted on the install and troubleshooting pages); the FAQ's measured "let adult counts change" experiment
+  Pass 34; Pass 26 is quoted on the home and install pages, Pass 34 on the troubleshooting page); the FAQ's measured "let adult counts change" experiment
   (average 24.0 to 23.1, about 4%, while homes able to have a baby fell from 11 to 1; one colony, straight-line
   stand-in); the tick and memory figures in the README (47 vs 157 solve ticks; 480 vs 1,118 ticks for 1,600 adults).
 - **Does not exist, and must not be faked:** in-game screenshots or clips of the mod at work (there is no UI to
