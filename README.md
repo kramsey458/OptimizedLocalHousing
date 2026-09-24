@@ -3,7 +3,7 @@
 **Website:** https://timbermods.github.io/OptimizedLocalHousing/ (install guide, troubleshooting, FAQ)
 
 A Timberborn 1.1 mod (built against **1.1.2.4**) that moves adult beavers into the homes that give the
-**shortest total commute** between where they live and where they work. Version **1.1.1**.
+**shortest total commute** between where they live and where they work. Version **1.1.1**. <!-- latest -->
 
 Everyone can't live in the house nearest their workplace, because beds are limited. The best you can do is
 minimize the total travel across the whole colony, and that is exactly what this mod solves, once a day, with

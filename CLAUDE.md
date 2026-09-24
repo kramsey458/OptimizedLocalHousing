@@ -13,7 +13,7 @@ PR → merge.
 ## Standing rules
 
 - Never launch or drive Timberborn, and never touch installed mods or saves. The maintainer (Kyler) playtests himself.
-- Commit on a branch and open a PR. Merge only when Kyler says so in the chat.
+- Commit on a branch and open a PR. Kyler has said to merge PRs automatically: merge, then check the page live.
 - Assume fresh games: no old-save compatibility notes on the site. Don't mention Incremental Housing (removed on purpose).
 - Compare fairly with Bobingabout's Housing Optimize and Commute Balancer, by what their Workshop pages say. Never
   "the best housing mod". The 25.6 vs 24.1 figure is a model with straight-line distances, not a benchmark.
@@ -24,6 +24,11 @@ PR → merge.
   `site.js` (theme toggle, chart tooltip, opens the `<details>` a `#hash` names), `seating.js` (the hero demo),
   `release.js`, `favicon.svg`, `.nojekyll`, `fonts/`, `textures/`. Live at https://timbermods.github.io/OptimizedLocalHousing/.
 - **Published:** GitHub Pages serves `main:/docs` (legacy build), so merging to main publishes; a build takes about a minute.
+- **Latest releases update themselves:** when a release becomes GitHub's Latest, `.github/workflows/latest-release.yml`
+  (the shared timbermods workflow) appends the standard footer to its notes, sets the site's
+  `data-release="version|tag|asset-name"` fallback text and the README lines ending in `<!-- latest -->` to the new
+  version, runs the site checks and commits to main. Pre-releases change nothing. Descriptions, status lists and FAQs
+  stay manual (the checklist below). Dry run: Actions → Latest release → Run workflow.
 - **Look:** "The Seating Chart". A host's planner's board: tented place cards and card stock pinned to linen, the hall
   drafted in blue for the plan as arranged and madder for the plan as it was. The look is fixed: updates extend it and
   never restyle it.
