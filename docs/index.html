@@ -37,7 +37,7 @@
     <div>
       <h1>Optimized Local Housing</h1>
       <p class="pitch">The shortest total walk the beds allow.</p>
-      <p class="lead">A Timberborn 1.1 mod. Once a day it works out where each adult beaver should live so the colony's whole walk between home and work is as short as it can be, and moves them there. Beds are limited, so not everyone lives next door to work; together, they walk the least.</p>
+      <p class="lead">A Timberborn 1.1 mod. Once a day, it moves adult beavers into the homes that make the colony's total walk to work as short as it can be. Beds are limited, so not everyone lives next door to work. Together, they walk the least.</p>
       <ul class="facts">
         <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="7" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="7" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="17" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.5 9l2 5.5M15.5 9l-2 5.5M9 7h6" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span><b>The whole colony, not each beaver.</b> One beaver may walk a little farther so that everyone together walks less.</span></li>
         <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v9H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="15.5" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span><b>Every home keeps its adults, and children never move.</b> Breeding is untouched. Empty beds are left to the game.</span></li>
@@ -100,7 +100,7 @@
         <div class="readout" data-readout aria-live="polite"><span class="ro-total"><b>185</b> hall's total walk, as the game left them</span><span>Run the day's pass to see the arrangement the mod would choose.</span></div>
         <button class="btn btn-primary" type="button" data-pass hidden>Run the day's pass</button>
       </div>
-      <figcaption>An illustration: made-up beavers and straight-line distances, and this page simply tries every arrangement. The mod finds the best arrangement for your colony with the Hungarian algorithm, district by district, pricing homes with the game's own route costs.</figcaption>
+      <figcaption>An illustration with made-up beavers and straight-line distances; this page simply tries every arrangement. In your colony, the mod solves each district exactly, with the game's own route costs.</figcaption>
     </figure>
   </div>
 </section>
@@ -112,8 +112,8 @@
       <h2>Homes shouldn't be a lottery.</h2>
     </div>
     <div>
-      <p class="big">By the look of the game's code, the built-in home assigner hands out beds without asking where a beaver works. Over time a colony ends up with beavers walking across the whole map every day, past homes right beside their job.</p>
-      <p>Not everyone can live next door to work, because beds are limited. So the real question is which arrangement of beavers into beds makes the <em>total</em> walking smallest. That is a classic assignment problem, and this mod solves it exactly, once a day, instead of nudging beavers around a swap at a time. It rearranges the adults already housed; the game's assigner still fills empty beds.</p>
+      <p class="big">By the look of its code, the game hands out beds without asking where a beaver works. Beavers end up walking across the map every day, past homes right beside their job.</p>
+      <p>The real question is which arrangement of beavers into beds makes the <em>total</em> walk smallest. That is a classic assignment problem. This mod solves it exactly, once a day, instead of nudging beavers one swap at a time. It only rearranges the adults already housed.</p>
     </div>
   </div>
 </section>
@@ -126,12 +126,12 @@
       <p>Six rules the mod keeps every time it arranges your colony.</p>
     </div>
     <ul class="rules-key">
-      <li><div><h3>Optimal, not first-come-first-served</h3><p>Every district is solved exactly with the Hungarian algorithm, so the colony's total commute is the smallest the rules allow, not whatever a greedy pass happens to leave over.</p></div></li>
-      <li><div><h3>Real routes, not straight lines</h3><p>Homes are priced with the game's own route cost, so stairs, platforms and ziplines count. The 32 closest homes to each workplace, in its own district, get a real route query.</p></div></li>
-      <li><div><h3>Families and breeding stay safe</h3><p>Every home keeps exactly the same number of adults, and children never move. Beds set aside for babies stay exactly where they are.</p></div></li>
+      <li><div><h3>Optimal, not first-come-first-served</h3><p>Each district is solved exactly with the Hungarian algorithm. The colony's total commute is the smallest the rules allow.</p></div></li>
+      <li><div><h3>Real routes, not straight lines</h3><p>Homes are priced with the game's own route cost, so stairs, platforms and ziplines count. Each workplace checks real routes to the 32 nearest homes in its district.</p></div></li>
+      <li><div><h3>Families and breeding stay safe</h3><p>Every home keeps exactly the same number of adults, and children never move. Beds for babies stay where they are.</p></div></li>
       <li><div><h3>No pointless shuffling</h3><p>Beavers move only when the rearrangement saves at least one route-cost unit for each beaver moved. Once a colony is arranged, another pass changes nothing.</p></div></li>
-      <li><div><h3>Smooth by design</h3><p>The work is spread across ticks with budgets per tick: 32 route queries on a colony of a few hundred beavers, and up to 128 on a large one, so its pass still ends within the daytime (only the very largest run longer).</p></div></li>
-      <li><div><h3>Built with co-op in mind</h3><p>Whole-number math, sorted IDs and a fully saved pass state are meant to give every player the same result, even across a save, a reload or a mid-pass join. <a href="#status">What has been played</a></p></div></li>
+      <li><div><h3>Smooth by design</h3><p>The work is spread over many ticks, a little at a time, so there is no long freeze. A large colony does more per tick to finish within the daytime; only the very largest take longer.</p></div></li>
+      <li><div><h3>Built with co-op in mind</h3><p>Every player's game should make the same moves, even across a save, a reload or a mid-pass join. <a href="#status">What has been played</a></p></div></li>
     </ul>
   </div>
 </section>
@@ -141,14 +141,14 @@
   <div class="wrap">
     <div class="section-head">
       <h2>One pass, five steps</h2>
-      <p>A pass runs as soon as the game is ticking the first time the mod sees a save, then at the start of every day. The steps are spread over many ticks, so there is no long freeze.</p>
+      <p>The first pass starts as soon as the game runs on a save the mod hasn't seen. After that, a pass runs at the start of every day.</p>
     </div>
     <div class="two-col">
       <ol class="steps">
         <li><strong>Capture</strong><p>Every housed adult beaver, its home and its assigned workplace, in one quick snapshot.</p></li>
-        <li><strong>Price</strong><p>Real route costs from each workplace's 32 nearest homes in its district. Anything farther is estimated, or taken from a recent check, and any move to it is re-checked first.</p></li>
-        <li><strong>Solve</strong><p>The best possible way to reassign the adults to the beds that adults occupy today, one district at a time, since nobody moves between districts.</p></li>
-        <li><strong>Verify</strong><p>Every proposed move is priced again with fresh routes. A cycle of moves is thrown away if it would cut off a beaver who can reach work today, or if it doesn't save enough.</p></li>
+        <li><strong>Price</strong><p>Real route costs from each workplace to its 32 nearest homes in its district. Farther homes are estimated.</p></li>
+        <li><strong>Solve</strong><p>The best way to reassign the adults to the beds adults use today, one district at a time.</p></li>
+        <li><strong>Verify</strong><p>Every proposed move is priced again with fresh routes. A cycle of moves is dropped if it would cut a beaver off from work, or if it saves too little.</p></li>
         <li><strong>Apply</strong><p>Whole cycles of moves are applied in a single tick, and rolled back if the game refuses any of them.</p></li>
       </ol>
       <figure class="cycle stock pinned">
@@ -183,17 +183,14 @@
     <div>
       <h2>What it always does</h2>
       <ul class="checks">
-        <li>Keeps every home's number of adults exactly the same.</li>
         <li>Leaves unemployed adults free to give up good beds to beavers who commute.</li>
         <li>Repairs a broken commute by moving a beaver to a home that can reach its workplace, when a bed can be arranged.</li>
         <li>Skips a move if the beaver, its job or its home changed while the pass was running, and tries again the next day.</li>
-        <li>Turns itself off if Housing Optimize or Commute Balancer is enabled.</li>
       </ul>
     </div>
     <div>
       <h2>What it never does</h2>
       <ul class="checks never">
-        <li>Move children.</li>
         <li>Move anyone into a paused, blocked or automation-off home, or out of one.</li>
         <li>Move a beaver who can reach work into a home that can't.</li>
         <li>Move a beaver into another district.</li>
@@ -223,7 +220,7 @@
         </table>
       </div>
     </div>
-    <p class="compare-note">In a replay of one real colony, a first-come-first-served model like the one Housing Optimize describes averaged 25.6 (23.5 to 29.0, depending on the order workplaces were handled) against 24.1 for this mod. That was a model with straight-line distances, not a benchmark of either mod. <a href="faq.html#conflicts">More in the FAQ</a></p>
+    <p class="compare-note">In a replay of one real colony, a first-come-first-served model like the one Housing Optimize describes averaged 25.6 (23.5 to 29.0, depending on the order workplaces were handled) against 24.1 for this mod. That was a model with looser bed rules and straight-line distances, not a benchmark of either mod. <a href="faq.html#is-it-the-best-housing">More in the FAQ</a></p>
     <p class="rule-line">Don't run them together: Optimized Local Housing turns itself off if Housing Optimize or Commute Balancer is enabled.</p>
   </div>
 </section>
@@ -281,7 +278,7 @@
       </div>
       <div class="sheet stock">
         <h3>In the live game</h3>
-        <p class="src">The log of a real colony: about 350 adults, 104 homes, 167 workplaces. 16 passes in a row, each about 183 ticks and 5,350 route queries, applying between 0 and 4 move cycles, with no errors, warnings or rollbacks.</p>
+        <p class="src">The log of a real colony of about 350 adults, 104 homes and 167 workplaces. 16 passes in a row, each about 183 ticks, applied 0 to 4 move cycles with no errors, warnings or rollbacks.</p>
         <div class="passline">
           <code class="pl-raw">[OptimizedLocalHousing] Pass 26: 356 adults, 104 homes, 167 workplaces; 5354 route queries over 182 ticks; 2 move cycles applied (0 rejected, 0 stale), 0 disconnected commutes repaired, route cost saved 177.</code>
           <dl class="fields">
@@ -302,7 +299,7 @@
   <div class="wrap">
     <div class="section-head" data-release-pinned="1.1.1">
       <h2>What is tested, and what isn't</h2>
-      <p>Stable means the evidence below, not that every situation has been tried. Here is the honest picture.</p>
+      <p>Stable means the evidence below, not that every situation has been tried.</p>
     </div>
     <div class="status-grid">
       <div class="stock">
@@ -310,11 +307,7 @@
         <ul class="checks">
           <li>16 passes in a row in a live game (about 350 adults, 104 homes, 167 workplaces) with no errors, warnings or rollbacks, on the code the stable release started from.</li>
           <li>A hosted co-op session with a second player on the same version: about 11,000 ticks, 15 passes, and no desync in the host's log.</li>
-          <li>41 automated checks: 40 run on every change, and one runs against the installed game. They include the solver against brute force, colonies with several districts, and large colonies.</li>
-          <li>Two simulated players stay identical at every tick of a pass, including when one reloads a save taken mid-pass.</li>
-          <li>Saving and reloading at any tick of a pass gives exactly the uninterrupted result.</li>
-          <li>Route queries and solver work stay within their per-tick budgets, and a large colony's pass ends within the daytime.</li>
-          <li>The compiled mod passes a check against the game's own component rules.</li>
+          <li>41 automated checks: 40 run on every change, and one runs against the installed game. They cover the solver against brute force, several districts, large colonies, and two players staying in step through saves and reloads.</li>
           <li>The replay of a real colony above.</li>
         </ul>
       </div>

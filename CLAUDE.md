@@ -7,8 +7,8 @@ PR → merge.
 
 - **Tests (what CI runs, `.github/workflows/tests.yml`, SDK 8):** `dotnet run --project OptimizedLocalHousing.Tests -c Release`
   must end with `40 checks passed.` (41 exist; the compiled-adapter check needs the built mod and the game, so it runs
-  only locally with two extra arguments; see README "Build and test").
-- **Build and package** (needs a local Timberborn install; never done in CI): see README "Build and test", then `./package.ps1`.
+  only locally with two extra arguments; see `DEVELOPING.md`).
+- **Build and package** (needs a local Timberborn install; never done in CI): see `DEVELOPING.md`, then `./package.ps1`.
 
 ## Standing rules
 
@@ -17,6 +17,24 @@ PR → merge.
 - Assume fresh games: no old-save compatibility notes on the site. Don't mention Incremental Housing (removed on purpose).
 - Compare fairly with Bobingabout's Housing Optimize and Commute Balancer, by what their Workshop pages say. Never
   "the best housing mod". The 25.6 vs 24.1 figure is a model with straight-line distances, not a benchmark.
+
+## Writing README and website text
+
+Kyler, 2026-09-24: "simplicity and elegance is effective and desirable." Every change to the README, the website
+text and the player docs follows these rules.
+
+- **Write for a Timberborn player** who wants to download, install and use the mod. Developer detail goes in
+  `DEVELOPING.md` or the changelog; link to it rather than repeating it.
+- **Short.** One idea per sentence, most under about 20 words. A paragraph or FAQ answer is one to three sentences,
+  a troubleshooting answer a few numbered steps.
+- **Lead with the action.** Menu paths as arrow chains; on-screen labels in bold, exactly as in game.
+- **Say each thing once**, where a player would look for it; link to it elsewhere.
+- **Plain words.** No internals (class names, ids, formats) unless the player needs them to act.
+- **Cut** filler, repeated caveats, edge cases a player won't meet, and history ("since …", "no longer", older
+  builds). Describe the mod as it is now.
+- **Check every fact against the code** before writing it; changelogs lag.
+- **Keep, briefly:** credits, the unofficial line, the status, and safety facts.
+- **Reread as a new player before publishing.** Every step works as written, and nothing is said twice.
 
 ## Website
 
@@ -93,6 +111,7 @@ PR → merge.
 
 ### Content rules
 
+- Every text change follows *Writing README and website text* above.
 - Describe the mod as it is now. No "New in <version>", "added in …" or version history on player pages; that belongs
   in the README changelog and the GitHub release notes. Upgrade steps players need are the only exception.
 - The played and not-played status matches the README exactly: the 1.0 code (released as 1.0.0) ran 16 passes in a
@@ -104,12 +123,13 @@ PR → merge.
 - Terminology: pass; move cycle; route cost / route-cost unit (the game's own, not straight-line); commute; adults,
   children, homes, workplaces, districts; the 32 nearest homes; rejected, stale; Hungarian algorithm.
 - `docs/release.js` is shared across timbermods sites and byte-identical: replace it, never edit it. Check:
-  `git hash-object docs/release.js` equals `gh api repos/timbermods/MixedStorage/contents/site/assets/release.js -q .sha`.
+  `git hash-object docs/release.js` equals `gh api repos/timbermods/MixedStorage/contents/docs/assets/release.js -q .sha`.
 - `404.html` uses absolute `/OptimizedLocalHousing/` paths and loads no scripts (unstyled on the local preview; that's expected).
 
 ### Update the website for a new release
 
-When asked to "update the website for the latest release, consistent with the design":
+When asked to "update the website for the latest release, consistent with the design" (write every change by
+*Writing README and website text* above):
 1. Read the release and the docs: `gh release list -R timbermods/OptimizedLocalHousing -L 5`,
    `gh release view <tag> -R timbermods/OptimizedLocalHousing`, README (incl. Changelog and "What has not been
    measured"), PRODUCT.md. List every player-facing change.
@@ -125,7 +145,7 @@ When asked to "update the website for the latest release, consistent with the de
    - Requirements and game version (built against 1.1.2.4, minimum 1.1.0.0): install `#requirements`, FAQ
      `#which-game-versions-operating-systems`, troubleshooting `#update`, index hero lead and meta description.
    - Behaviour: index `#features` (six rules; the head says "Six rules"), `#how` steps, `#rules` always / never,
-     `#compare` table, `#results`; FAQ `#does-it-have-settings` (tuning constants); log messages in troubleshooting
+     `#compare` table, `#results`; FAQ `#does-it-have-settings` (links the tuning constants in `DEVELOPING.md`); log messages in troubleshooting
      `#log` table and symptoms; install `#layout` (the `version-1.1` folder tree), `#update`, `#uninstall`.
    - `<meta name="description">` / `og:description` on every page, and PRODUCT.md's Operating Context.
 3. Put new content into the existing components: a rule → `ul.rules-key` item (h3 + p); always / never → `ul.checks` /
