@@ -126,7 +126,7 @@ Success, in order:
     has been played on 1.1.0 or 1.1.1; the client's side, joining and rehosting are untested.
   - Never measured: frame-time impact (the per-tick work is bounded, but a real path query hasn't been timed, nor the
     larger budgets of very large colonies). Iron Teeth untested (developed on Folktails). Only Windows. BeaverBuddies
-    MultiColony was audited against the mod's code, not played with it.
+    Timber Together was audited against the mod's code, not played with it.
   - The results are a replay of a real 266-beaver colony through the real pass engine with **straight-line distance
     standing in for route cost** (53.1 before, 24.1 after one pass, 24.0 true optimum; 147 ticks; 182 beavers rehomed
     in 20 cycles; a second pass changed nothing). Always say it's a stand-in.
@@ -139,7 +139,7 @@ Success, in order:
     troubleshooting multiplayer entry say the live session ran the code the stable release started from, and that
     this release hasn't been played live by two players. None of them walks through version history.
   - The Updating steps and the "Saved state ignored" answer carry no old-save notes (fresh games are assumed).
-  - Neither the README nor the site names a MultiColony version: its code was audited against this mod, not played
+  - Neither the README nor the site names a Timber Together version: its code was audited against this mod, not played
     with it.
 
 ## Brand Commitments

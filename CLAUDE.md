@@ -97,7 +97,7 @@ PR → merge.
   in the README changelog and the GitHub release notes. Upgrade steps players need are the only exception.
 - The played and not-played status matches the README exactly: the 1.0 code (released as 1.0.0) ran 16 passes in a
   live game, including one hosted co-op session; 1.1.0's changes and anything since are covered by automated tests but
-  not played; no live two-player session on 1.1.x; frame time, Iron Teeth, non-Windows and MultiColony live play untested.
+  not played; no live two-player session on 1.1.x; frame time, Iron Teeth, non-Windows and Timber Together live play untested.
   Replay numbers always say "straight-line stand-in". Never invent numbers, reviews or screenshots.
 - Keep the credits: MIT, maintained by Timbermods; Housing Optimize and Commute Balancer are Bobingabout's. Keep the
   "unofficial, not affiliated with or endorsed by Mechanistry" line in every footer.
