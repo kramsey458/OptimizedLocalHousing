@@ -78,7 +78,7 @@
   </details>
 
   <details class="q" id="no-log">
-    <summary>It's enabled, but there is no <code>[OptimizedLocalHousing]</code> line in the log</summary>
+    <summary><span>It's enabled, but there is no <code>[OptimizedLocalHousing]</code> line in the log</span></summary>
     <div class="answer">
       <ol>
         <li>Make sure you're reading the right session. The log is overwritten at each launch; the previous one is <code>Player-prev.log</code>.</li>
@@ -89,7 +89,7 @@
   </details>
 
   <details class="q" id="no-pass">
-    <summary>It says <code>loaded.</code> but I never see a <code>Pass</code> line</summary>
+    <summary><span>It says <code>loaded.</code> but I never see a <code>Pass</code> line</span></summary>
     <div class="answer">
       <ol>
         <li><strong>Unpause and let the game run.</strong> A pass takes about 150 to 200 ticks on a colony of a few hundred beavers: roughly 90 seconds to two minutes at normal speed.</li>
@@ -101,7 +101,7 @@
   </details>
 
   <details class="q" id="disabled">
-    <summary>The log says <code>Disabled because another housing assignment mod is enabled</code></summary>
+    <summary><span>The log says <code>Disabled because another housing assignment mod is enabled</code></span></summary>
     <div class="answer">
       <p>Disable the other housing mod in the Mods menu and restart. Two housing mods would keep undoing each other's moves. The message ends with the ID of the mod it found:</p>
       <ul>
@@ -113,7 +113,7 @@
   </details>
 
   <details class="q" id="zero">
-    <summary>The pass line says <code>0 move cycles applied</code>, or the numbers look strange</summary>
+    <summary><span>The pass line says <code>0 move cycles applied</code>, or the numbers look strange</span></summary>
     <div class="answer">
       <p>Reading the line: <code>Pass 34: 345 adults, 104 homes, 167 workplaces; 5394 route queries over 183 ticks; 4 move cycles applied (1 rejected, 2 stale), 0 disconnected commutes repaired, route cost saved 717.</code></p>
       <ul>
@@ -159,21 +159,21 @@
   </details>
 
   <details class="q" id="abandoned">
-    <summary>The log says <code>Pass abandoned until the next day</code></summary>
+    <summary><span>The log says <code>Pass abandoned until the next day</code></span></summary>
     <div class="answer">
       <p>An error stopped the pass. No beaver is left half-moved, the game keeps running, and the mod tries again the next day. It's a bug: copy the full message and <a href="#report">report it</a>.</p>
     </div>
   </details>
 
   <details class="q" id="rollback">
-    <summary>The log says <code>A move cycle failed and was rolled back</code></summary>
+    <summary><span>The log says <code>A move cycle failed and was rolled back</code></span></summary>
     <div class="answer">
       <p>The game refused one of the moves in a cycle, so every beaver in it went back to its old home. Nothing is lost. If it keeps happening, <a href="#report">report it</a> with the message.</p>
     </div>
   </details>
 
   <details class="q" id="state">
-    <summary>The log says <code>Saved state ignored</code></summary>
+    <summary><span>The log says <code>Saved state ignored</code></span></summary>
     <div class="answer">
       <p>The mod couldn't read its own data from the save. It starts fresh, at no cost to your colony.</p>
     </div>
