@@ -145,7 +145,9 @@ Success, in order:
 ## Brand Commitments
 
 - **Voice:** a fellow player explaining a useful mod: clear, exact, a little proud of the math, never hype. "Straight
-  answers, including the ones that aren't flattering." Numbers are given with their caveats.
+  answers, including the ones that aren't flattering." Numbers are given with their caveats. Short and plain: one
+  idea per sentence, each thing said once, no internals and no history (see CLAUDE.md, *Writing README and website
+  text*).
 - **No official Timberborn logos or key art.** The game's own item icons are allowed where used (none are used today).
   The site's marks are its own: `favicon.svg` (a house linked to a workplace) and simple line icons.
 - **License:** MIT, copyright Timbermods, for the code, docs and site.

@@ -31,7 +31,7 @@
 <div class="page-head">
   <div class="wrap">
     <h1>Install guide</h1>
-    <p class="lead">About five minutes. You need Timberborn 1.1 and nothing else: no other mods are required.</p>
+    <p class="lead">About five minutes. You need Timberborn 1.1 and no other mods.</p>
   </div>
 </div>
 <div class="wrap doc-grid">
@@ -50,30 +50,30 @@
   </nav>
   <div class="doc-body">
   <div class="notice stock" role="note">
-    <p><strong>Back up first.</strong> As with any mod, keep a copy of your save so you can undo the moves the mod makes.</p>
+    <p><strong>Back up first.</strong> The mod's moves can only be undone by loading an earlier save.</p>
   </div>
 
 
   <h2 class="first" id="requirements">Requirements</h2>
   <ul>
-    <li><strong>Timberborn 1.1.</strong> The mod is built against 1.1.2.4 and asks for 1.1.0.0 or newer. A future game update could break it.</li>
-    <li><strong>Windows.</strong> That is the only system it has been checked on. It is an ordinary game mod, so other systems may work, but the Mods folder is in a different place there.</li>
+    <li><strong>Timberborn 1.1.</strong> It needs 1.1.0.0 or newer and is built against 1.1.2.4. A future game update could break it.</li>
+    <li><strong>Windows.</strong> It has only been checked on Windows. Other systems may work, but their Mods folder is elsewhere.</li>
     <li><strong>No other mods.</strong> No Harmony, no Mod Settings.</li>
-    <li>Do <strong>not</strong> run it alongside Bobingabout's Housing Optimize or Commute Balancer. It disables itself if it sees either of them enabled. See <a href="faq.html#conflicts">the FAQ</a>.</li>
+    <li>Do <strong>not</strong> run it alongside Bobingabout's Housing Optimize or Commute Balancer. It turns itself off if either is enabled (<a href="faq.html#conflicts">why</a>).</li>
   </ul>
 
   <h2 id="steps">Step by step</h2>
   <ol class="steps">
-    <li><strong>Back up your save</strong><p>Copy the save you want to use from <code>Documents\Timberborn\Saves</code> so you can go back if you don't like the result.</p></li>
-    <li><strong>Download the mod</strong><p><a class="btn btn-primary" href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="download"><span>Download <span data-release="version">1.1.1</span></span></a></p><p>Get <a href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="download"><code><span data-release="asset-name">OptimizedLocalHousing-v1.1.1.zip</span></code></a> from the <a href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="notes">release page</a>. It is listed under <strong>Assets</strong>; don't download "Source code". The mod is distributed from GitHub, not the Steam Workshop.</p></li>
+    <li><strong>Back up your save</strong><p>Copy the save you want to use from <code>Documents\Timberborn\Saves</code>.</p></li>
+    <li><strong>Download the mod</strong><p><a class="btn btn-primary" href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="download"><span>Download <span data-release="version">1.1.1</span></span></a></p><p>Get <a href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="download"><code><span data-release="asset-name">OptimizedLocalHousing-v1.1.1.zip</span></code></a> from the <a href="https://github.com/timbermods/OptimizedLocalHousing/releases/latest" data-release-href="notes">release page</a>. It's under <strong>Assets</strong>, not "Source code". The mod isn't on the Steam Workshop.</p></li>
     <li><strong>Close Timberborn</strong><p>Make sure the game is fully closed before you copy files into its Mods folder.</p></li>
-    <li><strong>Extract into your Mods folder</strong><p>Extract the ZIP into <code>Documents\Timberborn\Mods</code>. It contains one folder, <code>OptimizedLocalHousing</code>, and you should end up with the layout <a href="#layout">shown below</a>. If you extracted into a new folder, you may have a doubled <code>OptimizedLocalHousing\OptimizedLocalHousing</code>: move the inner one up (the <a href="#layout">layout</a> shows both).</p></li>
-    <li><strong>Enable it and restart</strong><p>Start Timberborn, open <strong>Mods</strong> from the main menu, tick <strong>Optimized Local Housing</strong>, and restart the game when it asks. Don't run them together: Optimized Local Housing turns itself off if Housing Optimize or Commute Balancer is enabled. Menu wording can differ a little between game versions.</p></li>
-    <li><strong>Load your save and let the game run</strong><p>On a save the mod hasn't seen before, the first pass starts as soon as the game is ticking (not while paused). After that it runs at the start of every in-game day. <a href="#verify">Check that it ran.</a></p></li>
+    <li><strong>Extract into your Mods folder</strong><p>Extract the ZIP into <code>Documents\Timberborn\Mods</code>. You should get one <code>OptimizedLocalHousing</code> folder, as in the <a href="#layout">layout below</a>.</p></li>
+    <li><strong>Enable it and restart</strong><p>Start Timberborn and open <strong>Mods</strong> from the main menu. Tick <strong>Optimized Local Housing</strong>, then restart the game when it asks.</p></li>
+    <li><strong>Load your save and let the game run</strong><p>On a save the mod hasn't seen, the first pass starts as soon as the game runs (not while paused). After that, a pass runs at the start of every in-game day. <a href="#verify">Check that it ran.</a></p></li>
   </ol>
 
   <h2 id="layout">Folder layout</h2>
-  <p>This is what a correct install looks like. The game reads the manifest and the DLL from the <code>version-1.1</code> folder.</p>
+  <p>This is what a correct install looks like.</p>
 <div class="tree-pair">
     <figure class="right">
       <figcaption>Right</figcaption>
@@ -105,34 +105,27 @@
     <li>Quit the game, then open <code>%USERPROFILE%\AppData\LocalLow\Mechanistry\Timberborn\Player.log</code>. If you have already restarted, the previous session is in <code>Player-prev.log</code>.</li>
     <li>Search for <code>[OptimizedLocalHousing]</code>. You should see this at startup:
 <pre><code class="log-line">[OptimizedLocalHousing] <span data-release="version">1.1.1</span> loaded.</code></pre></li>
-    <li>After a pass finishes you should see a summary line (roughly 90 seconds to two minutes at normal game speed on a colony of a few hundred beavers, faster at higher speeds). This is a real line from a live game, and your numbers will differ:
+    <li>After each pass you should see a summary line. On a colony of a few hundred beavers, a pass takes about 90 seconds to two minutes at normal speed. Here is a real one; your numbers will differ:
 <div class="passline">
           <code class="pl-raw">[OptimizedLocalHousing] Pass 26: 356 adults, 104 homes, 167 workplaces; 5354 route queries over 182 ticks; 2 move cycles applied (0 rejected, 0 stale), 0 disconnected commutes repaired, route cost saved 177.</code>
-          <dl>
-            <dt>356 adults, 104 homes, 167 workplaces</dt><dd>who was in the plan</dd>
-            <dt>5354 route queries over 182 ticks</dt><dd>the work, spread out</dd>
-            <dt>2 move cycles applied</dt><dd>groups of beavers who swapped beds</dd>
-            <dt>0 rejected, 0 stale</dt><dd>moves thrown out at the fresh check, or because something changed during the pass</dd>
-            <dt>0 disconnected commutes repaired</dt><dd>beavers moved to a home that can reach their work</dd>
-            <dt>route cost saved 177</dt><dd>how much shorter the colony's walk got</dd>
-          </dl>
         </div></li>
   </ol>
-  <p>No line, or an error line? Head to <a href="troubleshooting.html">Troubleshooting</a>.</p>
+  <p><a href="troubleshooting.html#zero">What the numbers mean</a>. No line, or an error line? See <a href="troubleshooting.html">Troubleshooting</a>.</p>
 
   <h2 id="multiplayer">Multiplayer</h2>
-  <p>Every player must install the <strong>same version</strong> of the mod and run the same game version, because the mod changes which beaver lives where and all players' games have to agree. The pass is designed to give the same result on every machine and to resume correctly after a save, a reload or a join. It has been used in a live hosted co-op session (about 11,000 ticks and 15 passes) with no desync reported by the host. That session ran the code the stable release started from; this release hasn't been played live by two players yet, so if you try it please <a href="https://github.com/timbermods/OptimizedLocalHousing/issues/new">tell us how it went</a>.</p>
+  <p>Every player must install the <strong>same version</strong> of the mod and run the same game version. The pass is built to make the same moves on every machine, even after a save, a reload or a join.</p>
+  <p>It ran in one live hosted co-op session (about 11,000 ticks and 15 passes) with no desync in the host's log. That session ran the code the stable release started from; this release hasn't been played live by two players yet. If you try it, please <a href="https://github.com/timbermods/OptimizedLocalHousing/issues/new">tell us how it went</a>.</p>
 
   <h2 id="update">Updating</h2>
   <ol>
     <li>Close the game and delete the old <code>Mods\OptimizedLocalHousing</code> folder.</li>
     <li>Extract the new ZIP into <code>Mods</code> as above.</li>
-    <li>Start the game. Your saves keep working.</li>
-    <li>In multiplayer, every player must update to the same version together.</li>
+    <li>Start the game.</li>
+    <li>In multiplayer, every player updates together.</li>
   </ol>
 
   <h2 id="uninstall">Uninstalling</h2>
-  <p>Untick it in the Mods menu and restart, or delete the <code>OptimizedLocalHousing</code> folder. Nothing else is needed. Beavers keep the homes they have, and any leftover mod data in your save is ignored. To undo the moves already made, go back to a save from before you installed it.</p>
+  <p>Untick it in the Mods menu and restart, or delete the <code>OptimizedLocalHousing</code> folder. Beavers keep the homes they have, and the mod's leftover data in your save is ignored.</p>
 
   <h2 id="checksum">Verify the download (optional)</h2>
   <p>In PowerShell, from the folder you downloaded to:</p>

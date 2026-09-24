@@ -68,64 +68,63 @@
   <details class="q" id="not-listed">
     <summary>The mod isn't in the Mods list</summary>
     <div class="answer">
-      <ul>
-        <li><strong>Wrong folder depth.</strong> The game needs <code>Mods\OptimizedLocalHousing\version-1.1\manifest.json</code>. A doubled <code>OptimizedLocalHousing\OptimizedLocalHousing</code> folder is the usual mistake. See the <a href="install.html#layout">folder layout</a>.</li>
-        <li><strong>Wrong Mods folder.</strong> It must be the folder your other mods are in, normally <code>Documents\Timberborn\Mods</code>.</li>
-        <li><strong>Old game.</strong> The mod needs Timberborn 1.1 or newer. Older versions won't load it.</li>
-        <li>Fully quit and restart the game after copying files.</li>
-      </ul>
+      <ol>
+        <li><strong>Check the folder depth.</strong> The game needs <code>Mods\OptimizedLocalHousing\version-1.1\manifest.json</code>. A doubled <code>OptimizedLocalHousing\OptimizedLocalHousing</code> folder is the usual mistake; see the <a href="install.html#layout">folder layout</a>.</li>
+        <li><strong>Check the Mods folder.</strong> It must be the one your other mods are in, normally <code>Documents\Timberborn\Mods</code>.</li>
+        <li><strong>Check the game version.</strong> The mod needs Timberborn 1.1 or newer.</li>
+        <li>Fully quit and restart the game.</li>
+      </ol>
     </div>
   </details>
 
   <details class="q" id="no-log">
-    <summary>It's enabled, but there is no <code>[OptimizedLocalHousing]</code> line in the log</summary>
+    <summary><span>It's enabled, but there is no <code>[OptimizedLocalHousing]</code> line in the log</span></summary>
     <div class="answer">
-      <ul>
-        <li>Make sure you're reading the right session. The log is overwritten each launch, and the previous one is <code>Player-prev.log</code>.</li>
-        <li>Check the mod list near the top of the log. <code>Optimized Local Housing (<span data-release="tag">v1.1.1</span>)</code> should be listed. If it isn't, it wasn't enabled, or you didn't restart after enabling it.</li>
-        <li>If it's listed but the <code>loaded.</code> line is missing, check the game didn't fail to load the mod's DLL further down the log, and <a href="#report">report it</a> with that log.</li>
-      </ul>
+      <ol>
+        <li>Make sure you're reading the right session. The log is overwritten at each launch; the previous one is <code>Player-prev.log</code>.</li>
+        <li>Find the mod list near the top of the log. <code>Optimized Local Housing (<span data-release="tag">v1.1.1</span>)</code> should be in it. If it isn't, enable the mod and restart.</li>
+        <li>If it's listed but there's no <code>loaded.</code> line, look further down for an error loading the mod's DLL, and <a href="#report">report it</a> with that log.</li>
+      </ol>
     </div>
   </details>
 
   <details class="q" id="no-pass">
-    <summary>It says <code>loaded.</code> but I never see a <code>Pass</code> line</summary>
+    <summary><span>It says <code>loaded.</code> but I never see a <code>Pass</code> line</span></summary>
     <div class="answer">
-      <ul>
-        <li><strong>The game has to run.</strong> Passes only progress while the game is ticking. Paused time doesn't count. A pass takes roughly 150 to 200 ticks on a colony of a few hundred beavers, about 90 seconds to two minutes at normal speed.</li>
-        <li><strong>Saves the mod has already seen</strong> start their next pass at the beginning of the next in-game day, not straight away. Only a save the mod hasn't seen before starts a pass immediately, and a save made during a pass carries on with it.</li>
-        <li>You quit the game before the pass finished. Let it run a little longer, and note the line is written when the pass <em>ends</em>.</li>
+      <ol>
+        <li><strong>Unpause and let the game run.</strong> A pass takes about 150 to 200 ticks on a colony of a few hundred beavers: roughly 90 seconds to two minutes at normal speed.</li>
+        <li><strong>Don't quit too early.</strong> The line is written when the pass <em>ends</em>.</li>
+        <li><strong>Wait for the next day</strong> on a save the mod has seen before. Only a save it hasn't seen starts a pass straight away.</li>
         <li>Look for <a href="#disabled">"Disabled because…"</a> or <a href="#abandoned">"Pass abandoned…"</a> in the log.</li>
-      </ul>
+      </ol>
     </div>
   </details>
 
   <details class="q" id="disabled">
-    <summary>The log says <code>Disabled because another housing assignment mod is enabled</code></summary>
+    <summary><span>The log says <code>Disabled because another housing assignment mod is enabled</code></span></summary>
     <div class="answer">
-      <p>Optimized Local Housing turns itself off when it sees another mod that reassigns beavers' homes, because two of them would keep undoing each other. The message ends with the ID it found. It checks for these:</p>
+      <p>Disable the other housing mod in the Mods menu and restart. Two housing mods would keep undoing each other's moves. The message ends with the ID of the mod it found:</p>
       <ul>
         <li><code>BobHousingOptimize</code> (Bobingabout's Housing Optimize)</li>
         <li><code>BobCommuteBalancer</code> (Bobingabout's Commute Balancer)</li>
         <li><code>housingoptimize</code> (a mod.io listing of Housing Optimize)</li>
       </ul>
-      <p>Disable the other mod in the Mods menu and restart. Only one housing mod should be on.</p>
     </div>
   </details>
 
   <details class="q" id="zero">
-    <summary>The pass line says <code>0 move cycles applied</code>, or the numbers look strange</summary>
+    <summary><span>The pass line says <code>0 move cycles applied</code>, or the numbers look strange</span></summary>
     <div class="answer">
       <p>Reading the line: <code>Pass 34: 345 adults, 104 homes, 167 workplaces; 5394 route queries over 183 ticks; 4 move cycles applied (1 rejected, 2 stale), 0 disconnected commutes repaired, route cost saved 717.</code></p>
       <ul>
         <li><strong>adults / homes / workplaces:</strong> how many the pass considered.</li>
-        <li><strong>move cycles applied:</strong> groups of beavers that swapped beds around. Zero is the correct answer when the colony is already as good as it can be. A second pass on an optimized colony changes nothing.</li>
-        <li><strong>rejected:</strong> the fresh route check threw a proposed cycle away, because a beaver would end up unable to reach work, or the cycle didn't save at least half a route-cost unit. The route costs it found are remembered (and checked again when they come due), so the same cycle isn't proposed again every day.</li>
-        <li><strong>stale:</strong> someone in the cycle changed home or job, died, or a home couldn't take them, between the snapshot and the moment of applying. Small numbers are normal. These beavers are reconsidered in the next pass.</li>
-        <li><strong>disconnected commutes repaired:</strong> moved beavers whose old home couldn't reach their workplace and whose new home can. A cut-off beaver that was moved but still can't reach work isn't counted.</li>
-        <li><strong>route cost saved:</strong> the net drop in route cost across the beavers that moved. Repaired commutes aren't included, since they had no route before.</li>
+        <li><strong>move cycles applied:</strong> groups of beavers who swapped beds. Zero is normal once the colony is as good as it can be.</li>
+        <li><strong>rejected:</strong> cycles the fresh route check threw away, because a beaver would lose its route to work or the cycle saved too little. The costs it found are remembered, so the same cycle isn't proposed every day.</li>
+        <li><strong>stale:</strong> cycles skipped because something changed during the pass: a beaver's home or job, a death, or a home that could no longer take them. Small numbers are normal; those beavers are reconsidered the next day.</li>
+        <li><strong>disconnected commutes repaired:</strong> beavers who couldn't reach work from their old home and can from the new one.</li>
+        <li><strong>route cost saved:</strong> how much shorter the movers' walks got in total. Repaired commutes aren't counted, since they had no route before.</li>
       </ul>
-      <p>Persistent zeros on a colony that clearly needs help usually mean the beavers aren't eligible: they have no assigned workplace, the workplace is disabled or in another district, or their homes are paused, blocked or switched off by automation. Those beavers are left alone by design.</p>
+      <p>Zeros on a colony that clearly needs help usually mean the beavers aren't eligible. They have no job, or their homes are paused, blocked or switched off by automation, and those are left alone by design.</p>
     </div>
   </details>
 
@@ -134,11 +133,11 @@
     <div class="answer">
       <ul>
         <li><strong>Beds are limited.</strong> The mod minimizes the <em>total</em>. Someone has to live farther away, and it may be the beaver you're watching.</li>
-        <li><strong>Route cost isn't distance.</strong> The mod uses the game's route cost, so stairs and ziplines can make a home that looks close actually costly, or a far one cheap.</li>
-        <li><strong>Commute means home to assigned workplace.</strong> A beaver that wanders off to haul goods or a different job site isn't measured by that.</li>
+        <li><strong>Route cost isn't distance.</strong> Stairs and ziplines can make a home that looks close costly, or a far one cheap.</li>
+        <li><strong>Commute means home to assigned workplace.</strong> Trips to haul goods or visit other buildings don't count.</li>
         <li><strong>Timing.</strong> New jobs, new homes and births show up in the next pass.</li>
-        <li><strong>Vacant beds aren't used.</strong> Every home keeps its number of adults, and empty beds are left for the game and for babies. See <a href="faq.html#vacant">the FAQ</a>.</li>
-        <li><strong>Candidate homes are limited</strong> to the 32 nearest by block distance in each workplace's district, plus a re-check of anything farther. A home far away by straight line but close by zipline could be missed.</li>
+        <li><strong>Empty beds aren't used.</strong> They're left for the game and for babies (<a href="faq.html#vacant">why</a>).</li>
+        <li><strong>Only nearby homes are priced.</strong> Each workplace checks its 32 nearest homes; farther ones are estimated. A far home made cheap by a zipline could be missed.</li>
       </ul>
     </div>
   </details>
@@ -146,34 +145,35 @@
   <details class="q" id="families">
     <summary>Everyone moved at once, or parents ended up away from their children</summary>
     <div class="answer">
-      <p>Expected on the first pass of a badly housed colony: the best arrangement can differ from the current one for most adults. Children never move, so a child can end up in a home with different adults than before. Every home still has the same number of adults, so babies and breeding capacity are untouched. Later passes move only a few beavers. If you dislike the first result, load a backup save and don't install the mod.</p>
+      <p>That's expected on the first pass of a badly housed colony. Children never move, so a child may end up living with different adults; breeding is untouched. Later passes move only a few beavers.</p>
+      <p>If you dislike the result, load your backup and remove the mod.</p>
     </div>
   </details>
 
   <details class="q" id="stutter">
     <summary>The game hitches when a pass starts or finishes</summary>
     <div class="answer">
-      <p>The pass is split into steps with per-tick budgets (32 route queries per tick on a colony of a few hundred beavers; a large colony's pass does up to 128, and more solver work per tick, so that it usually ends within the daytime), but two moments do their work in a single tick: taking the snapshot when a pass starts, and applying the moves when it ends. On a large colony either could cause a brief blip. Frame-time impact hasn't been measured; for scale, a pass on a live colony of about 350 adults, 104 homes and 167 workplaces used about 5,350 route queries over about 183 ticks, with no problems reported.</p>
-      <p>If you see a real stutter, please <a href="#report">report it</a> with your colony size and the pass line from the log. Until it's fixed you can disable the mod.</p>
+      <p>Most of a pass is spread over many ticks, but two moments happen in a single tick: taking the snapshot when a pass starts, and applying the moves when it ends. On a large colony either could cause a brief blip.</p>
+      <p>Frame-time impact hasn't been measured. If you see a real stutter, <a href="#report">report it</a> with your colony size and the pass line; until it's fixed, you can disable the mod.</p>
     </div>
   </details>
 
   <details class="q" id="abandoned">
-    <summary>The log says <code>Pass abandoned until the next day</code></summary>
+    <summary><span>The log says <code>Pass abandoned until the next day</code></span></summary>
     <div class="answer">
-      <p>An unexpected error stopped the pass. It is contained: no beavers are left half-moved, the game keeps running, and the mod tries again the next day. Copy the full message, which includes the error and where it happened, and <a href="#report">report it</a>. That is a bug we want to hear about.</p>
+      <p>An error stopped the pass. No beaver is left half-moved, the game keeps running, and the mod tries again the next day. It's a bug: copy the full message and <a href="#report">report it</a>.</p>
     </div>
   </details>
 
   <details class="q" id="rollback">
-    <summary>The log says <code>A move cycle failed and was rolled back</code></summary>
+    <summary><span>The log says <code>A move cycle failed and was rolled back</code></span></summary>
     <div class="answer">
-      <p>The game refused one of the assignments in a cycle. The mod put every beaver in that cycle back in its original home, so nothing is lost. If it happens repeatedly, <a href="#report">report it</a> with the message.</p>
+      <p>The game refused one of the moves in a cycle, so every beaver in it went back to its old home. Nothing is lost. If it keeps happening, <a href="#report">report it</a> with the message.</p>
     </div>
   </details>
 
   <details class="q" id="state">
-    <summary>The log says <code>Saved state ignored</code></summary>
+    <summary><span>The log says <code>Saved state ignored</code></span></summary>
     <div class="answer">
       <p>The mod couldn't read its own data from the save. It starts fresh, at no cost to your colony.</p>
     </div>
@@ -182,25 +182,31 @@
   <details class="q" id="multiplayer">
     <summary>Multiplayer: the game desynced, or players see different homes</summary>
     <div class="answer">
-      <ul>
-        <li><strong>Every player must install the same version of the mod and run the same game version.</strong> If only some players have the mod, or the versions differ, the games will disagree about where beavers live.</li>
-        <li>Restart the session from the host's save with everyone on the same version.</li>
-        <li>It has been used in one live hosted co-op session (about 11,000 ticks and 15 passes) with no desync reported by the host, so a desync would be a new finding. If it happens, please report it: include every player's <code>Player.log</code> from the session and say when it happened relative to a <code>Pass</code> line.</li>
-      </ul>
+      <ol>
+        <li><strong>Check that every player has the same mod version and game version.</strong> If only some players have the mod, or versions differ, the games will disagree about where beavers live.</li>
+        <li>Restart the session from the host's save.</li>
+        <li>If it happens again, <a href="#report">report it</a> with every player's <code>Player.log</code>, and say when it happened relative to a <code>Pass</code> line.</li>
+      </ol>
+      <p>One live co-op session, on the code the stable release started from, showed no desync. This release hasn't been played live by two players yet, so a report helps.</p>
     </div>
   </details>
 
   <details class="q" id="update">
     <summary>It stopped working after a Timberborn update</summary>
     <div class="answer">
-      <p>The mod is built against Timberborn 1.1.2.4. A game update can change the parts it relies on. Look in the log for an error mentioning <code>OptimizedLocalHousing</code>, disable the mod until a matching release is available, and check the <a href="https://github.com/timbermods/OptimizedLocalHousing/releases">releases page</a>.</p>
+      <p>The mod is built against Timberborn 1.1.2.4, and a game update can change the parts it relies on.</p>
+      <ol>
+        <li>Look in the log for an error mentioning <code>OptimizedLocalHousing</code>.</li>
+        <li>Disable the mod until a matching release is out.</li>
+        <li>Check the <a href="https://github.com/timbermods/OptimizedLocalHousing/releases">releases page</a>.</li>
+      </ol>
     </div>
   </details>
 
   <details class="q" id="undo">
     <summary>I want to undo what it did</summary>
     <div class="answer">
-      <p>Disabling or deleting the mod stops further changes but doesn't move anyone back. To undo the moves already made, load a save from before you installed it. That is why you should try it on a copy first.</p>
+      <p>Load a save from before you installed it. Disabling the mod stops further moves, but doesn't move anyone back.</p>
     </div>
   </details>
 
